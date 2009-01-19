@@ -1,0 +1,9 @@
+foreach(dir
+	Default
+	Pirate
+	Robot
+	Singer
+	Surfer
+	)
+	add_subdirectory(${dir})
+endforeach(dir)
