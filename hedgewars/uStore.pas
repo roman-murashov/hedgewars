@@ -993,7 +993,7 @@ AddFileLog('GL_MAX_TEXTURE_SIZE: ' + inttostr(MaxTextureSize));
 {$ENDIF}
 
 {$IFNDEF IPHONEOS}
-SupportNPOTT:= glLoadExtension('GL_ARB_texture_non_power_of_two');
+//SupportNPOTT:= glLoadExtension('GL_ARB_texture_non_power_of_two');
 {$ENDIF}
 
 // set view port to whole window
