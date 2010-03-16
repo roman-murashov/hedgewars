@@ -1453,9 +1453,28 @@ const Template40Points: array[0..7] of TSDL_Rect =
       (
        (x: 512; y:    0)
       );
+  {const Template41Points: array[0..4] of TSDL_Rect =
+      (
+       (x:   90; y: 1050; w:    1; h:   1),
+	   (x:	100; y: 100; w: 400; h: 100),
+	   (x:	200; y: 100; w: 400; h: 100),
+       //(x:  100; y:  800; w:  100; h: 200),
+       //(x:  300; y:  600; w:  100; h: 200),
+       //(x:  500; y:  200; w:  100; h: 200),
+       //(x:  700; y:  600; w:  100; h: 100),
+       //(x:  900; y:  800; w:  100; h: 200),
+       (x:  900; y: 1050; w:    1; h:   1),
+       (x: NTPX; y:    0; w:    1; h:   1)
+      );
+  }
+      Template41FPoints: array[0..0] of TPoint =
+      (
+       (x: 128; y:    0)
+      );
+  var Template41Points: array[0..100] of TSDL_Rect;
 
 ////////////////////////////////////////////////////////////////////////
-const EdgeTemplates: array[0..40] of TEdgeTemplate =
+const EdgeTemplates: array[0..41] of TEdgeTemplate =
       (
        (BasePoints: @Template0Points;
         BasePointsCount: Succ(High(Template0Points));
@@ -1907,6 +1926,17 @@ const EdgeTemplates: array[0..40] of TEdgeTemplate =
         canMirror: true; canFlip: false; isNegative: false; canInvert: false;
         hasGirders: false;
         MaxHedgehogs: 8;
+       ),
+       (BasePoints: @Template41Points;
+        BasePointsCount: Succ(High(Template41Points));
+        FillPoints: @Template41FPoints;
+        FillPointsCount: Succ(High(Template41FPoints));
+        BezierizeCount: 0;
+        RandPassesCount: 0;
+        TemplateHeight: 2048; TemplateWidth: 1024;
+        canMirror: false; canFlip: false; isNegative: false; canInvert: false;
+        hasGirders: false;
+        MaxHedgehogs: 8;
        )
       );
 const SmallTemplates: array[0..1] of Longword = ( 39, 40 );
@@ -1919,7 +1949,78 @@ const LargeTemplates: array[0..19] of Longword =
       );
 const CavernTemplates: array[0..4] of Longword = (36, 2, 3, 21, 29);
 const WackyTemplates: array[0..3] of Longword = (37, 38, 39, 40);
+const FractTemplates: array[0..0] of Longword = (41);
+
+procedure InitFractTemplate;
 
 implementation
+
+procedure InitFractTemplate;
+function gaussian: integer;
+const
+	n = 12;
+	w = 50;
+var 
+	i: integer;
+	sum: integer;
+begin
+	sum := 0;
+	for i := 1 to n do
+		sum := sum + random(w);
+	gaussian := sum - (n div 2)*w;
+end;
+
+function rand: integer;
+begin
+	rand := random(1024) div 10;
+	if(random(10) = 1) then rand := -rand;
+end;
+
+function urand: integer;
+begin
+	urand := random(1024) div 10;
+end;
+
+var 
+	i: integer;
+	s: integer;
+begin
+       //(x:   90; y: 1050; w:    1; h:   1),
+	   //(x:	100; y: 100; w: 400; h: 100),
+	   //(x:	200; y: 100; w: 400; h: 100),
+       //(x:  100; y:  800; w:  100; h: 200),
+       //(x:  300; y:  600; w:  100; h: 200),
+       //(x:  500; y:  200; w:  100; h: 200),
+       //(x:  700; y:  600; w:  100; h: 100),
+       //(x:  900; y:  800; w:  100; h: 200),
+       //(x:  900; y: 1050; w:    1; h:   1),
+       //(x: NTPX; y:    0; w:    1; h:   1)
+	Template41Points[0].x :=   90;
+   	Template41Points[0].y := 1050;
+	Template41Points[0].w :=  1;
+	Template41Points[0].h := 1;
+	Template41Points[99].x :=   90;
+   	Template41Points[99].y := 1050;
+	Template41Points[99].w :=  1;
+	Template41Points[99].h := 1;
+	Template41Points[100].x :=   NTPX;
+   	Template41Points[100].y := 0;
+	Template41Points[100].w :=  1;
+	Template41Points[100].h := 1;
+	for i := 0 to 99 do begin
+		Template41Points[i].x := Template41Points[i-1].x + urand;
+		Template41Points[i].y := Template41Points[i-1].y - rand;
+		//Template41Points[i].x := 512 + round(400 * cos(double(i)/50 * 3.1475));
+		//Template41Points[i].y := 1024 + round(400 * sin(double(i)/50 * 3.1475));
+		//Template41Points[i].x := i*10;
+		//Template41Points[i].y := 2048 - i*10; 
+		Template41Points[i].w := 100;
+		Template41Points[i].h := 100; 
+	end;
+end;
+
+initialization
+
+InitFractTemplate;
 
 end.

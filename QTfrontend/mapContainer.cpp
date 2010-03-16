@@ -94,12 +94,13 @@ HWMapContainer::HWMapContainer(QWidget * parent) :
 	mainLayout.addWidget(lblFilter, 2, 0);
 
 	CB_TemplateFilter = new QComboBox(this);
-    CB_TemplateFilter->addItem(tr("All"), 0);
-    CB_TemplateFilter->addItem(tr("Small"), 1);
-    CB_TemplateFilter->addItem(tr("Medium"), 2);
-    CB_TemplateFilter->addItem(tr("Large"), 3);
-    CB_TemplateFilter->addItem(tr("Cavern"), 4);
-    CB_TemplateFilter->addItem(tr("Wacky"), 5);
+	CB_TemplateFilter->addItem(tr("Fractal(new)"), 6);
+    CB_TemplateFilter->addItem(tr("All"), 1);
+    CB_TemplateFilter->addItem(tr("Small"), 2);
+    CB_TemplateFilter->addItem(tr("Medium"), 3);
+    CB_TemplateFilter->addItem(tr("Large"), 4);
+    CB_TemplateFilter->addItem(tr("Cavern"), 5);
+    CB_TemplateFilter->addItem(tr("Wacky"), 6);
 	mainLayout.addWidget(CB_TemplateFilter, 2, 1);
 
 	connect(CB_TemplateFilter, SIGNAL(currentIndexChanged(int)), this, SLOT(templateFilterChanged(int)));

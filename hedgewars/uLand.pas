@@ -592,6 +592,10 @@ case cTemplateFilter of
      5: begin
      SelectTemplate:= WackyTemplates[getrandom(Succ(High(WackyTemplates)))];
      end;
+	 6: begin
+		 InitFractTemplate;
+		 SelectTemplate := FractTemplates[0];
+	 end;
 end;
 WriteLnToConsole('Selected template #'+inttostr(SelectTemplate)+' using filter #'+inttostr(cTemplateFilter));
 end;
