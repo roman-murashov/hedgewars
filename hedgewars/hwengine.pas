@@ -75,13 +75,13 @@ var isTerminated: boolean = false;
 {$IFDEF HWLIBRARY}
 type arrayofpchar = array[0..8] of PChar;
 
-procedure initEverything;
-procedure freeEverything;
+procedure initEverything(complete:boolean);
+procedure freeEverything(complete:boolean);
 
 implementation
 {$ELSE}
 procedure OnDestroy; forward;
-procedure freeEverything; forward;
+procedure freeEverything(complete:boolean); forward;
 {$ENDIF}
 
 ////////////////////////////////
@@ -140,9 +140,10 @@ begin
                 end;
         end;
 
-    SDL_GL_SwapBuffers();
 {$IFDEF SDL13}
     SDL_RenderPresent();
+{$ELSE}
+    SDL_GL_SwapBuffers();
 {$ENDIF}
 {$IFNDEF IPHONEOS}
     // not going to make captures on the iPhone
@@ -183,8 +184,7 @@ begin
     PrevTime:= SDL_GetTicks;
     while isTerminated = false do
     begin
-{$IFNDEF IPHONEOS}
-// have to remove this cycle because otherwise it segfaults at exit
+
         while SDL_PollEvent(@event) <> 0 do
         begin
             case event.type_ of
@@ -210,7 +210,6 @@ begin
                 SDL_QUITEV: isTerminated:= true
             end; // end case event.type_
         end; // end while SDL_PollEvent(@event) <> 0
-{$ENDIF}
 
         if isTerminated = false then
         begin
@@ -244,7 +243,7 @@ var p: TPathType;
     s: shortstring;
 begin
 {$IFDEF HWLIBRARY}
-    initEverything();
+    initEverything(true);
 
     cBits:= 32;
     cFullScreen:= false;
@@ -332,81 +331,88 @@ begin
 
     MainLoop();
     OnDestroy();
-{$IFDEF HWLIBRARY}freeEverything();{$ENDIF}
+{$IFDEF HWLIBRARY}freeEverything(true);{$ENDIF}
     if alsoShutdownFrontend then halt;
 end;
 
-procedure initEverything;
+procedure initEverything (complete:boolean);
 begin
     Randomize();
 
     uConsts.initModule;
     uMisc.initModule;
     uConsole.initModule;    // MUST happen after uMisc
-    
-    uAI.initModule;
-    //uAIActions does not need initialization
-    //uAIAmmoTests does not need initialization
-    uAIMisc.initModule;
-    uAmmos.initModule;
-    uChat.initModule;
-    uCollisions.initModule;
-    //uFloat does not need initialization
-    //uGame does not need initialization
-    uGears.initModule;
-    uIO.initModule;
-    uKeys.initModule;
+
     uLand.initModule;
-    //uLandGraphics does not need initialization
-    //uLandObjects does not need initialization
-    //uLandTemplates does not need initialization
-    //uLandTexture does not need initialization
-    //uLocale does not need initialization
-    uRandom.initModule; 
-    //uSHA is initialized internally
-    uSound.initModule;
-    uStats.initModule;
-    uStore.initModule;
-    uTeams.initModule;
-    uVisualGears.initModule;
-    uWorld.initModule;
-    uScript.initModule;
+    uIO.initModule;
+    
+    if complete then
+    begin
+        uAI.initModule;
+        //uAIActions does not need initialization
+        //uAIAmmoTests does not need initialization
+        uAIMisc.initModule;
+        uAmmos.initModule;
+        uChat.initModule;
+        uCollisions.initModule;
+        //uFloat does not need initialization
+        //uGame does not need initialization
+        uGears.initModule;
+        uKeys.initModule;
+        //uLandGraphics does not need initialization
+        //uLandObjects does not need initialization
+        //uLandTemplates does not need initialization
+        //uLandTexture does not need initialization
+        //uLocale does not need initialization
+        uRandom.initModule; 
+        //uSHA is initialized internally
+        uScript.initModule;
+        uSound.initModule;
+        uStats.initModule;
+        uStore.initModule;
+        uTeams.initModule;
+        uVisualGears.initModule;
+        uWorld.initModule;
+    end;
 end;
 
-procedure freeEverything;
+procedure freeEverything (complete:boolean);
 begin
-    uWorld.freeModule;
-    uVisualGears.freeModule;    //stub
-    uTeams.freeModule;
-    uStore.freeModule;          //stub
-    uStats.freeModule;          //stub
-    uSound.freeModule;          //stub
-    //uSHA does not need to be freed
-    uRandom.freeModule;         //stub
-    //uLocale does not need to be freed
-    //uLandTemplates does not need to be freed
-    //uLandTexture does not need to be freed
-    //uLandObjects does not need to be freed
-    //uLandGraphics does not need to be freed
-    uLand.freeModule;
-    uKeys.freeModule;           //stub
+    if complete then
+    begin
+        uWorld.freeModule;
+        uVisualGears.freeModule;    //stub
+        uTeams.freeModule;
+        uStore.freeModule;          //stub
+        uStats.freeModule;          //stub
+        uSound.freeModule;          //stub
+        uScript.freeModule;
+        //uSHA does not need to be freed
+        uRandom.freeModule;         //stub
+        //uLocale does not need to be freed
+        //uLandTemplates does not need to be freed
+        //uLandTexture does not need to be freed
+        //uLandObjects does not need to be freed
+        //uLandGraphics does not need to be freed
+        uKeys.freeModule;           //stub
+        uGears.freeModule;
+        //uGame does not need to be freed
+        //uFloat does not need to be freed
+        uCollisions.freeModule;     //stub
+        uChat.freeModule;           //stub
+        uAmmos.freeModule;
+        uAIMisc.freeModule;         //stub
+        //uAIAmmoTests does not need to be freed
+        //uAIActions does not need to be freed
+        uAI.freeModule;             //stub
+    end;
+    
     uIO.freeModule;             //stub
-    uGears.freeModule;
-    //uGame does not need to be freed
-    //uFloat does not need to be freed
-    uCollisions.freeModule;     //stub
-    uChat.freeModule;           //stub
-    uAmmos.freeModule;
-    uAIMisc.freeModule;         //stub
-    //uAIAmmoTests does not need to be freed
-    //uAIActions does not need to be freed
-    uAI.freeModule;             //stub
+    uLand.freeModule;
 
     uConsole.freeModule;
+    uMisc.freeModule;           // uMisc closes the debug log.
     uConsts.freeModule;         //stub
-    uScript.freeModule;
-    // uMisc closes the debug log.
-    uMisc.freeModule;
 end;
 
 /////////////////////////
@@ -414,7 +420,7 @@ procedure GenLandPreview{$IFDEF IPHONEOS}(port: LongInt){$ENDIF}; {$IFDEF HWLIBR
 var Preview: TPreview;
 begin
 {$IFDEF IPHONEOS}
-    initEverything();
+    initEverything(false);
     WriteLnToConsole('Preview connecting on port ' + inttostr(port));
     ipcPort:= port;
 {$ENDIF}
@@ -429,7 +435,7 @@ begin
     WriteLnToConsole('Preview sent, disconnect');
     CloseIPC();
 {$IFDEF IPHONEOS}
-    freeEverything();
+    freeEverything(false);
 {$ENDIF}
 end;
 
@@ -597,7 +603,7 @@ end;
 /////////////////////////////// m a i n ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 begin
-    initEverything();
+    initEverything(true);
     WriteLnToConsole('Hedgewars ' + cVersionString + ' engine (network protocol: ' + inttostr(cNetProtoVersion) + ')');
     
     GetParams();
@@ -606,7 +612,7 @@ begin
     else if GameType = gmtSyntax then DisplayUsage()
     else Game();
     
-    freeEverything();
+    freeEverything(true);
     if GameType = gmtSyntax then
         ExitCode:= 1
     else

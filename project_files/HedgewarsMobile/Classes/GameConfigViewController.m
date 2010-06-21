@@ -28,8 +28,9 @@
             [[self parentViewController] dismissModalViewControllerAnimated:YES];
             break;
         case 1:
-            [self performSelector:@selector(startGame)
-                       withObject:nil
+            theButton.enabled = NO;
+            [self performSelector:@selector(startGame:)
+                       withObject:theButton
                        afterDelay:0.25];
             break;
         default:
@@ -68,7 +69,9 @@
     [self.view addSubview:activeController.view];
 }
 
--(void) startGame {
+-(void) startGame:(UIButton *)button {
+    button.enabled = YES;
+
     // don't start playing if the preview is in progress
     if ([mapConfigViewController busy]) {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Wait for the Preview",@"")
@@ -128,6 +131,9 @@
 }
 
 -(void) viewDidLoad {
+    CGRect screen = [[UIScreen mainScreen] bounds];
+    self.view.frame = CGRectMake(0, 0, screen.size.height, screen.size.width);
+
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         if (mapConfigViewController == nil)
             mapConfigViewController = [[MapConfigViewController alloc] initWithNibName:@"MapConfigViewController-iPad" bundle:nil];
@@ -141,6 +147,12 @@
         schemeWeaponConfigViewController.view.frame = CGRectMake(362, 224, 300, 500);
         schemeWeaponConfigViewController.view.backgroundColor = [UIColor clearColor];
         [mapConfigViewController.view addSubview:schemeWeaponConfigViewController.view];
+        for (UIView *oneView in self.view.subviews) {
+            if ([oneView isMemberOfClass:[UIToolbar class]]) {
+                [[oneView viewWithTag:12345] setHidden:YES];
+                break;
+            }
+        }
     } else
         mapConfigViewController = [[MapConfigViewController alloc] initWithNibName:@"MapConfigViewController-iPhone" bundle:nil];
     activeController = mapConfigViewController;

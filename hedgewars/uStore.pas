@@ -1265,19 +1265,13 @@ begin
 end;
 
 procedure SetScale(f: GLfloat);
-var
-{$IFDEF IPHONEOS}
-scale: GLfloat = 1.5;
-{$ELSE}
-scale: GLfloat = 2.0;
-{$ENDIF}
 begin
     // leave immediately if scale factor did not change
     if f = cScaleFactor then exit;
 
-    if f = scale then
-        glPopMatrix   // "return" to default scaling
-    else                // other scaling
+    if f = cDefaultZoomLevel then
+        glPopMatrix         // "return" to default scaling
+    else                    // other scaling
     begin
         glPushMatrix;       // save default scaling
         glLoadIdentity;
@@ -1328,11 +1322,16 @@ begin
 
 end;
 
-
+{$IFDEF IPHONEOS}
+procedure spinningWheelDone; cdecl; external;
+{$ENDIF}
 procedure FinishProgress;
 begin
     WriteLnToConsole('Freeing progress surface... ');
     FreeTexture(ProgrTex);
+{$IFDEF IPHONEOS}
+    spinningWheelDone();
+{$ENDIF}
 end;
 
 procedure flipSurface(Surface: PSDL_Surface; Vertical: Boolean);

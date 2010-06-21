@@ -73,7 +73,7 @@
         // return resulting image
         return sprite;
     } else {
-        NSLog(@"initWithContentsOfFile: andCutAt: FAILED");
+        DLog(@"error - image == nil");
         return nil;
     }
 }
@@ -153,8 +153,6 @@ void addRoundedRectToPath(CGContextRef context, CGRect rect, float ovalWidth, fl
 
 -(UIImage *)makeRoundCornersOfSize:(CGSize) sizewh {
 	UIImage * newImage = nil;
-
-    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     
     NSInteger cornerWidth = sizewh.width;
     NSInteger cornerHeight = sizewh.height;
@@ -175,13 +173,10 @@ void addRoundedRectToPath(CGContextRef context, CGRect rect, float ovalWidth, fl
     CGImageRef imageMasked = CGBitmapContextCreateImage(context);
     CGContextRelease(context);
     CGColorSpaceRelease(colorSpace);
-    [self release];
     
-    newImage = [[UIImage imageWithCGImage:imageMasked] retain];
+    newImage = [UIImage imageWithCGImage:imageMasked];
     CGImageRelease(imageMasked);
-    
-    [pool release];
-    
+        
     return newImage;
 }
 

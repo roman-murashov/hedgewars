@@ -71,10 +71,10 @@
     [alert addSubview:indicator];
     [indicator release];
     
-    // create a team
+    // create default files (teams/weapons/scheme)
     createTeamNamed(@"Pirates");
     createTeamNamed(@"Ninjas");
-    
+    createWeaponNamed(@"Default");
     createSchemeNamed(@"Default");
     
     // create settings.plist
@@ -101,18 +101,13 @@
 -(IBAction) switchViews:(id) sender {
     UIButton *button = (UIButton *)sender;
     UIAlertView *alert;
-    NSString *debugStr, *configNibName;
+    NSString *debugStr;
 
     switch (button.tag) {
         case 0:
-            // bug in UIModalTransitionStylePartialCurl, displays the controller awkwardly if it is not allocated every time
-            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-                configNibName = @"GameConfigViewController-iPad";
-            else
-                configNibName = @"GameConfigViewController-iPhone";
-            
-            gameConfigViewController = [[GameConfigViewController alloc] initWithNibName:configNibName bundle:nil];        
+            gameConfigViewController = [[GameConfigViewController alloc] initWithNibName:@"GameConfigViewController" bundle:nil];        
 #ifdef __IPHONE_3_2
+            // bug in UIModalTransitionStylePartialCurl, displays the controller awkwardly if it is not allocated every time            
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
                 gameConfigViewController.modalTransitionStyle = UIModalTransitionStylePartialCurl;
 #endif
