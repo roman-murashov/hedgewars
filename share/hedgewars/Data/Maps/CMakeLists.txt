@@ -1,0 +1,25 @@
+foreach(dir
+	Bamboo
+	BambooPlinko
+	Bath
+	Blox
+	Cake
+	Castle
+	cheese
+	Cogs
+	CrazyMission
+	EarthRise
+	Eyes
+	HedgeFortress
+	Hedgelove
+	Hedgewars
+	Hydrant
+	Lonely_Island
+	mushrooms
+	PirateFlag
+	Plane
+	Sheep
+	)
+
+add_subdirectory(${dir})
+endforeach(dir)

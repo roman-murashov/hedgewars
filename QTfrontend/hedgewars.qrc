@@ -1,0 +1,47 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="Ammos.png">../share/hedgewars/Data/Graphics/AmmoMenu/Ammos.png</file>
+    <file>res/hh25x25.png</file>
+    <file>res/ammopic.png</file>
+    <file>res/infinity.png</file>
+    <file>res/botlevels/0.png</file>
+    <file>res/botlevels/1.png</file>
+    <file>res/botlevels/2.png</file>
+    <file>res/botlevels/3.png</file>
+    <file>res/botlevels/4.png</file>
+    <file>res/botlevels/5.png</file>
+    <file>res/botlevels/net0.png</file>
+    <file>res/botlevels/net1.png</file>
+    <file>res/botlevels/net2.png</file>
+    <file>res/botlevels/net3.png</file>
+    <file>res/botlevels/net4.png</file>
+    <file>res/botlevels/net5.png</file>
+    <file>res/bonus.png</file>
+    <file>res/Hedgehog.svg</file>
+    <file>res/net.png</file>
+    <file>res/About.png</file>
+    <file>res/SimpleGame.png</file>
+    <file>res/Multiplayer.png</file>
+    <file>res/Trainings.png</file>
+    <file>res/Background.png</file>
+    <file>res/Exit.png</file>
+    <file>res/HedgewarsTitle.png</file>
+    <file>res/LocalPlay.png</file>
+    <file>res/NetworkPlay.png</file>
+    <file>res/Settings.png</file>
+    <file>res/dropdown.png</file>
+    <file>res/checked.png</file>
+    <file>res/unchecked.png</file>
+    <file>res/graphicsicon.png</file>
+    <file>res/Save.png</file>
+    <file>res/Record.png</file>
+    <file>res/weaponsicon.png</file>
+    <file>res/teamicon.png</file>
+    <file>res/panelbg.png</file>
+    <file>res/lightbulb_on.png</file>
+    <file>res/lightbulb_off.png</file>
+    <file>res/spin_up.png</file>
+    <file>res/spin_down.png</file>
+    <file>res/PlaySound.png</file>
+</qresource>
+</RCC>

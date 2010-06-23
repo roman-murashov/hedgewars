@@ -1,0 +1,42 @@
+; English locale
+
+00:00=Grenade
+00:01=ClusterBomb
+00:02=Bazooka
+00:03=UFO
+00:04=Shotgun
+00:05=PickHammer
+00:06=Skip
+00:07=Rope
+00:08=Mine
+00:09=DEagle
+00:10=Dynamite
+00:11=Baseball Bat
+00:12=Fire Punch
+00:13=sec
+00:14=Parachute
+00:15=Air Attack
+00:16=Mine Strike
+00:17=Blow Torch
+00:18=Construction
+00:19=Teleportation
+00:20=Switch Hedgehog
+00:21=Mortar
+00:22=Whip
+00:23=Kamikaze
+00:24=Cake
+00:25=Seduction
+00:26=Watermelon Bomb
+00:27=Hellish hand-grenade
+00:28=Drill Rocket
+00:29=Ballgun
+00:30=Napalm
+00:31=RC Plane
+
+01:00=Let's fight!
+01:01=Round draw
+01:02=%1 wins!
+01:03=Volume %1%
+01:04=Paused
+01:05=Really quit (Y/Esc)?
+01:06=Sudden death!

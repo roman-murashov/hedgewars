@@ -1,0 +1,49 @@
+; Italian locale
+
+00:00=Granata
+00:01=Bomba a grappolo
+00:02=Bazooka
+00:03=UFO
+00:04=Fucile a Pompa
+00:05=Martello Pneumatico
+00:06=Salta il turno
+00:07=Corda
+00:08=Mina
+00:09=DEagle
+00:10=Dinamite
+00:11=Mazza da Baseball
+00:12=Pugno di Fuoco
+00:13=sec
+00:14=Paracadute
+00:15=Attacco Missilistico
+00:16=Attacco Aereo Minato
+00:17=Torcia Infuocata
+00:18=Trave
+00:19=Teletrasporto
+00:20=Cambia Hedgehog
+00:21=Mortaio
+00:22=Frusta
+00:23=Attacco Kamikaze
+00:24=Torta
+00:25=Seduzione
+00:26=Bomba anguria
+00:27=Granata infernale
+00:28=Razzo trivella
+00:29=Sparapalle
+00:30=Napalm
+00:31=Aereo Radiocomandato
+
+01:00=Combattiamo!
+01:01=Round in parità
+01:02=%1 vince!
+01:03=Volume %1%
+01:04=In pausa
+01:05=Vuoi davvero uscire (Y/Esc)?
+01:06=Sudden death!
+
+
+
+
+
+
+
