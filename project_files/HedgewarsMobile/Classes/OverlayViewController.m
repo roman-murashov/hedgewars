@@ -11,13 +11,19 @@
 #import "PascalImports.h"
 #import "CGPointUtils.h"
 #import "SDL_mouse.h"
-#import "SDL_config_iphoneos.h"
-#import "PopoverMenuViewController.h"
+#import "InGameMenuViewController.h"
 #import "CommodityFunctions.h"
+#import "SDL_config_iphoneos.h"
 
 #define HIDING_TIME_DEFAULT [NSDate dateWithTimeIntervalSinceNow:2.7]
 #define HIDING_TIME_NEVER   [NSDate dateWithTimeIntervalSinceNow:10000]
+#define doDim()             [dimTimer setFireDate:HIDING_TIME_DEFAULT]
+#define doNotDim()          [dimTimer setFireDate:HIDING_TIME_NEVER]
 
+#define CONFIRMATION_TAG 5959
+#define GRENADE_TAG 9595
+#define ANIMATION_DURATION 0.25
+#define removeConfirmationInput()   [[self.view viewWithTag:CONFIRMATION_TAG] removeFromSuperview]; 
 
 @implementation OverlayViewController
 @synthesize popoverController, popupMenu;
@@ -30,7 +36,7 @@
     UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
     CGRect rect = [[UIScreen mainScreen] bounds];
     CGRect usefulRect = CGRectMake(0, 0, rect.size.width, rect.size.height);
-    UIView *sdlView = [[[UIApplication sharedApplication] keyWindow] viewWithTag:12345];
+    UIView *sdlView = [[[UIApplication sharedApplication] keyWindow] viewWithTag:SDL_VIEW_TAG];
     
     [UIView beginAnimations:@"rotation" context:NULL];
     [UIView setAnimationDuration:0.8f];
@@ -39,13 +45,11 @@
         case UIDeviceOrientationLandscapeLeft:
             sdlView.transform = CGAffineTransformMakeRotation(degreesToRadian(0));
             self.view.transform = CGAffineTransformMakeRotation(degreesToRadian(90));
-            [self chatDisappear];
             HW_setLandscape(YES);
             break;
         case UIDeviceOrientationLandscapeRight:
             sdlView.transform = CGAffineTransformMakeRotation(degreesToRadian(180));
             self.view.transform = CGAffineTransformMakeRotation(degreesToRadian(-90));
-            [self chatDisappear];
             HW_setLandscape(YES);
             break;
         /*
@@ -74,35 +78,6 @@
     [UIView commitAnimations];
 }
 
--(void) chatAppear {
-    /*
-    if (writeChatTextField == nil) {
-        writeChatTextField = [[UITextField alloc] initWithFrame:CGRectMake(0, 100, 768, [UIFont systemFontSize]+8)];
-        writeChatTextField.textColor = [UIColor whiteColor];
-        writeChatTextField.backgroundColor = [UIColor blueColor];
-        writeChatTextField.autocapitalizationType = UITextAutocapitalizationTypeNone;
-        writeChatTextField.autocorrectionType = UITextAutocorrectionTypeNo;
-        writeChatTextField.enablesReturnKeyAutomatically = NO;
-        writeChatTextField.keyboardAppearance = UIKeyboardAppearanceDefault;
-        writeChatTextField.keyboardType = UIKeyboardTypeDefault;
-        writeChatTextField.returnKeyType = UIReturnKeyDefault;
-        writeChatTextField.secureTextEntry = NO;    
-        [self.view addSubview:writeChatTextField];
-    }
-    writeChatTextField.alpha = 1;
-    [self activateOverlay];
-    [dimTimer setFireDate:HIDING_TIME_NEVER];
-    */
-}
-
--(void) chatDisappear {
-    /*
-    writeChatTextField.alpha = 0;
-    [writeChatTextField resignFirstResponder];
-    [dimTimer setFireDate:HIDING_TIME_DEFAULT];
-    */
-}
-
 #pragma mark -
 #pragma mark View Management
 -(void) viewDidLoad {
@@ -112,7 +87,7 @@
     
     // set initial orientation
     UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
-    UIView *sdlView = [[[UIApplication sharedApplication] keyWindow] viewWithTag:12345];
+    UIView *sdlView = [[[UIApplication sharedApplication] keyWindow] viewWithTag:SDL_VIEW_TAG];
     switch (orientation) {
         case UIDeviceOrientationLandscapeLeft:
             sdlView.transform = CGAffineTransformMakeRotation(degreesToRadian(0));
@@ -146,6 +121,11 @@
     [UIView setAnimationDuration:1];
     self.view.alpha = 1;
     [UIView commitAnimations];
+    
+    // find the sdl window we're on
+    SDL_VideoDevice *_this = SDL_GetVideoDevice();
+    SDL_VideoDisplay *display = &_this->displays[0];
+    sdlwindow = display->windows;
 }
 
 /* these are causing problems at reloading so let's remove 'em
@@ -189,7 +169,7 @@
 // set the overlay visible and put off the timer for enough time
 -(void) activateOverlay {
     self.view.alpha = 1;
-    [dimTimer setFireDate:HIDING_TIME_NEVER];
+    doNotDim();
 }
 
 // dim the overlay when there's no more input for a certain amount of time
@@ -204,6 +184,9 @@
         case 1:
         case 2:
         case 3:
+            [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                                     selector:@selector(unsetPreciseStatus)
+                                                       object:nil];
             HW_walkingKeysUp();
             break;
         case 4:
@@ -216,7 +199,7 @@
             break;
     }
 
-    [dimTimer setFireDate:HIDING_TIME_DEFAULT];
+    doDim();
 }
 
 // issue certain action based on the tag of the button 
@@ -239,9 +222,13 @@
             HW_walkRight();
             break;
         case 2:
+            [self performSelector:@selector(unsetPreciseStatus) withObject:nil afterDelay:0.8];
+            HW_preciseSet(YES);
             HW_aimUp();
             break;
         case 3:
+            [self performSelector:@selector(unsetPreciseStatus) withObject:nil afterDelay:0.8];
+            HW_preciseSet(YES);
             HW_aimDown();
             break;
         case 4:
@@ -270,6 +257,10 @@
     }
 }
 
+-(void) unsetPreciseStatus {
+    HW_preciseSet(NO);
+}
+
 // present a further check before closing game
 -(void) actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger) buttonIndex {
     if ([actionSheet cancelButtonIndex] != buttonIndex)
@@ -285,7 +276,7 @@
 
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         if (popupMenu == nil) 
-            popupMenu = [[PopoverMenuViewController alloc] initWithStyle:UITableViewStylePlain];
+            popupMenu = [[InGameMenuViewController alloc] initWithStyle:UITableViewStylePlain];
         if (popoverController == nil) {
             popoverController = [[UIPopoverController alloc] initWithContentViewController:popupMenu];
             [popoverController setPopoverContentSize:CGSizeMake(220, 170) animated:YES];
@@ -297,17 +288,11 @@
                          permittedArrowDirections:UIPopoverArrowDirectionUp
                                          animated:YES];
     } else {
-        if (popupMenu == nil) {
-            popupMenu = [[PopoverMenuViewController alloc] initWithStyle:UITableViewStyleGrouped];
-            popupMenu.view.backgroundColor = [UIColor clearColor];
-            popupMenu.view.frame = CGRectMake(480, 0, 200, 170);
-        }
-        [self.view addSubview:popupMenu.view];
+        if (popupMenu == nil)
+            popupMenu = [[InGameMenuViewController alloc] initWithStyle:UITableViewStyleGrouped];
         
-        [UIView beginAnimations:@"showing popover" context:NULL];
-        [UIView setAnimationDuration:0.35];
-        popupMenu.view.frame = CGRectMake(280, 0, 200, 170);
-        [UIView commitAnimations];
+        [self.view addSubview:popupMenu.view];
+        [popupMenu present];
     }
     popupMenu.tableView.scrollEnabled = NO;
 }
@@ -318,23 +303,14 @@
         isPopoverVisible = NO;
         
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            [(InGameMenuViewController *)popoverController.contentViewController removeChat];
             [popoverController dismissPopoverAnimated:YES];
         } else {
-            [UIView beginAnimations:@"hiding popover" context:NULL];
-            [UIView setAnimationDuration:0.35];
-            popupMenu.view.frame = CGRectMake(480, 0, 200, 170);
-            [UIView commitAnimations];
-        
-            [popupMenu.view performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:0.35];
+            [popupMenu dismiss];
         }
         [self buttonReleased:nil];
     }
 }
-
--(void) textFieldDoneEditing:(id) sender{
-    [sender resignFirstResponder];
-}
-
 
 #pragma mark -
 #pragma mark Custom touch event handling
@@ -342,19 +318,17 @@
     NSSet *allTouches = [event allTouches];
     UITouch *first, *second;
     
-    if (isPopoverVisible) {
+    // hide in-game menu
+    if (isPopoverVisible)
         [self dismissPopover];
-    }
-    /*
-    if (writeChatTextField) {
-        [self.writeChatTextField resignFirstResponder];
-        [dimTimer setFireDate:HIDING_TIME_DEFAULT];
-    }
-    */
+    
+    // reset default dimming
+    doDim();
     
     switch ([allTouches count]) {
-        case 1:            
+        case 1:       
             removeConfirmationInput();
+            startingPoint = [[[allTouches allObjects] objectAtIndex:0] locationInView:self.view];
             if (2 == [[[allTouches allObjects] objectAtIndex:0] tapCount])
                 HW_zoomReset();
             break;
@@ -403,7 +377,46 @@
                     [UIView setAnimationDuration:ANIMATION_DURATION];
                     [self.view viewWithTag:CONFIRMATION_TAG].alpha = 1;
                     [UIView commitAnimations];
-                }
+                    
+                    // keep the overlay active, or the button will fade
+                    [self activateOverlay];
+                    doNotDim();
+                } else
+                    if (HW_isWeaponTimerable()) {
+                        if (isSegmentVisible) {
+                            UISegmentedControl *grenadeTime = (UISegmentedControl *)[self.view viewWithTag:GRENADE_TAG];
+                            
+                            [UIView beginAnimations:@"removing segmented control" context:NULL];
+                            [UIView setAnimationDuration:ANIMATION_DURATION];
+                            [UIView setAnimationCurve:UIViewAnimationCurveEaseIn];
+                            grenadeTime.frame = CGRectMake(screen.size.height / 2 - 125, screen.size.width, 250, 50);
+                            [UIView commitAnimations];
+                            
+                            [grenadeTime performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:ANIMATION_DURATION];
+                        } else {
+                            NSArray *items = [[NSArray alloc] initWithObjects:@"1",@"2",@"3",@"4",@"5",nil];
+                            UISegmentedControl *grenadeTime = [[UISegmentedControl alloc] initWithItems:items];
+                            [items release];
+                            
+                            [grenadeTime addTarget:self action:@selector(setGrenadeTime:) forControlEvents:UIControlEventValueChanged];
+                            grenadeTime.frame = CGRectMake(screen.size.height / 2 - 125, screen.size.width, 250, 50);
+                            grenadeTime.selectedSegmentIndex = 2;
+                            grenadeTime.tag = GRENADE_TAG;
+                            [self.view addSubview:grenadeTime];
+                            [grenadeTime release];
+                            
+                            [UIView beginAnimations:@"inserting segmented control" context:NULL];
+                            [UIView setAnimationDuration:ANIMATION_DURATION];
+                            [UIView setAnimationCurve:UIViewAnimationCurveEaseIn];
+                            grenadeTime.frame = CGRectMake(screen.size.height / 2 - 125, screen.size.width - 100, 250, 50);
+                            [UIView commitAnimations];
+                            
+                            [self activateOverlay];
+                            doNotDim();
+                        }
+                        isSegmentVisible = !isSegmentVisible;
+                    }
+
             break;
         case 2:
             HW_allKeysUp();
@@ -419,6 +432,12 @@
 -(void) sendHWClick {
     HW_click();
     removeConfirmationInput();
+    doDim();
+}
+
+-(void) setGrenadeTime:(id) sender {
+    UISegmentedControl *theSegment = (UISegmentedControl *)sender;
+    HW_setGrenadeTime(theSegment.selectedSegmentIndex + 1);
 }
 
 -(void) touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -442,6 +461,8 @@
             } else {
                 DLog(@"x: %f y: %f -> X:%d Y:%d", currentPosition.x, currentPosition.y, HWX(currentPosition.x), HWY(currentPosition.y));
                 HW_setCursor(HWX(currentPosition.x), HWY(currentPosition.y));
+                if (HW_isWeaponSwitch())
+                    HW_tab();
             }
             break;
         case 2:
@@ -468,7 +489,8 @@
     }
 }
 
-
+#pragma mark -
+#pragma mark Functions called by pascal
 // called from AddProgress and FinishProgress (respectively)
 void startSpinning() {
     isGameRunning = NO;
@@ -478,12 +500,12 @@ void startSpinning() {
     indicator.center = CGPointMake(screen.size.width/2 - 118, screen.size.height/2);
     indicator.hidesWhenStopped = YES;
     [indicator startAnimating];
-    [[[[UIApplication sharedApplication] keyWindow] viewWithTag:12345] addSubview:indicator];
+    [[[[UIApplication sharedApplication] keyWindow] viewWithTag:SDL_VIEW_TAG] addSubview:indicator];
     [indicator release];
 }
 
 void stopSpinning() {
-    UIActivityIndicatorView *indicator = (UIActivityIndicatorView *)[[[[UIApplication sharedApplication] keyWindow] viewWithTag:12345] viewWithTag:987654];
+    UIActivityIndicatorView *indicator = (UIActivityIndicatorView *)[[[[UIApplication sharedApplication] keyWindow] viewWithTag:SDL_VIEW_TAG] viewWithTag:987654];
     [indicator stopAnimating];
     isGameRunning = YES;
 }
@@ -491,11 +513,16 @@ void stopSpinning() {
 void clearView() {
     UIWindow *theWindow = [[UIApplication sharedApplication] keyWindow];
     UIButton *theButton = (UIButton *)[theWindow viewWithTag:CONFIRMATION_TAG];
+    UISegmentedControl *theSegment = (UISegmentedControl *)[theWindow viewWithTag:GRENADE_TAG];
+    
     [UIView beginAnimations:@"remove button" context:NULL];
     [UIView setAnimationDuration:ANIMATION_DURATION];
     theButton.alpha = 0;
+    theSegment.alpha = 0;
     [UIView commitAnimations];
+    
     [theWindow performSelector:@selector(removeFromSuperview) withObject:theButton afterDelay:0.3];
+    [theWindow performSelector:@selector(removeFromSuperview) withObject:theSegment afterDelay:0.3];    
 }
 
 @end

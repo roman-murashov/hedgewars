@@ -13,7 +13,7 @@
 unit PascalExports;
 
 interface
-uses uKeys, GLunit, uWorld, uMisc, uGears, uConsole, uTeams, uConsts, hwengine;
+uses uKeys, GLunit, uWorld, uMisc, uConsole, uTeams, uConsts, uChat, uGears, hwengine;
 
 {$INCLUDE "config.inc"}
 
@@ -23,7 +23,7 @@ implementation
 var xx, yy: LongInt;
 
 // retrieve protocol information
-procedure HW_versionInfo(netProto: PShortInt; versionStr: Ppchar); cdecl; export;
+procedure HW_versionInfo(netProto: PShortInt; versionStr: PPChar); cdecl; export;
 begin
 // http://bugs.freepascal.org/view.php?id=16156
     if netProto <> nil then netProto^:= cNetProtoVersion;
@@ -63,6 +63,7 @@ begin
     rightKey:= false;
     upKey:= false;
     downKey:= false;
+    preciseKey:= false;
 end;
 
 procedure HW_otherKeysUp; cdecl; export;
@@ -86,6 +87,11 @@ end;
 procedure HW_walkRight; cdecl; export;
 begin
     rightKey:= true;
+end;
+
+procedure HW_preciseSet(status:boolean); cdecl; export;
+begin
+    preciseKey:= status;
 end;
 
 procedure HW_aimUp; cdecl; export;
@@ -113,43 +119,25 @@ begin
     backspaceKey:= true;
 end;
 
+procedure HW_tab; cdecl; export;
+begin
+    tabKey:= true;
+end;
+
 procedure HW_chat; cdecl; export;
 begin
     chatAction:= true;
 end;
 
-procedure HW_tab; cdecl; export;
+procedure HW_chatEnd; cdecl; export;
 begin
-    switchAction:= true;
+    KeyPressChat(27); // esc - cleans buffer
+    KeyPressChat(13); // enter - removes chat
 end;
 
 procedure HW_pause; cdecl; export;
 begin
     pauseAction:= true;
-end;
-
-procedure HW_cursorUp(coefficient:LongInt); cdecl; export;
-begin
-    coeff:= coefficient;
-    cursorUp:= true;
-end;
-
-procedure HW_cursorDown(coefficient:LongInt); cdecl; export;
-begin
-    coeff:= coefficient;
-    cursorDown:= true;
-end;
-
-procedure HW_cursorLeft(coefficient:LongInt); cdecl; export;
-begin
-    coeff:= coefficient;
-    cursorLeft:= true;
-end;
-
-procedure HW_cursorRight(coefficient:LongInt); cdecl; export;
-begin
-    coeff:= coefficient;
-    cursorRight:= true;
 end;
 
 procedure HW_terminate(closeFrontend: boolean); cdecl; export;
@@ -198,6 +186,27 @@ end;
 function HW_isWeaponRequiringClick: boolean; cdecl; export;
 begin
     exit( (CurrentHedgehog^.Gear^.State and gstHHChooseTarget) <> 0 )
+end;
+
+function HW_isWeaponTimerable: boolean; cdecl; export;
+var CurSlot, CurAmmo: LongWord;
+begin
+    CurSlot:= CurrentHedgehog^.CurSlot;
+    CurAmmo:= CurrentHedgehog^.CurAmmo;
+    exit( (CurrentHedgehog^.Ammo^[CurSlot, CurAmmo].Propz and ammoprop_Timerable) <> 0)
+end;
+
+function HW_isWeaponSwitch: boolean cdecl; export;
+begin
+    if CurAmmoGear <> nil then
+        exit(CurAmmoGear^.AmmoType = amSwitch) 
+    else
+        exit(false)
+end;
+
+procedure HW_setGrenadeTime(time: LongInt); cdecl; export;
+begin
+    ParseCommand('/timer ' + inttostr(time), true);
 end;
 
 //amSwitch
