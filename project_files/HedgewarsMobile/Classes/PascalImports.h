@@ -22,7 +22,7 @@ extern "C" {
     void GenLandPreview(void);
 
 
-    void HW_versionInfo(short int*, char**);
+    void HW_versionInfo(short int *netProto, char **versionStr);
 
     void HW_click(void);
     
@@ -39,27 +39,30 @@ extern "C" {
     void HW_walkRight(void);
     void HW_aimUp(void);
     void HW_aimDown(void);
+    void HW_preciseSet(BOOL status);
+    
     void HW_shoot(void);
     void HW_jump(void);
     void HW_backjump(void);
     
     void HW_chat(void);
+    void HW_chatEnd(void);
     void HW_tab(void);
     void HW_pause(void);
     
-    void HW_cursorUp(int);
-    void HW_cursorDown(int);
-    void HW_cursorLeft(int);
-    void HW_cursorRight(int);
+    void HW_terminate(BOOL andCloseFrontend);
     
-    void HW_terminate(BOOL);
-    
-    void HW_setLandscape(BOOL);
+    void HW_setLandscape(BOOL rotate);
     void HW_setCursor(int x, int y);
     void HW_saveCursor(BOOL reset);
     
     BOOL HW_isAmmoOpen(void);
     BOOL HW_isWeaponRequiringClick(void);
+    BOOL HW_isWeaponTimerable(void);
+    BOOL HW_isWeaponSwitch(void);
+    
+    void HW_setGrenadeTime(int time);
+    
 #ifdef __cplusplus
 }
 #endif

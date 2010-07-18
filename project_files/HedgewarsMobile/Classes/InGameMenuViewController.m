@@ -7,19 +7,18 @@
 //
 
 #import "SDL_uikitappdelegate.h"
-#import "PopoverMenuViewController.h"
+#import "InGameMenuViewController.h"
 #import "PascalImports.h"
 #import "CommodityFunctions.h"
 #import "SDL_sysvideo.h"
 
-@implementation PopoverMenuViewController
+@implementation InGameMenuViewController
 @synthesize menuList;
 
 
 -(BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation) interfaceOrientation {
     return rotationManager(interfaceOrientation);
 }
-
 
 -(void) didReceiveMemoryWarning {
     // Releases the view if it doesn't have a superview.
@@ -37,6 +36,11 @@
     self.menuList = array;
     [array release];
     
+    // save the sdl window (!= uikit window) for future reference
+    SDL_VideoDevice *_this = SDL_GetVideoDevice();
+    SDL_VideoDisplay *display = &_this->displays[0];
+    sdlwindow = display->windows;
+        
     [super viewDidLoad];
 }
 
@@ -49,6 +53,31 @@
 -(void) dealloc {
     [menuList release];
     [super dealloc];
+}
+
+#pragma mark -
+#pragma mark animating
+-(void) present {
+    CGRect screen = [[UIScreen mainScreen] bounds];
+    self.view.backgroundColor = [UIColor clearColor];
+    self.view.frame = CGRectMake(screen.size.height, 0, 200, 170);
+    
+    [UIView beginAnimations:@"showing popover" context:NULL];
+    [UIView setAnimationDuration:0.35];
+    self.view.frame = CGRectMake(screen.size.height-200, 0, 200, 170);
+    [UIView commitAnimations];
+}
+
+-(void) dismiss {
+    CGRect screen = [[UIScreen mainScreen] bounds];
+    [UIView beginAnimations:@"hiding popover" context:NULL];
+    [UIView setAnimationDuration:0.35];
+    self.view.frame = CGRectMake(screen.size.height, 0, 200, 170);
+    [UIView commitAnimations];
+        
+    [self.view performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:0.35];
+    
+    [self removeChat];
 }
 
 #pragma mark -
@@ -83,21 +112,21 @@
             isPaused = !isPaused;
             break;
         case 1:
-            HW_chat();
-            /*
-            SDL_VideoDevice *_this = SDL_GetVideoDevice();
-            SDL_VideoDisplay *display = &_this->displays[0];
-            SDL_Window *window = display->windows;
-            SDL_iPhoneKeyboardShow(window);
-            */
+            if (SDL_iPhoneKeyboardIsShown(sdlwindow))
+                [self removeChat];
+            else {
+                HW_chat();
+                SDL_iPhoneKeyboardShow(sdlwindow);
+            }
             break;
         case 2:
             // expand the view (and table) so that the actionsheet can be selected on the iPhone
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+                CGRect screen = [[UIScreen mainScreen] bounds];
                 [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
                 [UIView beginAnimations:@"table width more" context:NULL];
                 [UIView setAnimationDuration:0.2];
-                self.view.frame = CGRectMake(0, 0, 480, 320);
+                self.view.frame = CGRectMake(0, 0, screen.size.height, screen.size.width);
                 [UIView commitAnimations];
             }
             actionSheet = [[UIActionSheet alloc] initWithTitle:NSLocalizedString(@"Are you reeeeeally sure?", @"")
@@ -119,13 +148,20 @@
     [aTableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
+-(void) removeChat {
+    HW_chatEnd();
+    if (SDL_iPhoneKeyboardIsShown(sdlwindow))
+        SDL_iPhoneKeyboardHide(sdlwindow);
+}
+
 #pragma mark -
 #pragma mark actionSheet methods
 -(void) actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger) buttonIndex {
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone){
+        CGRect screen = [[UIScreen mainScreen] bounds];
         [UIView beginAnimations:@"table width less" context:NULL];
         [UIView setAnimationDuration:0.2];
-        self.view.frame = CGRectMake(280, 0, 200, 170);
+        self.view.frame = CGRectMake(screen.size.height-200, 0, 200, 170);
         [UIView commitAnimations];
     }
     

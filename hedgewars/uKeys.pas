@@ -70,7 +70,8 @@ var hideAmmoMenu: boolean;
     downKey: boolean;
     rightKey: boolean;
     leftKey: boolean;
-
+    preciseKey: boolean;
+    
     backspaceKey: boolean;
     spaceKey: boolean;
     enterKey: boolean;
@@ -78,12 +79,7 @@ var hideAmmoMenu: boolean;
     
     chatAction: boolean;
     pauseAction: boolean;
-    switchAction: boolean;
     
-    cursorUp: boolean;
-    cursorDown: boolean;
-    cursorLeft: boolean;
-    cursorRight: boolean;
 {$IFDEF IPHONEOS}    
 procedure setiPhoneBinds;
 {$ENDIF}
@@ -342,12 +338,9 @@ DefaultBinds[23]:= '+up';
 DefaultBinds[24]:= '+down';
 DefaultBinds[25]:= '+left';
 DefaultBinds[26]:= '+right';
+DefaultBinds[27]:= '+precise';
 DefaultBinds[44]:= 'chat';
 DefaultBinds[55]:= 'pause';
-DefaultBinds[66]:= '+cur_u';
-DefaultBinds[67]:= '+cur_d';
-DefaultBinds[68]:= '+cur_l';
-DefaultBinds[69]:= '+cur_r';
 {$ELSE}
 DefaultBinds[KeyNameToCode('up')]:= '+up';
 DefaultBinds[KeyNameToCode('down')]:= '+down';
@@ -380,6 +373,7 @@ begin
     tkbdn[24]:= ord(downKey);
     tkbdn[25]:= ord(leftKey);
     tkbdn[26]:= ord(rightKey);
+    tkbdn[27]:= ord(preciseKey);
 
     tkbdn[ 8]:= ord(backspaceKey);
     tkbdn[ 9]:= ord(tabKey);
@@ -388,12 +382,6 @@ begin
 
     tkbdn[44]:= ord(chatAction);
     tkbdn[55]:= ord(pauseAction);
-    //tkbdn[100]:= ord(switchAction);
-    
-    tkbdn[66]:= ord(cursorUp);
-    tkbdn[67]:= ord(cursorDown);
-    tkbdn[68]:= ord(cursorLeft);
-    tkbdn[69]:= ord(cursorRight);
     
     // set to false the keys that only need one stoke
     leftClick:= false;
@@ -406,7 +394,6 @@ begin
     
     chatAction:= false;
     pauseAction:= false;
-    //switchAction:= false;
 end;
 {$ENDIF}
 
@@ -520,6 +507,7 @@ begin
     downKey:= false;
     rightKey:= false;
     leftKey:= false;
+    preciseKey:= false;
 
     // action key emulation
     backspaceKey:= false;
@@ -530,14 +518,6 @@ begin
     // other key emulation
     chatAction:= false;
     pauseAction:= false;
-    switchAction:= false;
-
-    // cursor emulation
-    cursorUp:= false;
-    cursorDown:= false;
-    cursorLeft:= false;
-    cursorRight:= false;
-    
 {$ENDIF}
 end;
 

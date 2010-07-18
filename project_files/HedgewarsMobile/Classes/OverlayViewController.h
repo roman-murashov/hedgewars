@@ -7,27 +7,30 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "SDL_sysvideo.h"
 
-#define CONFIRMATION_TAG 5959
-#define ANIMATION_DURATION 0.25
-#define removeConfirmationInput()   [[self.view viewWithTag:CONFIRMATION_TAG] removeFromSuperview]; 
-
-@class PopoverMenuViewController;
+@class InGameMenuViewController;
 
 @interface OverlayViewController : UIViewController {
+    // the timer that dims the overlay
     NSTimer *dimTimer;
 
-    // used only on the ipad
-    UIPopoverController *popoverController;
-
-    PopoverMenuViewController *popupMenu;
+    // the in-game menu
+    UIPopoverController *popoverController; // iPad only
+    InGameMenuViewController *popupMenu;
     BOOL isPopoverVisible;
     
+    // ths touch section
     CGFloat initialDistanceForPinching;
+    CGPoint startingPoint;
+    BOOL isSegmentVisible;
+    
+    // the sdl window underneath
+    SDL_Window *sdlwindow;
 }
 
 @property (nonatomic,retain) id popoverController;
-@property (nonatomic,retain) PopoverMenuViewController *popupMenu;
+@property (nonatomic,retain) InGameMenuViewController *popupMenu;
 
 BOOL isGameRunning;
 
@@ -43,7 +46,5 @@ BOOL isGameRunning;
 -(void) dismissPopover;
 -(void) dimOverlay;
 -(void) activateOverlay;
--(void) chatAppear;
--(void) chatDisappear;
 
 @end
