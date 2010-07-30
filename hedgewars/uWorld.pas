@@ -674,7 +674,9 @@ begin
         DrawRepeated(sprSky, sprSkyL, sprSkyR, (WorldDx + LAND_WIDTH div 2) * 3 div 8, SkyOffset);
         ChangeDepth(RM, -cStereo_Horizon);
         DrawRepeated(sprHorizont, sprHorizontL, sprHorizontR, (WorldDx + LAND_WIDTH div 2) * 3 div 5, HorizontOffset);
-    end;
+    end
+    else
+        ChangeDepth(RM, cStereo_Sky - cStereo_Horizon);
 
     DrawVisualGears(0);
     
@@ -690,10 +692,13 @@ begin
         DrawWaves( 1,  75 - WorldDx div 19, - cWaveHeight + offsetY div 45, 32);
         ChangeDepth(RM, -cStereo_Water);
         DrawWaves(-1, 100 + WorldDx div 14, - cWaveHeight + offsetY div 70, 24);
-        ResetDepth(RM);
     end
     else
+    begin
+        ChangeDepth(RM, -4 * cStereo_Water);
         DrawWaves(-1, 100, - (cWaveHeight + (cWaveHeight shr 1)), 0);
+    end;
+    ResetDepth(RM);
 
     DrawLand(WorldDx, WorldDy);
 
@@ -744,11 +749,13 @@ begin
         DrawWater(cWaterOpacity, - offsetY div 10);
         ChangeDepth(RM, cStereo_Water);
         DrawWaves( -1, 25 + WorldDx div 3, - cWaveHeight - offsetY div 10, 0);
-        ResetDepth(RM);
     end
     else
+    begin
+        ChangeDepth(RM, cStereo_Water);
         DrawWaves(-1, 50, - (cWaveHeight shr 1), 0);
-
+    end;
+    ResetDepth(RM);
 
 {$WARNINGS OFF}
 // Target

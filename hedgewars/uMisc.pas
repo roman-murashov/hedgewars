@@ -35,7 +35,7 @@ var
     isSpeed         : boolean;
     isFirstFrame    : boolean;
 
-    isStereoEnabled : boolean = true;
+    isStereoEnabled : boolean;
 
     fastUntilLag    : boolean;
 
@@ -759,7 +759,7 @@ begin
     Rewrite(f);
 {$ELSE}
     if (ParamStr(1) <> '') and (ParamStr(2) <> '') then
-        if (ParamCount <> 3) and (ParamCount <> 18) then
+        if (ParamCount <> 3) and (ParamCount <> 19) then
         begin
             for i:= 0 to 7 do
             begin
@@ -784,7 +784,6 @@ begin
 {$ENDIF}
 {$I+}
 {$ENDIF}
-
 end;
 
 procedure freeModule;
