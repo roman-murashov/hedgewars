@@ -857,21 +857,6 @@ DrawChat;
 
 if fastUntilLag then DrawCentered(0, (cScreenHeight shr 1), SyncTexture);
 if isPaused then DrawCentered(0, (cScreenHeight shr 1), PauseTexture);
-if ReadyTimeLeft > 0 then
-    begin
-    // TODO: move outside drawing code or do a spearate step in ugears?
-    if (ReadyTimeLeft = 1) or (ReadyTimeLeft < Lag) then
-        if (CurrentTeam^.ExtDriven or (CurrentHedgehog^.BotLevel > 0)) then
-            PlaySound(sndIllGetYou, CurrentTeam^.voicepack)
-        else
-            PlaySound(sndYesSir, CurrentTeam^.voicepack);
-
-    if ReadyTimeLeft > Lag then
-        dec(ReadyTimeLeft, Lag)
-    else
-        ReadyTimeLeft:= 0;
-    DrawCentered(0, (cScreenHeight shr 1), ReadyTexture);
-    end;
 if not isFirstFrame and (missionTimer <> 0) or isPaused or fastUntilLag or (GameState = gsConfirm) then
     begin
     if (ReadyTimeLeft = 0) and (missionTimer > 0) then dec(missionTimer, Lag);
