@@ -28,19 +28,24 @@
 
     NSInteger ipcPort;  // Port on which engine will listen
     TCPsocket csd;      // Client socket descriptor
+    
+    NSString *savePath;
+    BOOL isNetGame;
 }
 
 @property (nonatomic, retain) NSDictionary *systemSettings;
 @property (nonatomic, retain) NSDictionary *gameConfig;
+@property (nonatomic, retain) NSString *savePath;
 
 -(id) initWithDictionary:(NSDictionary *)gameDictionary;
 -(void) engineProtocol;
 -(void) startThread:(NSString *)selector;
 -(int)  sendToEngine:(NSString *)string;
+-(int)  sendToEngineNoSave:(NSString *)string;
 -(void) provideTeamData:(NSString *)teamName forHogs:(NSInteger) numberOfPlayingHogs withHealth:(NSInteger) initialHealth ofColor:(NSNumber *)teamColor;
 -(void) provideAmmoData:(NSString *)ammostoreName forPlayingTeams:(NSInteger) numberOfTeams;
 -(NSInteger) provideScheme:(NSString *)schemeName;
 
--(const char **)getSettings;
+-(const char **)getSettings:(NSString *)recordFile;
 
 @end

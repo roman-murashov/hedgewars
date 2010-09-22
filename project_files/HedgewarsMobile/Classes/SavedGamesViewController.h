@@ -15,15 +15,21 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * File created on 19/09/2010.
+ * File created on 22/09/2010.
  */
 
 
 #import <UIKit/UIKit.h>
 
-@interface SupportViewController : UIViewController {
 
+@interface SavedGamesViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>  {
+    UITableView *tableView;
+    NSMutableArray *listOfSavegames;
 }
+
+@property (nonatomic,retain) IBOutlet UITableView *tableView;
+@property (nonatomic,retain) NSMutableArray *listOfSavegames;
+
 
 -(IBAction) buttonPressed:(id) sender;
 
