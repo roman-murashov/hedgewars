@@ -24,12 +24,12 @@
 #import "SDL_net.h"
 #import "PascalImports.h"
 #import "CommodityFunctions.h"
+#import "NSStringExtra.h"
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 64
 
 @implementation GameSetup
-
-@synthesize systemSettings, gameConfig;
+@synthesize systemSettings, gameConfig, savePath;
 
 -(id) initWithDictionary:(NSDictionary *)gameDictionary {
     if (self = [super init]) {
@@ -40,7 +40,18 @@
         self.systemSettings = dictSett;
         [dictSett release];
 
-        self.gameConfig = gameDictionary;
+        self.gameConfig = [gameDictionary objectForKey:@"game_dictionary"];
+        isNetGame = [[gameDictionary objectForKey:@"netgame"] boolValue];
+        NSString *path = [gameDictionary objectForKey:@"savefile"];
+        // if path is empty it means i have to create a new file, otherwise i read from that file
+        if ([path isEqualToString:@""] == YES) {
+            NSDateFormatter *outputFormatter = [[NSDateFormatter alloc] init];
+            [outputFormatter setDateFormat:@"yyyy-MM-dd 'at' HH,mm"];
+            NSString *newDateString = [outputFormatter stringFromDate:[NSDate date]];
+            self.savePath = [SAVES_DIRECTORY() stringByAppendingFormat:@"%@.hws", newDateString];
+            [outputFormatter release];
+        } else
+            self.savePath = path;
     }
     return self;
 }
@@ -48,6 +59,7 @@
 -(void) dealloc {
     [gameConfig release];
     [systemSettings release];
+    [savePath release];
     [super dealloc];
 }
 
@@ -238,8 +250,17 @@
     [NSThread detachNewThreadSelector:usage toTarget:self withObject:nil];
 }
 
-// wrapper that computes the length of the message and then sends the command string
+// wrapper that computes the length of the message and then sends the command string, saving the command on a file
 -(int) sendToEngine: (NSString *)string {
+    uint8_t length = [string length];
+
+    [[NSString stringWithFormat:@"%c%@",length,string] appendToFile:savePath];
+    SDLNet_TCP_Send(csd, &length , 1);
+    return SDLNet_TCP_Send(csd, [string UTF8String], length);
+}
+
+// wrapper that computes the length of the message and then sends the command string, skipping file writing
+-(int) sendToEngineNoSave: (NSString *)string {
     uint8_t length = [string length];
 
     SDLNet_TCP_Send(csd, &length , 1);
@@ -294,8 +315,12 @@
             case 'C':
                 DLog(@"sending game config...\n%@",self.gameConfig);
 
-                // local game
-                [self sendToEngine:@"TL"];
+                if (isNetGame == YES)
+                    [self sendToEngineNoSave:@"TN"];
+                else
+                    [self sendToEngineNoSave:@"TL"];
+                NSString *saveHeader = @"TS";
+                [[NSString stringWithFormat:@"%c%@",[saveHeader length], saveHeader] appendToFile:savePath];
 
                 // seed info
                 [self sendToEngine:[self.gameConfig objectForKey:@"seed_command"]];
@@ -335,6 +360,8 @@
                 clientQuit = YES;
                 break;
             case 'e':
+                buffer[msgSize] = '\0';
+                [[NSString stringWithUTF8String:buffer] appendToFile:savePath];
                 sscanf(buffer, "%*s %d", &eProto);
                 short int netProto = 0;
                 char *versionStr;
@@ -361,7 +388,9 @@
             default:
                 // empty packet or just statistics -- in either cases gameTicks is sent
                 gameTicks = SDLNet_Read16 (&buffer[msgSize - 2]);
-                //DLog(@"engineProtocol - %d: received [%s]", gameTicks, buffer);
+                DLog(@"engineProtocol - %d: received [%s]", gameTicks, buffer);
+                buffer[msgSize] = '\0';
+                [[NSString stringWithUTF8String:buffer] appendToFile:savePath];
                 break;
         }
     }
@@ -380,7 +409,7 @@
 #pragma mark -
 #pragma mark Setting methods
 // returns an array of c-strings that are read by engine at startup
--(const char **)getSettings {
+-(const char **)getSettings: (NSString *)recordFile {
     NSString *ipcString = [[NSString alloc] initWithFormat:@"%d", ipcPort];
     NSString *localeString = [[NSString alloc] initWithFormat:@"%@.txt", [[NSLocale currentLocale] objectForKey:NSLocaleLanguageCode]];
     CGRect screenBounds = [[UIScreen mainScreen] bounds];
@@ -421,7 +450,7 @@
     gameArgs[ 7] = [[[self.systemSettings objectForKey:@"music"] stringValue] UTF8String];       //isMusicEnabled
     gameArgs[ 8] = [[[self.systemSettings objectForKey:@"alternate"] stringValue] UTF8String];   //cAltDamage
     gameArgs[ 9] = NULL;                                                                         //unused
-    gameArgs[10] = NULL;                                                                         //recordFileName
+    gameArgs[10] = [recordFile UTF8String];                                                      //recordFileName
 
     [wSize release];
     [hSize release];
