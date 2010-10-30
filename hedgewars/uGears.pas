@@ -1201,19 +1201,17 @@ if (TrainingFlags and tfSpawnTargets) <> 0 then
 if ((GameFlags and gfForts) = 0) then
     begin
     // TODO: exclude each other or allow both, mines and explosives, on same map?
-    if ((GameFlags and gfMines) <> 0) then
-        for i:= 0 to Pred(cLandAdditions) do
-            begin
-            Gear:= AddGear(0, 0, gtMine, 0, _0, _0, 0);
-            FindPlace(Gear, false, 0, LAND_WIDTH);
-            end;
-//  No game flag for this for now
-//  if ((GameFlags and gfExplosives) <> 0) then
-        for i:= 0 to Pred(cExplosives) do
-            begin
-            Gear:= AddGear(0, 0, gtExplosives, 0, _0, _0, 0);
-            FindPlace(Gear, false, 0, LAND_WIDTH);
-            end;
+    for i:= 0 to Pred(cLandMines) do
+        begin
+        Gear:= AddGear(0, 0, gtMine, 0, _0, _0, 0);
+        FindPlace(Gear, false, 0, LAND_WIDTH);
+        end;
+    // No game flag for this for now
+    for i:= 0 to Pred(cExplosives) do
+        begin
+        Gear:= AddGear(0, 0, gtExplosives, 0, _0, _0, 0);
+        FindPlace(Gear, false, 0, LAND_WIDTH);
+        end;
     end;
 
 if (GameFlags and gfLowGravity) <> 0 then
@@ -1309,7 +1307,7 @@ while Gear <> nil do
                                 if not Gear^.Invulnerable then
                                     Gear^.State:= (Gear^.State or gstMoving) and (not gstWinner);
                                 Gear^.Active:= true;
-                                FollowGear:= Gear
+                                if Gear^.Kind <> gtFlame then FollowGear:= Gear
                                 end;
                             if ((Mask and EXPLPoisoned) <> 0) and (Gear^.Kind = gtHedgehog) then
                                 PHedgehog(Gear^.Hedgehog)^.Effects[hePoisoned] := true;

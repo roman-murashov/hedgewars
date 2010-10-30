@@ -54,7 +54,7 @@ with PHedgehog(Gear^.Hedgehog)^ do
     while (ammoidx < cMaxSlotAmmoIndex) and (Ammo^[slot, ammoidx].AmmoType <> CurAmmoType) do inc(ammoidx);
 
     if ((Gear^.State and (gstAttacking or gstAttacked)) <> 0) or
-       ((MultiShootAttacks > 0) and (CurAmmoGear <> nil) and ((Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_NoRoundEndHint) = 0)) or
+       ((MultiShootAttacks > 0) and ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_NoRoundEndHint) = 0)) or
        ((Gear^.State and gstHHDriven) = 0) then exit;
 
     if ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_NoRoundEndHint) <> 0) and (MultiShootAttacks > 0) then OnUsedAmmo(PHedgehog(Gear^.Hedgehog)^);
@@ -879,6 +879,7 @@ if (Gear^.Health = 0) then
 
         if not PHedgehog(Gear^.Hedgehog)^.Team^.hasGone then
             begin
+            PHedgehog(Gear^.Hedgehog)^.Effects[hePoisoned] := false;
             if PHedgehog(Gear^.Hedgehog)^.Effects[heResurrectable] then begin
                 ResurrectHedgehog(Gear);
             end else begin

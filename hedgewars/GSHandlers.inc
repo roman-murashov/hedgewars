@@ -3051,7 +3051,7 @@ begin
     Gear^.X := HHGear^.X;
     Gear^.Y := HHGear^.Y;
     // For some reason I need to reapply followgear here, something else grabs it otherwise.
-    if not bShowAmmoMenu then FollowGear := HHGear;
+    if not bShowAmmoMenu and not CurrentTeam^.ExtDriven then FollowGear := HHGear;
 
     if ((Gear^.State and gsttmpFlag) = 0) or (HHGear^.dY < _0) then doStepHedgehogMoving(HHGear);
 
@@ -4094,32 +4094,36 @@ var
 begin
     AllInactive := false;
     hh := PHedgehog(Gear^.Hedgehog);
-    RenderHealth(hh^);
     DrawCentered(hwRound(Gear^.X) + WorldDx, hwRound(Gear^.Y) + WorldDy -
             cHHRadius - 14 - hh^.HealthTagTex^.h, hh^.HealthTagTex);
-    DrawCircle(hwRound(Gear^.X), hwRound(Gear^.Y), Gear^.Radius, 1.5, 0, 0, $FF,
-            $FF);
+    (*DrawCircle(hwRound(Gear^.X), hwRound(Gear^.Y), Gear^.Radius, 1.5, 0, 0, $FF,
+            $FF);*)
 
     doStepHedgehogMoving(hh^.Gear);
 
-    if ((Gear^.Message and gmUp) <> 0) then begin
+    if ((Gear^.Message and gmUp) <> 0) then 
+        begin
         if (GameTicks and $F) <> 0 then exit;
-    end else begin
-        if (GameTicks and $1FF) <> 0 then exit;
-    end;
+        end 
+    else if (GameTicks and $1FF) <> 0 then exit;
+
 
     graves := GearsNear(hh^.Gear, gtGrave, Gear^.Radius);
 
-    if Length(graves) = 0 then begin
+    if Length(graves) = 0 then 
+        begin
         StopSound(Gear^.SoundChannel);
         Gear^.Timer := 250;
         Gear^.doStep := @doStepIdle;
         exit;
-    end;
+        end;
 
     if ((Gear^.Message and gmAttack) <> 0) and (hh^.Gear^.Health > 0) then begin
         i := getRandom(Length(graves));
         dec(hh^.Gear^.Health);
+        if (hh^.Gear^.Health = 0) and (hh^.Gear^.Damage = 0) then
+            hh^.Gear^.Damage:= 1;
+        RenderHealth(hh^);
         inc(graves[i]^.Health);
 {-for i:= 0 to High(graves) do begin
             if hh^.Gear^.Health > 0 then begin
@@ -4129,7 +4133,7 @@ begin
         end; -}
     end else begin
         // now really resurrect the hogs with the hp saved in the graves
-        for i:= 0 to High(graves) do begin
+        for i:= 0 to High(graves) do
             if graves[i]^.Health > 0 then begin
                 resgear := AddGear(hwRound(graves[i]^.X), hwRound(graves[i]^.Y),
                         gtHedgehog, gstWait, _0, _0, 0);
@@ -4139,12 +4143,16 @@ begin
                 DeleteGear(graves[i]);
                 RenderHealth(PHedgehog(resgear^.Hedgehog)^);
                 RecountTeamHealth(Phedgehog(resgear^.Hedgehog)^.Team);
+                FreeTexture(PHedgehog(resgear^.Hedgehog)^.HatTex);
+                PHedgehog(resgear^.Hedgehog)^.HatTex := Surface2Tex(
+                    LoadImage(Pathz[ptHats] + '/Reserved/Zombie', ifNone),
+                    True);
             end;
-        end;
         StopSound(Gear^.SoundChannel);
         Gear^.Timer := 250;
         Gear^.doStep := @doStepIdle;
     end;
+    //if hh^.Gear^.Health = 0 then doStepHedgehogFree(hh^.Gear);
 end;
 
 procedure doStepResurrector(Gear: PGear);
