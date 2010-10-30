@@ -77,7 +77,7 @@ procedure doStepCloud(Gear: PVisualGear; Steps: Longword);
 var s: Longword;
     t: float;
 begin
-Gear^.X:= Gear^.X + (cWindSpeedf * 200 + Gear^.dX) * Steps;
+Gear^.X:= Gear^.X + (cWindSpeedf * 750 * Gear^.dX) * Steps;
 
 // up-and-down-bounce magic
 s := (GameTicks + Gear^.Timer) mod 4096;
@@ -516,12 +516,16 @@ begin
 inc(Gear^.Timer, Steps );
 if Gear^.Timer > 64 then
     begin
+    if Gear^.State = 0 then
+      begin
+      DeleteVisualGear(Gear);
+      exit;
+      end;
     dec(Gear^.State, Gear^.Timer div 65);
     Gear^.Timer:= Gear^.Timer mod 65;
     end;
 Gear^.dX:= Gear^.dX + cWindSpeedf * Steps;
 Gear^.X:= Gear^.X + Gear^.dX;
-if Gear^.State = 0 then DeleteVisualGear(Gear);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
