@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Encoding=UTF-8
+Name=Hedgewars
+GenericName=Fighting Hedgehogs
+GenericName[ru]=Битвы ежей
+GenericName[pl]=Walczące jeże
+GenericName[sk]=Bojujúci ježkovia
+GenericName[sv]=Stridande igelkottar
+Icon=hedgewars.png
+Exec=hedgewars
+Terminal=false
+StartupNotify=false
+Categories=Application;Game;StrategyGame;
