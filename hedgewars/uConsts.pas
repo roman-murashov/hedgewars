@@ -75,7 +75,7 @@ type
             sprFeather, sprPiano, sprHandSineGun, sprPortalGun, sprPortal,
             sprCheese, sprHandCheese, sprHandFlamethrower, sprChunk, sprNote,
             sprSMineOff, sprSMineOn, sprHandSMine, sprHammer,
-            sprHandResurrector, sprCross
+            sprHandResurrector, sprCross, sprAirDrill, sprNapalmBomb
             );
 
     // Gears that interact with other Gears and/or Land
@@ -89,7 +89,8 @@ type
             gtHellishBomb, gtWaterUp, gtDrill, gtBallGun, gtBall, gtRCPlane, // 40
             gtSniperRifleShot, gtJetpack, gtMolotov, gtExplosives, gtBirdy, // 45
             gtEgg, gtPortal, gtPiano, gtGasBomb, gtSineGunShot, gtFlamethrower, // 51
-            gtSMine, gtPoisonCloud, gtHammer, gtHammerHit, gtResurrector);
+            gtSMine, gtPoisonCloud, gtHammer, gtHammerHit, gtResurrector, // 56
+            gtNapalmBomb); // 57
 
     // Gears that are _only_ of visual nature (e.g. background stuff, visual effects, speechbubbles, etc.)
     TVisualGearType = (vgtFlake, vgtCloud, vgtExplPart, vgtExplPart2, vgtFire,
@@ -97,7 +98,7 @@ type
             vgtSteam, vgtAmmo, vgtSmoke, vgtSmokeWhite, vgtHealth, vgtShell,
             vgtDust, vgtSplash, vgtDroplet, vgtSmokeRing, vgtBeeTrace, vgtEgg,
             vgtFeather, vgtHealthTag, vgtSmokeTrace, vgtEvilTrace, vgtExplosion,
-            vgtBigExplosion, vgtChunk, vgtNote);
+            vgtBigExplosion, vgtChunk, vgtNote, vgtLineTrail);
 
     TGearsType = set of TGearType;
 
@@ -134,7 +135,7 @@ type
             amRCPlane, amLowGravity, amExtraDamage, amInvulnerable, amExtraTime, // 35
             amLaserSight, amVampiric, amSniperRifle, amJetpack, amMolotov, amBirdy, amPortalGun, // 42
             amPiano, amGasBomb, amSineGun, amFlamethrower, amSMine, amHammer, // 48
-            amResurrector);
+            amResurrector, amDrillStrike);
 
     TCrateType = (HealthCrate, AmmoCrate, UtilityCrate);
 
@@ -355,6 +356,7 @@ const
     gfResetWeps          = $00200000;
     gfPerHogAmmo         = $00400000;
     gfDisableWind        = $00800000;           // only lua for now
+    gfMoreWind           = $01000000;
     // NOTE: When adding new game flags, ask yourself
     // if a "game start notice" would be useful. If so,
     // add one in uWorld.pas - look for "AddGoal".
@@ -824,8 +826,18 @@ const
             (FileName: 'Cross'; Path: ptGraphics; altPath: ptNone;
                 Texture: nil; Surface: nil; Width: 108; Height: 138;
                 imageWidth: 0; imageHeight: 0; saveSurf: false; priority:
-                tpMedium; getDimensions: false; getImageDimensions: true)
+                tpMedium; getDimensions: false; getImageDimensions: true),
             //sprCross
+            (FileName:  'AirDrill'; Path: ptGraphics; AltPath: ptNone;
+                Texture: nil; Surface: nil; Width:  16; Height: 16;
+                imageWidth: 0; imageHeight: 0; saveSurf: false; priority:
+                tpMedium; getDimensions: false; getImageDimensions: true),
+            // sprAirDrill
+            (FileName:  'NapalmBomb'; Path: ptGraphics; AltPath: ptNone;
+                Texture: nil; Surface: nil; Width:  16; Height: 16;
+                imageWidth: 0; imageHeight: 0; saveSurf: false; priority:
+                tpMedium; getDimensions: false; getImageDimensions: true)
+            // sprNapalmBomb
             );
 
 
@@ -2183,6 +2195,7 @@ const
             ejectX: 0;
             ejectY: 0),
 
+// Ressurrector
         (NameId: sidResurrector;
             NameTex: nil;
             Probability: 0;
@@ -2204,6 +2217,33 @@ const
             SkipTurns: 0;
             PosCount: 1;
             PosSprite: sprWater;
+            ejectX: 0;
+            ejectY: 0),
+
+// DrillStrike
+            (NameId: sidDrillStrike;
+            NameTex: nil;
+            Probability: 200;
+            NumberInCase: 1;
+            Ammo: (Propz: ammoprop_NoCrosshair or
+                            ammoprop_NeedTarget or
+                            ammoprop_AttackingPut or
+                            ammoprop_DontHold or
+                            ammoprop_NotBorder;
+                Count: 1;
+                NumPerTurn: 0;
+                Timer: 0;
+                Pos: 0;
+                AmmoType: amDrillStrike;
+                AttackVoice: sndIncoming);
+            Slot: 5;
+            TimeAfterTurn: 0;
+            minAngle: 0;
+            maxAngle: 0;
+            isDamaging: true;
+            SkipTurns: 6;
+            PosCount: 2;
+            PosSprite: sprAmAirplane;
             ejectX: 0;
             ejectY: 0)
         );

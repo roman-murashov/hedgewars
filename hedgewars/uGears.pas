@@ -209,7 +209,8 @@ const doStepHandlers: array[TGearType] of TGearStepProcedure = (
             @doStepPoisonCloud,
             @doStepHammer,
             @doStepHammerHit,
-            @doStepResurrector
+            @doStepResurrector,
+            @doStepNapalmBomb
             );
 
 procedure InsertGearToList(Gear: PGear);
@@ -298,7 +299,7 @@ case Kind of
                 gear^.ImpactSound:= sndGrenadeImpact;
                 gear^.nImpactSounds:= 1;
                 gear^.AdvBounce:= 1;
-                gear^.Radius:= 6;
+                gear^.Radius:= 5;
                 gear^.Elasticity:= _0_8;
                 gear^.Friction:= _0_8;
                 gear^.RenderTimer:= true;
@@ -308,7 +309,7 @@ case Kind of
                 gear^.ImpactSound:= sndMelonImpact;
                 gear^.nImpactSounds:= 1;
                 gear^.AdvBounce:= 1;
-                gear^.Radius:= 4;
+                gear^.Radius:= 6;
                 gear^.Elasticity:= _0_8;
                 gear^.Friction:= _0_995;
                 gear^.RenderTimer:= true;
@@ -365,9 +366,9 @@ case Kind of
                 gear^.Elasticity:= _0_55;
                 gear^.Friction:= _0_995;
                 if cMinesTime < 0 then
-                    gear^.Timer:= getrandom(6)*1000
+                    gear^.Timer:= getrandom(51)*100
                 else
-                    gear^.Timer:= cMinesTime*1;
+                    gear^.Timer:= cMinesTime*1000;
                 end;
        gtSMine: begin
                 gear^.Health:= 10;
@@ -544,6 +545,10 @@ gtFlamethrower: begin
                 end;
      gtWaterUp: begin
                 gear^.Tag := 47;
+                end;
+  gtNapalmBomb: begin
+                gear^.Timer:= 1000;
+                gear^.Radius:= 5;
                 end;
     end;
 
