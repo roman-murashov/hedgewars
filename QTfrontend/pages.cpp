@@ -1562,6 +1562,14 @@ PageScheme::PageScheme(QWidget* parent) :
     TBW_perhogammo->setToolTip("<b>" + ToggleButtonWidget::tr("Per Hedgehog Ammo") + "</b>:<br />" + tr("Each hedgehog has its own ammo. It does not share with the team."));
     glGMLayout->addWidget(TBW_perhogammo,4,0,1,1);
 
+    TBW_nowind = new ToggleButtonWidget(gbGameModes, ":/res/btnNoWind.png");
+    TBW_nowind->setToolTip("<b>" + ToggleButtonWidget::tr("Disable Wind") + "</b>:<br />" + tr("You will not have to worry about wind anymore."));
+    glGMLayout->addWidget(TBW_nowind,4,1,1,1);
+
+    TBW_morewind = new ToggleButtonWidget(gbGameModes, ":/res/btnMoreWind.png");
+    TBW_morewind->setToolTip("<b>" + ToggleButtonWidget::tr("More Wind") + "</b>:<br />" + tr("Wind will affect almost everything."));
+    glGMLayout->addWidget(TBW_morewind,4,2,1,1);
+
     // Right
     QLabel * l;
 
@@ -1800,19 +1808,21 @@ void PageScheme::setModel(QAbstractItemModel * model)
     mapper->addMapping(TBW_infattack, 19);
     mapper->addMapping(TBW_resetweps, 20);
     mapper->addMapping(TBW_perhogammo, 21);
-    mapper->addMapping(SB_DamageModifier, 22);
-    mapper->addMapping(SB_TurnTime, 23);
-    mapper->addMapping(SB_InitHealth, 24);
-    mapper->addMapping(SB_SuddenDeath, 25);
-    mapper->addMapping(SB_CaseProb, 26);
-    mapper->addMapping(SB_MinesTime, 27);
-    mapper->addMapping(SB_Mines, 28);
-    mapper->addMapping(SB_MineDuds, 29);
-    mapper->addMapping(SB_Explosives, 30);
-    mapper->addMapping(SB_HealthCrates, 31);
-    mapper->addMapping(SB_CrateHealth, 32);
-    mapper->addMapping(SB_WaterRise, 33);
-    mapper->addMapping(SB_HealthDecrease, 34);
+    mapper->addMapping(TBW_nowind, 22);
+    mapper->addMapping(TBW_morewind, 23);
+    mapper->addMapping(SB_DamageModifier, 24);
+    mapper->addMapping(SB_TurnTime, 25);
+    mapper->addMapping(SB_InitHealth, 26);
+    mapper->addMapping(SB_SuddenDeath, 27);
+    mapper->addMapping(SB_CaseProb, 28);
+    mapper->addMapping(SB_MinesTime, 29);
+    mapper->addMapping(SB_Mines, 30);
+    mapper->addMapping(SB_MineDuds, 31);
+    mapper->addMapping(SB_Explosives, 32);
+    mapper->addMapping(SB_HealthCrates, 33);
+    mapper->addMapping(SB_CrateHealth, 34);
+    mapper->addMapping(SB_WaterRise, 35);
+    mapper->addMapping(SB_HealthDecrease, 36);
 
     mapper->toFirst();
 }

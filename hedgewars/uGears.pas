@@ -135,24 +135,18 @@ procedure doStepCase(Gear: PGear); forward;
 
 function GetLaunchX(at: TAmmoType; dir: LongInt; angle: LongInt): LongInt;
 begin
-    GetLaunchX:= 0
-(*
     if (Ammoz[at].ejectX <> 0) or (Ammoz[at].ejectY <> 0) then
         GetLaunchX:= sign(dir) * (8 + hwRound(AngleSin(angle) * Ammoz[at].ejectX) + hwRound(AngleCos(angle) * Ammoz[at].ejectY))
     else
         GetLaunchX:= 0
-*)
 end;
 
 function GetLaunchY(at: TAmmoType; angle: LongInt): LongInt;
 begin
-    GetLaunchY:= 0
-(*
     if (Ammoz[at].ejectX <> 0) or (Ammoz[at].ejectY <> 0) then
         GetLaunchY:= hwRound(AngleSin(angle) * Ammoz[at].ejectY) - hwRound(AngleCos(angle) * Ammoz[at].ejectX) - 2
     else
         GetLaunchY:= 0
-*)
 end;
 
 {$INCLUDE "GSHandlers.inc"}
@@ -215,7 +209,8 @@ const doStepHandlers: array[TGearType] of TGearStepProcedure = (
             @doStepPoisonCloud,
             @doStepHammer,
             @doStepHammerHit,
-            @doStepResurrector
+            @doStepResurrector,
+            @doStepNapalmBomb
             );
 
 procedure InsertGearToList(Gear: PGear);
@@ -304,7 +299,7 @@ case Kind of
                 gear^.ImpactSound:= sndGrenadeImpact;
                 gear^.nImpactSounds:= 1;
                 gear^.AdvBounce:= 1;
-                gear^.Radius:= 6;
+                gear^.Radius:= 5;
                 gear^.Elasticity:= _0_8;
                 gear^.Friction:= _0_8;
                 gear^.RenderTimer:= true;
@@ -314,7 +309,7 @@ case Kind of
                 gear^.ImpactSound:= sndMelonImpact;
                 gear^.nImpactSounds:= 1;
                 gear^.AdvBounce:= 1;
-                gear^.Radius:= 4;
+                gear^.Radius:= 6;
                 gear^.Elasticity:= _0_8;
                 gear^.Friction:= _0_995;
                 gear^.RenderTimer:= true;
@@ -371,9 +366,9 @@ case Kind of
                 gear^.Elasticity:= _0_55;
                 gear^.Friction:= _0_995;
                 if cMinesTime < 0 then
-                    gear^.Timer:= getrandom(4)*1000
+                    gear^.Timer:= getrandom(51)*100
                 else
-                    gear^.Timer:= cMinesTime*1;
+                    gear^.Timer:= cMinesTime*1000;
                 end;
        gtSMine: begin
                 gear^.Health:= 10;
@@ -550,6 +545,10 @@ gtFlamethrower: begin
                 end;
      gtWaterUp: begin
                 gear^.Tag := 47;
+                end;
+  gtNapalmBomb: begin
+                gear^.Timer:= 1000;
+                gear^.Radius:= 5;
                 end;
     end;
 
@@ -1425,6 +1424,7 @@ procedure AmmoShove(Ammo: PGear; Damage, Power: LongInt);
 var t: PGearArray;
     Gear: PGear;
     i, tmpDmg: LongInt;
+    VGear: PVisualGear;
 begin
 t:= CheckGearsCollision(Ammo);
 // Just to avoid hogs on rope dodging fire.
@@ -1446,6 +1446,16 @@ while i > 0 do
     tmpDmg:= ModifyDamage(Damage, Gear);
     if (Gear^.State and gstNoDamage) = 0 then
         begin
+        
+        if (Ammo^.Kind = gtDEagleShot) or (Ammo^.Kind = gtSniperRifleShot) then 
+        begin
+            VGear := AddVisualGear(hwround(Ammo^.X), hwround(Ammo^.Y), vgtBulletHit);
+            if VGear <> nil then
+            begin
+                VGear^.Angle := DxDy2Angle(-Ammo^.dX, Ammo^.dY);
+            end;
+        end;
+        
         if (Gear^.Kind = gtHedgehog) and (Ammo^.State and gsttmpFlag <> 0) and (Ammo^.Kind = gtShover) then Gear^.FlightTime:= 1;
 
         case Gear^.Kind of
