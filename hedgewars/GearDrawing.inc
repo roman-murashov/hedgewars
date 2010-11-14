@@ -4,7 +4,6 @@ var i, t: LongInt;
     sign, hx, hy, cx, cy, tx, ty, sx, sy, m: LongInt;  // hedgehog, crosshair, temp, sprite, direction
     dx, dy, ax, ay, aAngle, dAngle, hAngle, lx, ly: real;  // laser, change
     defaultPos, HatVisible: boolean;
-    VertexBuffer: array [0..1] of TVertex2f;
     HH: PHedgehog;
     CurWeapon: PAmmo;
 begin
@@ -126,22 +125,7 @@ if (Gear^.State and gstHHDriven) <> 0 then
 
             //if (abs(lx-tx)>8) or (abs(ly-ty)>8) then
                 begin
-                glDisable(GL_TEXTURE_2D);
-                glEnable(GL_LINE_SMOOTH);
-
-                glLineWidth(1.0);
-
-                Tint($FF, $00, $00, $C0);
-                VertexBuffer[0].X:= hx + WorldDx;
-                VertexBuffer[0].Y:= hy + WorldDy;
-                VertexBuffer[1].X:= tx + WorldDx;
-                VertexBuffer[1].Y:= ty + WorldDy;
-
-                glVertexPointer(2, GL_FLOAT, 0, @VertexBuffer[0]);
-                glDrawArrays(GL_LINES, 0, Length(VertexBuffer));
-                Tint($FF, $FF, $FF, $FF);
-                glEnable(GL_TEXTURE_2D);
-                glDisable(GL_LINE_SMOOTH);
+                DrawLine(hx, hy, tx, ty, 1.0, $FF, $00, $00, $C0);
                 end;
             end;
         // draw crosshair
@@ -438,7 +422,8 @@ if (Gear^.State and gstHHDriven) <> 0 then
 
         case amt of
             amAirAttack,
-            amMineStrike: DrawRotated(sprHandAirAttack, sx, oy, sign, 0);
+            amMineStrike,
+            amDrillStrike: DrawRotated(sprHandAirAttack, sx, oy, sign, 0);
             amPickHammer: DrawHedgehog(sx, sy,
                         sign,
                         1,
@@ -711,7 +696,10 @@ while Gear<>nil do
                       DrawRotatedf(sprPortal, x, y, Gear^.Tag, hwSign(Gear^.dX), Gear^.DirAngle)
                  else DrawRotatedf(sprPortal, x, y, 4 + Gear^.Tag div 2, hwSign(Gear^.dX), Gear^.DirAngle);
 
-       gtDrill: DrawRotated(sprDrill, x, y, 0, DxDy2Angle(Gear^.dY, Gear^.dX));
+           gtDrill: if (Gear^.State and gsttmpFlag) <> 0 then
+                        DrawRotated(sprAirDrill, x, y, 0, DxDy2Angle(Gear^.dY, Gear^.dX))
+                    else
+                        DrawRotated(sprDrill, x, y, 0, DxDy2Angle(Gear^.dY, Gear^.dX));
 
         gtHedgehog: DrawHH(Gear, x, y);
 
@@ -728,9 +716,7 @@ while Gear<>nil do
                         Tint($FF, $FF, $FF, $FF)
                         end
                     end;
-
              gtBee: DrawRotatedF(sprBee, x, y, (GameTicks shr 5) mod 2, 0, DxDy2Angle(Gear^.dY, Gear^.dX));
-
       gtPickHammer: DrawSprite(sprPHammer, x - 16, y - 50 + LongInt(((GameTicks shr 5) and 1) * 2), 0);
             gtRope: DrawRope(Gear);
             gtMine: if (((Gear^.State and gstAttacking) = 0)or((Gear^.Timer and $3FF) < 420)) and (Gear^.Health <> 0) then
@@ -860,6 +846,7 @@ while Gear<>nil do
                     DrawTexture(x - 108, y - 108, SpritesData[sprVampiric].Texture, 4.5);
                     Tint($FF, $FF, $FF, $FF);
                     end;
+      gtNapalmBomb: DrawRotated(sprNapalmBomb, x, y, 0, DxDy2Angle(Gear^.dY, Gear^.dX));
          end;
       if Gear^.RenderTimer and (Gear^.Tex <> nil) then DrawCentered(x + 8, y + 8, Gear^.Tex);
       Gear:= Gear^.NextGear
