@@ -133,6 +133,16 @@ else
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
+procedure doStepLineTrail(Gear: PVisualGear; Steps: Longword);
+begin
+Steps := Steps;
+if Gear^.Timer <= Steps then
+    DeleteVisualGear(Gear)
+else
+    dec(Gear^.Timer, Steps)
+end;
+
+////////////////////////////////////////////////////////////////////////////////
 procedure doStepEgg(Gear: PVisualGear; Steps: Longword);
 begin
 Gear^.X:= Gear^.X + Gear^.dX * Steps;
@@ -607,4 +617,13 @@ if round(Gear^.Y) > cWaterLine then
     AddVisualGear(round(Gear^.X), round(Gear^.Y), vgtDroplet);
     DeleteVisualGear(Gear);
     end
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+procedure doStepBulletHit(Gear: PVisualGear; Steps: Longword);
+begin
+  if Gear^.FrameTicks <= Steps then
+      DeleteVisualGear(Gear)
+  else
+      dec(Gear^.FrameTicks, Steps);
 end;
