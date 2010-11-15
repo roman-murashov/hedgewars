@@ -55,6 +55,7 @@ var
     isSpeed         : boolean;
     isFirstFrame    : boolean;
 
+    cStereoMode     : TStereoMode;
     fastUntilLag    : boolean;
 
     GameState       : TGameState;
@@ -849,7 +850,6 @@ begin
 {$ENDIF}
 {$I+}
 {$ENDIF}
-
 end;
 
 procedure freeModule;
