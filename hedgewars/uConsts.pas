@@ -152,6 +152,9 @@ type
 
     TWave = (waveRollup, waveSad, waveWave, waveHurrah, waveLemonade, waveShrug, waveJuggle);
 
+    TRenderMode = (rmDefault, rmLeftEye, rmRightEye);
+    TStereoMode = (smNone, smRedCyan, smCyanRed, smRedBlue, smBlueRed, smRedGreen, smGreenRed, smHorizontal, smVertical, smAFR);
+
     THHFont = record
             Handle: PTTF_Font;
             Height: LongInt;
@@ -195,7 +198,7 @@ For example, say, a mode where the weaponset is reset each turn, or on sudden de
     TScreenFade = (sfNone, sfInit, sfToBlack, sfFromBlack, sfToWhite, sfFromWhite);
 const
     sfMax = 1000;
-    cDefaultParamNum = 16;
+    cDefaultParamNum = 17;
 
     // message constants
     errmsgCreateSurface   = 'Error creating SDL surface';

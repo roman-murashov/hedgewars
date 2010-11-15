@@ -222,6 +222,7 @@ public:
     QComboBox *CBTeamName;
     IconedGroupBox *AGGroupBox;
     QComboBox *CBResolution;
+    QComboBox *CBStereoMode;
     QCheckBox *CBEnableSound;
     QCheckBox *CBEnableFrontendSound;
     QCheckBox *CBEnableMusic;
@@ -242,6 +243,14 @@ public:
     QLineEdit *editNetNick;
     QSlider *SLQuality;
     QCheckBox *CBFrontendEffects;
+
+private:
+    bool previousFullscreenValue;
+    int previousResolutionIndex;
+
+private slots:
+    void forceFullscreen(int index);
+    void setFullscreen(void);
 };
 
 class PageNet : public AbstractPage
