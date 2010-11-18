@@ -20,13 +20,17 @@
 
 unit uIO;
 interface
-uses SDLh;
+uses SDLh, uTypes;
 
 var ipcPort: Word = 0;
     hiTicks: Word;
 
 procedure initModule;
 procedure freeModule;
+
+procedure OutError(Msg: shortstring; isFatalError: boolean);
+procedure TryDo(Assert: boolean; Msg: shortstring; isFatal: boolean); inline;
+procedure SDLTry(Assert: boolean; isFatal: boolean);
 
 procedure SendIPC(s: shortstring);
 procedure SendIPCXY(cmd: char; X, Y: SmallInt);
@@ -35,6 +39,7 @@ procedure SendIPCAndWaitReply(s: shortstring);
 procedure SendIPCTimeInc;
 procedure SendKeepAliveMessage(Lag: Longword);
 procedure LoadRecordFromFile(fileName: shortstring);
+procedure SendStat(sit: TStatInfoType; s: shortstring);
 procedure IPCWaitPongEvent;
 procedure IPCCheckSock;
 procedure InitIPC;
@@ -42,7 +47,7 @@ procedure CloseIPC;
 procedure NetGetNextCmd;
 
 implementation
-uses uConsole, uConsts, uWorld, uMisc, uLand, uChat, uTeams;
+uses uConsole, uConsts, uLand, uChat, uTeams, uVariables, uCommands, uUtils;
 
 type PCmd = ^TCmd;
      TCmd = packed record
@@ -64,6 +69,27 @@ var IPCSock: PTCPSocket;
 
     SendEmptyPacketTicks: LongWord;
 
+
+procedure OutError(Msg: shortstring; isFatalError: boolean);
+begin
+WriteLnToConsole(Msg);
+if isFatalError then
+    begin
+    SendIPC('E' + GetLastConsoleLine);
+    SDL_Quit;
+    halt(1)
+    end
+end;
+
+procedure TryDo(Assert: boolean; Msg: shortstring; isFatal: boolean);
+begin
+if not Assert then OutError(Msg, isFatal)
+end;
+
+procedure SDLTry(Assert: boolean; isFatal: boolean);
+begin
+if not Assert then OutError(SDL_GetError, isFatal)
+end;
 
 function AddCmd(Time: Word; str: shortstring): PCmd;
 var command: PCmd;
@@ -138,7 +164,7 @@ case s[1] of
      else
      loTicks:= SDLNet_Read16(@s[byte(s[0]) - 1]);
      AddCmd(loTicks, s);
-     {$IFDEF DEBUGFILE}AddFileLog('IPC in: '+s[1]+' ticks '+inttostr(lastcmd^.loTime));{$ENDIF}
+     {$IFDEF DEBUGFILE}AddFileLog('IPC in: '+s[1]+' ticks '+IntToStr(lastcmd^.loTime));{$ENDIF}
      end
 end;
 
@@ -202,6 +228,15 @@ until i = 0;
 
 close(f)
 end;
+
+procedure SendStat(sit: TStatInfoType; s: shortstring);
+const stc: array [TStatInfoType] of char = 'rDkKHTPsSB';
+var buf: shortstring;
+begin
+buf:= 'i' + stc[sit] + s;
+SendIPCRaw(@buf[0], length(buf) + 1)
+end;
+
 
 procedure SendIPC(s: shortstring);
 begin
@@ -311,7 +346,7 @@ while (headcmd <> nil)
         'F': TeamGone(copy(headcmd^.str, 2, Pred(headcmd^.len)));
         'N': begin
             tmpflag:= false;
-            {$IFDEF DEBUGFILE}AddFileLog('got cmd "N": time '+inttostr(hiTicks shl 16 + headcmd^.loTime)){$ENDIF}
+            {$IFDEF DEBUGFILE}AddFileLog('got cmd "N": time '+IntToStr(hiTicks shl 16 + headcmd^.loTime)){$ENDIF}
             end;
         'p': begin
             x16:= SDLNet_Read16(@(headcmd^.X));
@@ -342,8 +377,8 @@ while (headcmd <> nil)
 if (headcmd <> nil) and tmpflag and (not CurrentTeam^.hasGone) then
     TryDo(GameTicks < hiTicks shl 16 + headcmd^.loTime,
             'oops, queue error. in buffer: ' + headcmd^.cmd +
-            ' (' + inttostr(GameTicks) + ' > ' +
-            inttostr(hiTicks shl 16 + headcmd^.loTime) + ')',
+            ' (' + IntToStr(GameTicks) + ' > ' +
+            IntToStr(hiTicks shl 16 + headcmd^.loTime) + ')',
             true);
 
 isInLag:= (headcmd = nil) and tmpflag and (not CurrentTeam^.hasGone);

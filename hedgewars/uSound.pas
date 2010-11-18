@@ -20,13 +20,7 @@
 
 unit uSound;
 interface
-uses SDLh, uConsts;
-
-type PVoicepack = ^TVoicepack;
-    TVoicepack = record
-        name: shortstring;
-        chunks: array [TSound] of PMixChunk;
-        end;
+uses SDLh, uConsts, uTypes;
 
 var MusicFN: shortstring;
 
@@ -52,7 +46,7 @@ function  AskForVoicepack(name: shortstring): Pointer;
 
 
 implementation
-uses uMisc, uConsole;
+uses uMisc, uVariables, uConsole, uUtils, uIO;
 
 const chanTPU = 32;
 var Volume: LongInt;

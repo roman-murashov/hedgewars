@@ -20,7 +20,7 @@
 
 unit uAmmos;
 interface
-uses uConsts, uTeams, uStats;
+uses uConsts, uTypes;
 
 procedure initModule;
 procedure freeModule;
@@ -47,7 +47,7 @@ function  GetAmmoEntry(var Hedgehog: THedgehog): PAmmo;
 var StoreCnt: Longword;
 
 implementation
-uses uMisc, uGears, uWorld, uLocale, uConsole, uMobile;
+uses uWorld, uLocale, uMobile, uVariables, uCommands, uUtils, uIO;
 
 type TAmmoCounts = array[TAmmoType] of Longword;
 var StoresList: array[0..Pred(cMaxHHs)] of PHHAmmo;
@@ -326,7 +326,7 @@ with Hedgehog do
             if (Count <> AMMO_INFINITE) and not (Hedgehog.Team^.ExtDriven or (Hedgehog.BotLevel > 0)) then
                 s:= s + ' (' + IntToStr(Count) + ')';
             if (Propz and ammoprop_Timerable) <> 0 then
-                s:= s + ', ' + inttostr(Timer div 1000) + ' ' + trammo[sidSeconds];
+                s:= s + ', ' + IntToStr(Timer div 1000) + ' ' + trammo[sidSeconds];
             AddCaption(s, Team^.Clan^.Color, capgrpAmmoinfo);
             end;
         if (Propz and ammoprop_NeedTarget) <> 0

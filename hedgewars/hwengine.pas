@@ -30,7 +30,8 @@ program hwengine;
 {$ENDIF}
 
 uses SDLh, uMisc, uConsole, uGame, uConsts, uLand, uAmmos, uVisualGears, uGears, uStore, uWorld, uKeys, uSound,
-     uScript, uTeams, uStats, uIO, uLocale, uChat, uAI, uAIMisc, uRandom, uLandTexture, uCollisions, uMobile, sysutils;
+     uScript, uTeams, uStats, uIO, uLocale, uChat, uAI, uAIMisc, uRandom, uLandTexture, uCollisions, uMobile,
+     sysutils, uTypes, uVariables, uCommands, uUtils;
 
 var isTerminated: boolean = false;
     alsoShutdownFrontend: boolean = false;
@@ -111,6 +112,7 @@ begin
         flagMakeCapture:= false;
         s:= 'hw_' + FormatDateTime('YYYY-MM-DD_HH-mm-ss', Now()) + inttostr(GameTicks);
         WriteLnToConsole('Saving ' + s + '...');
+        playSound(sndShutter);
         MakeScreenshot(s);
         //SDL_SaveBMP_RW(SDLPrimSurface, SDL_RWFromFile(Str2PChar(s), 'wb'), 1)
     end;
@@ -123,7 +125,6 @@ begin
     FreeActionsList();
     StoreRelease();
     ControllerClose();
-    SendKB();
     CloseIPC();
     TTF_Quit();
 {$IFDEF SDL13}
@@ -317,8 +318,11 @@ begin
     Randomize();
 
     // uConsts does not need initialization as they are all consts
+    uUtils.initModule;
     uMisc.initModule;
+    uVariables.initModule;
     uConsole.initModule;    // MUST happen after uMisc
+    uCommands.initModule;
 
     uLand.initModule;
     uIO.initModule;
@@ -385,7 +389,10 @@ begin
     uIO.freeModule;             //stub
     uLand.freeModule;
 
+    uCommands.freeModule;
     uConsole.freeModule;
+    uVariables.freeModule;
+    uUtils.freeModule;
     uMisc.freeModule;           // uMisc closes the debug log.
 end;
 
