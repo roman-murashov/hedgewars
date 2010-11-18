@@ -20,89 +20,7 @@
 
 unit uTeams;
 interface
-uses uConsts, uKeys, uGears, uRandom, uFloat, uStats, uVisualGears, uCollisions, GLunit, uSound;
-
-type 
-    PHHAmmo = ^THHAmmo;
-    THHAmmo = array[0..cMaxSlotIndex, 0..cMaxSlotAmmoIndex] of TAmmo;
-
-    PHedgehog = ^THedgehog;
-    PTeam     = ^TTeam;
-    PClan     = ^TClan;
-
-    THedgehog = record
-            Name: string[MAXNAMELEN];
-            Gear: PGear;
-            SpeechGear: PVisualGear;
-            NameTagTex,
-            HealthTagTex,
-            HatTex: PTexture;
-            Ammo: PHHAmmo;
-            CurAmmoType: TAmmoType;
-            AmmoStore: Longword;
-            Team: PTeam;
-            MultiShootAttacks: Longword;
-            visStepPos: LongWord;
-            BotLevel  : Byte; // 0 - Human player
-            HatVisibility: GLfloat;
-            stats: TStatistics;
-            Hat: shortstring;
-            InitialHealth: LongInt; // used for gfResetHealth
-            King: boolean;  // Flag for a bunch of hedgehog attributes
-            Unplaced: boolean;  // Flag for hog placing mode
-            Timer: Longword;
-            Effects: Array[THogEffect] of boolean;
-            end;
-
-    TTeam = record
-            Clan: PClan;
-            TeamName: string[MAXNAMELEN];
-            ExtDriven: boolean;
-            Binds: TBinds;
-            Hedgehogs: array[0..cMaxHHIndex] of THedgehog;
-            CurrHedgehog: LongWord;
-            NameTagTex: PTexture;
-            CrosshairTex,
-            GraveTex,
-            HealthTex,
-            AIKillsTex,
-            FlagTex: PTexture;
-            Flag: shortstring;
-            GraveName: shortstring;
-            FortName: shortstring;
-            TeamHealth: LongInt;
-            TeamHealthBarWidth,
-            NewTeamHealthBarWidth: LongInt;
-            DrawHealthY: LongInt;
-            AttackBar: LongWord;
-            HedgehogsNumber: Longword;
-            hasGone: boolean;
-            voicepack: PVoicepack;
-            PlayerHash: shortstring;   // md5 hash of player name. For temporary enabling of hats as thank you. Hashed for privacy of players
-            stats: TTeamStats;
-            end;
-
-    TClan = record
-            Color: Longword;
-            Teams: array[0..Pred(cMaxTeams)] of PTeam;
-            TeamsNumber: Longword;
-            CurrTeam: LongWord;
-            ClanHealth: LongInt;
-            ClanIndex: LongInt;
-            TurnNumber: LongWord;
-            end;
-
-var CurrentTeam: PTeam;
-    PreviousTeam: PTeam;
-    CurrentHedgehog: PHedgehog;
-    TeamsArray: array[0..Pred(cMaxTeams)] of PTeam;
-    TeamsCount: Longword;
-    ClansArray: array[0..Pred(cMaxTeams)] of PClan;
-    ClansCount: Longword;
-    LocalClan: LongInt;  // last non-bot, non-extdriven clan
-    LocalAmmo: LongInt;  // last non-bot, non-extdriven clan's first team's ammo index
-    CurMinAngle, CurMaxAngle: Longword;
-    GameOver: boolean;
+uses uConsts, uKeys, uGears, uRandom, uFloat, uStats, uVisualGears, uCollisions, GLunit, uSound, uTypes;
 
 procedure initModule;
 procedure freeModule;
@@ -119,7 +37,8 @@ procedure TeamGoneEffect(var Team: TTeam);
 function  GetTeamStatString(p: PTeam): shortstring;
 
 implementation
-uses uMisc, uWorld, uLocale, uAmmos, uChat, uMobile;
+uses uWorld, uLocale, uAmmos, uChat, uMobile, uVariables, uUtils, uIO;
+
 const MaxTeamHealth: LongInt = 0;
 
 function CheckForWin: boolean;
@@ -495,7 +414,7 @@ end;
 function GetTeamStatString(p: PTeam): shortstring;
 var s: ansistring;
 begin
-    s:= p^.TeamName + ':' + inttostr(p^.TeamHealth) + ':';
+    s:= p^.TeamName + ':' + IntToStr(p^.TeamHealth) + ':';
     GetTeamStatString:= s;
 end;
 

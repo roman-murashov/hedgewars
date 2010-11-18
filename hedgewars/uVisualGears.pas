@@ -20,31 +20,7 @@
 
 unit uVisualGears;
 interface
-uses uConsts, uFloat, Math, GLunit;
-
-type PVisualGear = ^TVisualGear;
-    TVGearStepProcedure = procedure (Gear: PVisualGear; Steps: Longword);
-    TVisualGear = record
-        NextGear, PrevGear: PVisualGear;
-        Frame,
-        FrameTicks: Longword;
-        X : float;
-        Y : float;
-        dX: float;
-        dY: float;
-        tdX: float;
-        tdY: float;
-        State : Longword;
-        Timer: Longword;
-        Angle, dAngle: real;
-        Kind: TVisualGearType;
-        doStep: TVGearStepProcedure;
-        Tex: PTexture;
-        alpha, scale: GLfloat;
-        Hedgehog: pointer;
-        Text: shortstring;
-        Tint: Longword;
-        end;
+uses uConsts, uFloat, GLunit, uTypes;
 
 procedure initModule;
 procedure freeModule;
@@ -57,12 +33,9 @@ procedure DeleteVisualGear(Gear: PVisualGear);
 procedure AddClouds;
 procedure AddDamageTag(X, Y, Damage, Color: LongWord);
 
-var VisualGearsList: PVisualGear;
-    vobFrameTicks, vobFramesCount, vobCount: Longword;
-    vobVelocity, vobFallSpeed: LongInt;
-
 implementation
-uses uWorld, uMisc, uStore, uTeams, uSound, uMobile;
+uses uMisc, uStore, uSound, uMobile, uVariables, uTextures, uRender, uUtils, Math, uRenderUtils;
+
 const cExplFrameTicks = 110;
 
 {$INCLUDE "VGSHandlers.inc"}
@@ -125,7 +98,7 @@ const doStepHandlers: array[TVisualGearType] of TVGearStepProcedure =
 function  AddVisualGear(X, Y: LongInt; Kind: TVisualGearType; State: LongWord = 0): PVisualGear;
 var gear: PVisualGear;
     t: Longword;
-    sp: float;
+    sp: real;
 begin
 if (GameType = gmtSave) or (fastUntilLag and (GameType = gmtNet)) then // we are scrolling now
     if Kind <> vgtCloud then
@@ -151,8 +124,8 @@ if ((cReducedQuality and rqFancyBoom) <> 0) and
 
 New(gear);
 FillChar(gear^, sizeof(TVisualGear), 0);
-gear^.X:= float(X);
-gear^.Y:= float(Y);
+gear^.X:= real(X);
+gear^.Y:= real(Y);
 gear^.Kind := Kind;
 gear^.doStep:= doStepHandlers[Kind];
 gear^.State:= 0;
@@ -378,7 +351,7 @@ while t <> nil do
       if Gear^.Kind = vgtFlake then
           begin
           // Damage calc from doMakeExplosion
-          dmg:= min(101, Radius + cHHRadius div 2 - LongInt(abs(round(Gear^.X) - X) + abs(round(Gear^.Y) - Y)) div 5);
+          dmg:= Min(101, Radius + cHHRadius div 2 - LongInt(abs(round(Gear^.X) - X) + abs(round(Gear^.Y) - Y)) div 5);
           if dmg > 1 then
               begin
               Gear^.tdX:= 0.02 * dmg + 0.01;
@@ -436,7 +409,7 @@ case Layer of
         case Gear^.Kind of
             vgtExplosion: DrawSprite(sprExplosion50, round(Gear^.X) - 32 + WorldDx, round(Gear^.Y) - 32 + WorldDy, Gear^.State);
             vgtBigExplosion: begin
-                             Tint($FF, $FF, $FF, floor($FF * (1 - power(Gear^.Timer / 250, 4))));
+                             Tint($FF, $FF, $FF, round($FF * (1 - power(Gear^.Timer / 250, 4))));
                              DrawRotatedTextureF(SpritesData[sprBigExplosion].Texture, 0.85 * (-power(2, -10 * Int(Gear^.Timer)/250) + 1) + 0.4, 0, 0, round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, 0, 1, 385, 385, Gear^.Angle);
                              end;
             end;
@@ -451,14 +424,14 @@ case Layer of
                 vgtBubble: DrawSprite(sprBubbles, round(Gear^.X) + WorldDx - 8, round(Gear^.Y) + WorldDy - 8, Gear^.Frame);//(RealTicks div 64 + Gear^.Frame) mod 8);
                 vgtSteam: DrawSprite(sprSmokeWhite, round(Gear^.X) + WorldDx - 11, round(Gear^.Y) + WorldDy - 11, 7 - Gear^.Frame);
                 vgtAmmo: begin
-                        Tint($FF, $FF, $FF, floor(Gear^.alpha * $FF));
+                        Tint($FF, $FF, $FF, round(Gear^.alpha * $FF));
                         DrawTextureF(ropeIconTex, Gear^.scale, round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, 0, 1, 32, 32);
                         DrawTextureF(SpritesData[sprAMAmmos].Texture, Gear^.scale * 0.90, round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, Gear^.Frame - 1, 1, 32, 32);
                         end;
                 vgtHealth:  begin
                             case Gear^.Frame div 10 of
-                                0:Tint(0, $FF, 0, floor(Gear^.FrameTicks * $FF / 1000));
-                                1:Tint($FF, 0, 0, floor(Gear^.FrameTicks * $FF / 1000));
+                                0:Tint(0, $FF, 0, round(Gear^.FrameTicks * $FF / 1000));
+                                1:Tint($FF, 0, 0, round(Gear^.FrameTicks * $FF / 1000));
                             end;
                             DrawSprite(sprHealth, round(Gear^.X) + WorldDx - 8, round(Gear^.Y) + WorldDy - 8, 0);
                             end;
@@ -482,7 +455,7 @@ case Layer of
                             DrawRotatedF(sprBeeTrace, round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, Gear^.Frame, 1, (RealTicks shr 4) mod cMaxAngle);
                             end;
                 vgtSmokeRing: begin
-                            Tint($FF, $FF, $FF, floor(Gear^.alpha * $FF));
+                            Tint($FF, $FF, $FF, round(Gear^.alpha * $FF));
                             DrawRotatedTextureF(SpritesData[sprSmokeRing].Texture, Gear^.scale, 0, 0, round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, 0, 1, 200, 200, Gear^.Angle);
                             end;
                 vgtChunk: DrawRotatedF(sprChunk, round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, Gear^.Frame, 1, Gear^.Angle);

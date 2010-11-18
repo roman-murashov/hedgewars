@@ -41,7 +41,6 @@ implementation
 {$IFNDEF LUA_DISABLED}
 uses LuaPas in 'LuaPas.pas',
     uConsole,
-    uMisc,
     uConsts,
     uVisualGears,
     uGears,
@@ -49,11 +48,14 @@ uses LuaPas in 'LuaPas.pas',
     uWorld,
     uAmmos,
     uSound,
-    uTeams,
-    uKeys,
     uChat,
     uStats,
-    uRandom;
+    uRandom,
+    uTypes,
+    uVariables,
+    uCommands,
+    uUtils,
+    uIO;
 
 var luaState : Plua_State;
     ScriptAmmoLoadout : shortstring;
@@ -299,7 +301,7 @@ begin
     else begin
         gear := GearByUID(lua_tointeger(L, 1));
         if (gear <> nil) and (gear^.Kind = gtHedgehog) and (gear^.Hedgehog <> nil) then
-            lua_pushinteger(L, PHedgehog(gear^.Hedgehog)^.BotLevel)
+            lua_pushinteger(L, gear^.Hedgehog^.BotLevel)
         else
             lua_pushnil(L);
     end;
@@ -319,7 +321,7 @@ begin
         gear:= GearByUID(lua_tointeger(L, 1));
         if (gear <> nil) and (gear^.Kind = gtHedgehog) and (gear^.Hedgehog <> nil) then
             begin
-            lua_pushinteger(L, PHedgehog(gear^.Hedgehog)^.Team^.Clan^.ClanIndex)
+            lua_pushinteger(L, gear^.Hedgehog^.Team^.Clan^.ClanIndex)
             end
         else
             lua_pushnil(L);
@@ -340,7 +342,7 @@ begin
         gear:= GearByUID(lua_tointeger(L, 1));
         if (gear <> nil) and (gear^.Kind = gtHedgehog) and (gear^.Hedgehog <> nil) then
             begin
-            lua_pushstring(L, str2pchar(PHedgehog(gear^.Hedgehog)^.Team^.TeamName))
+            lua_pushstring(L, str2pchar(gear^.Hedgehog^.Team^.TeamName))
             end
         else
             lua_pushnil(L);
@@ -361,7 +363,7 @@ begin
         gear:= GearByUID(lua_tointeger(L, 1));
         if (gear <> nil) and (gear^.Kind = gtHedgehog) and (gear^.Hedgehog <> nil) then
             begin
-            lua_pushstring(L, str2pchar(PHedgehog(gear^.Hedgehog)^.Name))
+            lua_pushstring(L, str2pchar(gear^.Hedgehog^.Name))
             end
         else
             lua_pushnil(L);
@@ -570,7 +572,7 @@ begin
     else begin
         gear := GearByUID(lua_tointeger(L, 1));
         if gear <> nil then
-            PHedgehog(gear^.Hedgehog)^.Effects[THogEffect(lua_tointeger(L, 2))]:= lua_tointeger(L, 3) <> 0;
+            gear^.Hedgehog^.Effects[THogEffect(lua_tointeger(L, 2))]:= lua_tointeger(L, 3) <> 0;
     end;
     lc_seteffect := 0;
 end;
