@@ -381,7 +381,7 @@ begin
             vg^.dY:= lua_tonumber(L, 5);
             vg^.Angle:= lua_tonumber(L, 6);
             vg^.Frame:= lua_tointeger(L, 7);
-            vg^.FrameTicks:= lua_tointeger(L, 8);
+            if lua_tointeger(L, 8) <> 0 then vg^.FrameTicks:= lua_tointeger(L, 8);  // find a better way to do this. maybe need to break all these up.
             vg^.State:= lua_tointeger(L, 9);
             vg^.Timer:= lua_tointeger(L, 10);
             vg^.Tint:= lua_tointeger(L, 11);
@@ -674,17 +674,17 @@ end;
 function lc_hogsay(L : Plua_State) : LongInt; Cdecl;
 var gear : PGear;
    vgear : PVisualGear;
+       s : LongWord;
 begin
-    if lua_gettop(L) <> 3 then
-        begin
-        LuaError('Lua: Wrong number of parameters passed to HogSay!');
-        end
-    else
+    if lua_gettop(L) = 4 then s:= lua_tointeger(L, 4)
+    else s:= 0;
+
+    if (lua_gettop(L) = 4) or (lua_gettop(L) = 3) then
         begin
         gear:= GearByUID(lua_tointeger(L, 1));
         if gear <> nil then
             begin
-            vgear:= AddVisualGear(0, 0, vgtSpeechBubble);
+            vgear:= AddVisualGear(0, 0, vgtSpeechBubble, s, true);
             if vgear <> nil then
                begin
                vgear^.Text:= lua_tostring(L, 2);
@@ -693,7 +693,8 @@ begin
                if (vgear^.FrameTicks < 1) or (vgear^.FrameTicks > 3) then vgear^.FrameTicks:= 1;
                end;
             end
-        end;
+        end
+    else LuaError('Lua: Wrong number of parameters passed to HogSay!');
     lc_hogsay:= 0
 end;
 
@@ -826,9 +827,11 @@ end;
 function lc_findplace(L : Plua_State) : LongInt; Cdecl;
 var gear: PGear;
     fall: boolean;
+    tryhard: boolean;
     left, right: LongInt;
 begin
-    if lua_gettop(L) <> 4 then
+    tryhard:= false;
+    if (lua_gettop(L) <> 4) and (lua_gettop(L) <> 5) then
         LuaError('Lua: Wrong number of parameters passed to FindPlace!')
     else
         begin
@@ -836,10 +839,13 @@ begin
         fall:= lua_toboolean(L, 2);
         left:= lua_tointeger(L, 3);
         right:= lua_tointeger(L, 4);
+        if lua_gettop(L) = 5 then tryhard:= lua_toboolean(L, 5);
         if gear <> nil then
-            FindPlace(gear, fall, left, right)
+            FindPlace(gear, fall, left, right, tryhard);
+        if gear <> nil then lua_pushinteger(L, gear^.uid)
+        else lua_pushnil(L);
         end;
-    lc_findplace:= 0
+    lc_findplace:= 1
 end;
 
 function lc_playsound(L : Plua_State) : LongInt; Cdecl;
@@ -1080,6 +1086,18 @@ begin
     else
         lua_pushstring(L, str2pchar(Pathz[ptData]));
     lc_getdatapath:= 1
+end;
+
+function lc_maphasborder(L : Plua_State) : LongInt; Cdecl;
+begin
+    if lua_gettop(L) <> 0 then
+        begin
+        LuaError('Lua: Wrong number of parameters passed to MapHasBorder!');
+        lua_pushnil(L);
+        end
+    else
+        lua_pushboolean(L, hasBorder);
+    lc_maphasborder:= 1
 end;
 ///////////////////
 
@@ -1491,6 +1509,7 @@ lua_register(luaState, 'SetGearMessage', @lc_setgearmessage);
 lua_register(luaState, 'GetRandom', @lc_getrandom);
 lua_register(luaState, 'SetWind', @lc_setwind);
 lua_register(luaState, 'GetDataPath', @lc_getdatapath);
+lua_register(luaState, 'MapHasBorder', @lc_maphasborder);
 
 
 ScriptClearStack; // just to be sure stack is empty

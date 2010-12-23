@@ -577,6 +577,10 @@ AmmoSchemeModel::AmmoSchemeModel(QObject* parent, const QString & fileName) :
 
 QVariant AmmoSchemeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    Q_UNUSED(section);
+    Q_UNUSED(orientation);
+    Q_UNUSED(role);
+
     return QVariant();
 }
 
@@ -598,6 +602,8 @@ int AmmoSchemeModel::columnCount(const QModelIndex & parent) const
 
 Qt::ItemFlags AmmoSchemeModel::flags(const QModelIndex & index) const
 {
+    Q_UNUSED(index);
+
     return
         Qt::ItemIsEnabled
         | Qt::ItemIsSelectable
@@ -620,12 +626,22 @@ bool AmmoSchemeModel::setData(const QModelIndex & index, const QVariant & value,
 
 bool AmmoSchemeModel::insertRows(int row, int count, const QModelIndex & parent)
 {
-    beginInsertRows(parent, row, row);
+    Q_UNUSED(count);
 
-    QList<QVariant> newScheme = defaultScheme;
-    newScheme[0] = QVariant(tr("new"));
+    beginInsertRows(parent, schemes.size(), schemes.size());
 
-    schemes.insert(row, newScheme);
+    if (row == -1)
+    {
+        QList<QVariant> newScheme = defaultScheme;
+        newScheme[0] = QVariant(tr("new"));
+        schemes.insert(schemes.size(), newScheme);
+    }
+    else
+    {
+        QList<QVariant> newScheme = schemes[row];
+        newScheme[0] = QVariant(tr("copy of") + " " + newScheme[0].toString());
+        schemes.insert(schemes.size(), newScheme);
+    }
 
     endInsertRows();
 
@@ -684,6 +700,10 @@ NetAmmoSchemeModel::NetAmmoSchemeModel(QObject * parent) :
 
 QVariant NetAmmoSchemeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    Q_UNUSED(section);
+    Q_UNUSED(orientation);
+    Q_UNUSED(role);
+
     return QVariant();
 }
 
