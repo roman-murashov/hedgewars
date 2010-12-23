@@ -23,7 +23,7 @@ var
     cReducedQuality : LongWord    = rqNone;
     //userNick is in uChat
     recordFileName  : shortstring = '';
-    cReadyDelay     : Longword    = 0;
+    cReadyDelay     : Longword    = 5000;
     cLogfileBase    : shortstring = 'debug';
 //////////////////////////
 
@@ -138,6 +138,8 @@ var
     ScreenFade      : TScreenFade;
     ScreenFadeValue : LongInt;
     ScreenFadeSpeed : LongInt;
+
+    Theme           : shortstring;
 
 {$IFDEF SDL13}
     SDLwindow       : PSDL_Window;
@@ -548,8 +550,14 @@ const
             (FileName:  'BulletHit'; Path: ptGraphics; AltPath: ptNone;
                 Texture: nil; Surface: nil; Width:  32; Height: 32;
                 imageWidth: 0; imageHeight: 0; saveSurf: false; priority:
-                tpMedium; getDimensions: false; getImageDimensions: true)
+                tpMedium; getDimensions: false; getImageDimensions: true),
             // sprNapalmBomb
+            (FileName:  'Snowball'; Path: ptCurrTheme; AltPath: ptGraphics; Texture: nil; Surface: nil;
+            Width:  16; Height: 16; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpMedium; getDimensions: false; getImageDimensions: true),// sprSnowball
+            (FileName:  'amSnowball'; Path: ptCurrTheme; AltPath: ptHedgehog; Texture: nil; Surface: nil;
+            Width:  64; Height: 64; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpMedium; getDimensions: false; getImageDimensions: true),// sprHandSnowball
+            (FileName:  'Snow'; Path: ptCurrTheme; AltPath: ptGraphics; Texture: nil; Surface: nil;
+            Width:  4; Height: 4; imageWidth: 0; imageHeight: 0; saveSurf: true; priority: tpMedium; getDimensions: false; getImageDimensions: true) // sprSnow
             );
 
 
@@ -1957,9 +1965,30 @@ const
             PosCount: 2;
             PosSprite: sprAmAirplane;
             ejectX: 0;
+            ejectY: 0),
+// Snowball
+            (NameId: sidSnowball;
+            NameTex: nil;
+            Probability: 0;
+            NumberInCase: 1;
+            Ammo: (Propz: ammoprop_Power or ammoprop_AltUse;
+                Count: 2;
+                NumPerTurn: 0;
+                Timer: 0;
+                Pos: 0;
+                AmmoType: amSnowball;
+                AttackVoice: sndNone);
+            Slot: 0;
+            TimeAfterTurn: 3000;
+            minAngle: 0;
+            maxAngle: 0;
+            isDamaging: true;
+            SkipTurns: 0;
+            PosCount: 1;
+            PosSprite: sprWater;
+            ejectX: 0; 
             ejectY: 0)
         );
-
 
 
     conversionFormat: TSDL_PixelFormat = (
@@ -2248,7 +2277,7 @@ begin
     cReducedQuality := rqNone;
     //userNick is in uChat
     recordFileName  := '';
-    cReadyDelay     := 0;
+    cReadyDelay     := 5000;
 end;
 
 end.

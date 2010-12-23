@@ -71,8 +71,10 @@ class AbstractPage : public QWidget
 
  protected:
   AbstractPage(QWidget* parent = 0) {
+    Q_UNUSED(parent);
+
     font14 = new QFont("MS Shell Dlg", 14);
-    setFocusPolicy(Qt::StrongFocus);
+    //setFocusPolicy(Qt::StrongFocus);
   }
   virtual ~AbstractPage() {};
 
@@ -393,6 +395,7 @@ public:
     QPushButton *BtnDefault;
     QPushButton *BtnDelete;
     QPushButton *BtnNew;
+    QPushButton *BtnCopy;
     QPushButton *BtnBack;
     SelWeaponWidget* pWeapons;
     QComboBox* selectWeaponSet;
@@ -467,6 +470,7 @@ public:
     PageScheme(QWidget* parent = 0);
 
     QPushButton * BtnBack;
+    QPushButton * BtnCopy;
     QPushButton * BtnNew;
     QPushButton * BtnDelete;
     QPushButton * BtnSave;
@@ -476,6 +480,7 @@ public:
 
 public slots:
     void newRow();
+    void copyRow();
     void deleteRow();
 
 private:
@@ -585,6 +590,10 @@ public:
     QPushButton * BtnBack;
 
     DrawMapWidget * drawMapWidget;
+
+private slots:
+    void load();
+    void save();
 };
 
 #endif // PAGES_H

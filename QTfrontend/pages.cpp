@@ -40,6 +40,7 @@
 #include <QDataWidgetMapper>
 #include <QTime>
 #include <QSlider>
+#include <QFileDialog>
 
 #include "ammoSchemeModel.h"
 #include "pages.h"
@@ -563,7 +564,6 @@ PageOptions::PageOptions(QWidget* parent) :
             SchemeDelete->setIconSize(pmDelete.size());
             SchemeDelete->setIcon(pmDelete);
             SchemeDelete->setMaximumWidth(pmDelete.width() + 6);
-            SchemeDelete->setEnabled(false);
             WeaponsLayout->addWidget(SchemeDelete, 1, 4);
 
             QLabel* WeaponLabel = new QLabel(groupWeapons);
@@ -1063,7 +1063,10 @@ PageTraining::PageTraining(QWidget* parent) : AbstractPage(parent)
     tmpdir.setFilter(QDir::Files);
     CBSelect->addItems(tmpdir.entryList(QStringList("*.lua")).replaceInStrings(QRegExp("^(.*)\\.lua"), "\\1"));
     for(int i = 0; i < CBSelect->count(); i++)
+    {
         CBSelect->setItemData(i, CBSelect->itemText(i));
+        CBSelect->setItemText(i, CBSelect->itemText(i).replace("_", " "));
+    }
 
     pageLayout->addWidget(CBSelect, 1, 1);
     
@@ -1104,23 +1107,25 @@ PageSelectWeapon::PageSelectWeapon(QWidget* parent) :
     QGridLayout * pageLayout = new QGridLayout(this);
 
     pWeapons = new SelWeaponWidget(cAmmoNumber, this);
-    pageLayout->addWidget(pWeapons, 0, 0, 1, 6);
+    pageLayout->addWidget(pWeapons, 0, 0, 1, 5);
 
-    BtnBack = addButton(":/res/Exit.png", pageLayout, 1, 0, true);
-    BtnDefault = addButton(tr("Default"), pageLayout, 1, 2);
-    BtnNew = addButton(tr("New"), pageLayout, 1, 3);
-    BtnDelete = addButton(tr("Delete"), pageLayout, 1, 4);
-    BtnSave = addButton(":/res/Save.png", pageLayout, 1, 5, true);
+    BtnBack = addButton(":/res/Exit.png", pageLayout, 1, 0, 2, 1, true);
+    BtnDefault = addButton(tr("Default"), pageLayout, 1, 3);
+    BtnNew = addButton(tr("New"), pageLayout, 1, 2);
+    BtnCopy = addButton(tr("Copy"), pageLayout, 2, 2);
+    BtnDelete = addButton(tr("Delete"), pageLayout, 2, 3);
+    BtnSave = addButton(":/res/Save.png", pageLayout, 1, 4, 2, 1, true);
     BtnSave->setStyleSheet("QPushButton{margin: 24px 0px 0px 0px;}");
     BtnBack->setFixedHeight(BtnSave->height());
     BtnBack->setStyleSheet("QPushButton{margin-top: 31px;}");
 
     selectWeaponSet = new QComboBox(this);
-    pageLayout->addWidget(selectWeaponSet, 1, 1);
+    pageLayout->addWidget(selectWeaponSet, 1, 1, 2, 1);
 
     connect(BtnDefault, SIGNAL(clicked()), pWeapons, SLOT(setDefault()));
     connect(BtnSave, SIGNAL(clicked()), pWeapons, SLOT(save()));
     connect(BtnNew, SIGNAL(clicked()), pWeapons, SLOT(newWeaponsName()));
+    connect(BtnCopy, SIGNAL(clicked()), pWeapons, SLOT(copy()));
     connect(selectWeaponSet, SIGNAL(currentIndexChanged(const QString&)), pWeapons, SLOT(setWeaponsName(const QString&)));
 }
 
@@ -1502,7 +1507,7 @@ PageScheme::PageScheme(QWidget* parent) :
     sp.setVerticalPolicy(QSizePolicy::MinimumExpanding);
     sp.setHorizontalPolicy(QSizePolicy::Expanding);
 
-    pageLayout->addWidget(gb, 1,0,13,4);
+    pageLayout->addWidget(gb, 1,0,13,5);
 
     gbGameModes = new QGroupBox(QGroupBox::tr("Game Modifiers"), gb);
     gbBasicSettings = new QGroupBox(QGroupBox::tr("Basic Settings"), gb);
@@ -1829,12 +1834,14 @@ PageScheme::PageScheme(QWidget* parent) :
     mapper = new QDataWidgetMapper(this);
 
     BtnBack = addButton(":/res/Exit.png", pageLayout, 15, 0, true);
-    BtnNew = addButton(tr("New"), pageLayout, 15, 2);
-    BtnDelete = addButton(tr("Delete"), pageLayout, 15, 3);
+    BtnCopy = addButton(tr("Copy"), pageLayout, 15, 2);
+    BtnNew = addButton(tr("New"), pageLayout, 15, 3);
+    BtnDelete = addButton(tr("Delete"), pageLayout, 15, 4);
 
     selectScheme = new QComboBox(this);
     pageLayout->addWidget(selectScheme, 15, 1);
 
+    connect(BtnCopy, SIGNAL(clicked()), this, SLOT(copyRow()));
     connect(BtnNew, SIGNAL(clicked()), this, SLOT(newRow()));
     connect(BtnDelete, SIGNAL(clicked()), this, SLOT(deleteRow()));
     connect(selectScheme, SIGNAL(currentIndexChanged(int)), mapper, SLOT(setCurrentIndex(int)));
@@ -1891,7 +1898,14 @@ void PageScheme::setModel(QAbstractItemModel * model)
 void PageScheme::newRow()
 {
     QAbstractItemModel * model = mapper->model();
-    model->insertRow(model->rowCount());
+    model->insertRow(-1);
+    selectScheme->setCurrentIndex(model->rowCount() - 1);
+}
+
+void PageScheme::copyRow()
+{
+    QAbstractItemModel * model = mapper->model();
+    model->insertRow(selectScheme->currentIndex());
     selectScheme->setCurrentIndex(model->rowCount() - 1);
 }
 
@@ -2018,8 +2032,34 @@ PageDrawMap::PageDrawMap(QWidget* parent) : AbstractPage(parent)
 {
     QGridLayout * pageLayout = new QGridLayout(this);
 
-    BtnBack = addButton(":/res/Exit.png", pageLayout, 1, 0, true);
+    QPushButton * pbUndo = addButton(tr("Undo"), pageLayout, 0, 0);
+    QPushButton * pbClear = addButton(tr("Clear"), pageLayout, 1, 0);
+    QPushButton * pbLoad = addButton(tr("Load"), pageLayout, 2, 0);
+    QPushButton * pbSave = addButton(tr("Save"), pageLayout, 3, 0);
+
+    BtnBack = addButton(":/res/Exit.png", pageLayout, 5, 0, true);
 
     drawMapWidget = new DrawMapWidget(this);
-    pageLayout->addWidget(drawMapWidget, 0, 0, 1, 2);
+    pageLayout->addWidget(drawMapWidget, 0, 1, 5, 1);
+
+    connect(pbUndo, SIGNAL(clicked()), drawMapWidget, SLOT(undo()));
+    connect(pbClear, SIGNAL(clicked()), drawMapWidget, SLOT(clear()));
+    connect(pbLoad, SIGNAL(clicked()), this, SLOT(load()));
+    connect(pbSave, SIGNAL(clicked()), this, SLOT(save()));
+}
+
+void PageDrawMap::load()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load drawn map"), ".", tr("Drawn Maps (*.hwmap);;All files (*.*)"));
+
+    if(!fileName.isEmpty())
+        drawMapWidget->load(fileName);
+}
+
+void PageDrawMap::save()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save drawn map"), ".", tr("Drawn Maps (*.hwmap);;All files (*.*)"));
+
+    if(!fileName.isEmpty())
+        drawMapWidget->save(fileName);
 }

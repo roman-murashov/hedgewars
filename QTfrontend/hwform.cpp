@@ -86,7 +86,7 @@ HWForm::HWForm(QWidget *parent)
 
     ui.setupUi(this);
     setMinimumSize(760, 580);
-    setFocusPolicy(Qt::StrongFocus);
+    //setFocusPolicy(Qt::StrongFocus);
     CustomizePalettes();
 
     ui.pageOptions->CBResolution->addItems(sdli.getResolutions());
@@ -308,11 +308,13 @@ void HWForm::onFrontendFullscreen(bool value)
   }
 }
 
+/*
 void HWForm::keyReleaseEvent(QKeyEvent *event)
 {
-  if (event->key() == Qt::Key_Escape /*|| event->key() == Qt::Key_Backspace*/ ) 
+  if (event->key() == Qt::Key_Escape) 
     this->GoBack();
 }
+*/
 
 void HWForm::CustomizePalettes()
 {
@@ -436,7 +438,7 @@ void HWForm::OnPageShown(quint8 id, quint8 lastid)
     if(id == ID_PAGE_DRAWMAP)
     {
         DrawMapScene * scene;
-        if(lastid = ID_PAGE_MULTIPLAYER)
+        if(lastid == ID_PAGE_MULTIPLAYER)
             scene = ui.pageMultiplayer->gameCFG->pMapContainer->getDrawMapScene();
         else
             scene = ui.pageNetGame->pGameCFG->pMapContainer->getDrawMapScene();
@@ -445,7 +447,7 @@ void HWForm::OnPageShown(quint8 id, quint8 lastid)
     }
     if(lastid == ID_PAGE_DRAWMAP)
     {
-        if(id = ID_PAGE_MULTIPLAYER)
+        if(id == ID_PAGE_MULTIPLAYER)
             ui.pageMultiplayer->gameCFG->pMapContainer->mapDrawingFinished();
         else
             ui.pageNetGame->pGameCFG->pMapContainer->mapDrawingFinished();
@@ -662,6 +664,7 @@ void HWForm::DeleteScheme()
         QMessageBox::warning(0, QMessageBox::tr("Schemes"), QMessageBox::tr("Can not delete default scheme '%1'!").arg(ui.pageOptions->SchemesName->currentText()));
     } else {
         ui.pageScheme->deleteRow();
+        ammoSchemeModel->Save();
     }
 }
 
@@ -875,7 +878,6 @@ void HWForm::AsyncNetServerStart()
 
 void HWForm::NetDisconnect()
 {
-    //qDebug("NetDisconnect");
     if(hwnet) {
         hwnet->Disconnect();
         delete hwnet;
@@ -898,8 +900,9 @@ void HWForm::ForcedDisconnect()
 {
     if(pnetserver) return; // we have server - let it care of all things
     if (hwnet) {
-        hwnet->deleteLater();
+        HWNewNet * tmp = hwnet;
         hwnet = 0;
+        tmp->deleteLater();
         QMessageBox::warning(this, QMessageBox::tr("Network"),
                 QMessageBox::tr("Connection to server is lost"));
 
@@ -1157,6 +1160,8 @@ void HWForm::resizeEvent(QResizeEvent * event)
 
 void HWForm::UpdateCampaignPage(int index)
 {
+    Q_UNUSED(index);
+
     HWTeam team(ui.pageCampaign->CBTeam->currentText());
     ui.pageCampaign->CBSelect->clear();
 
@@ -1167,7 +1172,7 @@ void HWForm::UpdateCampaignPage(int index)
     QStringList entries = tmpdir.entryList(QStringList("*#*.lua"));
     //entries.sort();
     for(int i = 0; (i < entries.count()) && (i <= team.CampaignProgress); i++)
-        ui.pageCampaign->CBSelect->addItem(QString(entries[i]).replace(QRegExp("^(\\d+)#(.+)\\.lua"), QComboBox::tr("Mission") + " \\1: \\2"), QString(entries[i]).replace(QRegExp("^(.*)\\.lua"), "\\1"));
+        ui.pageCampaign->CBSelect->addItem(QString(entries[i]).replace(QRegExp("^(\\d+)#(.+)\\.lua"), QComboBox::tr("Mission") + " \\1: \\2").replace("_", " "), QString(entries[i]).replace(QRegExp("^(.*)\\.lua"), "\\1"));
 }
 
 void HWForm::AssociateFiles()

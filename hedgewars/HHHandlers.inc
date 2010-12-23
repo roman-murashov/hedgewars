@@ -207,6 +207,7 @@ with Gear^,
                   amClusterBomb: FollowGear:= AddGear(hwRound(lx), hwRound(ly), gtClusterBomb,  0, newDx, newDy, CurWeapon^.Timer);
                       amGasBomb: FollowGear:= AddGear(hwRound(lx), hwRound(ly), gtGasBomb,      0, newDx, newDy, CurWeapon^.Timer);
                       amBazooka: FollowGear:= AddGear(hwRound(lx), hwRound(ly), gtShell,        0, newDx, newDy, 0);
+                     amSnowball: FollowGear:= AddGear(hwRound(lx), hwRound(ly), gtSnowball,     0, newDx, newDy, 0);
                           amBee: FollowGear:= AddGear(hwRound(lx), hwRound(ly), gtBee,          0, newDx, newDy, 0);
                       amShotgun: begin
                                  PlaySound(sndShotgunReload);
@@ -275,7 +276,8 @@ with Gear^,
                              end;
                       amLowGravity: begin
                                     PlaySound(sndLowGravity);
-                                    cGravity:= cMaxWindSpeed
+                                    cGravity:= cMaxWindSpeed;
+                                    cGravityf:= 0.00025
                                     end;
                       amExtraDamage:begin 
                                     PlaySound(sndHellishImpact4);
@@ -667,12 +669,12 @@ if isFalling then
        Gear^.dY:= Gear^.dY + cGravity;
 // this set of circumstances could be less complex if jumping was more clearly identified
        if ((GameFlags and gfMoreWind) <> 0) and 
-          (Gear^.Damage <> 0) or
+          (((Gear^.Damage <> 0) or
           ((CurAmmoGear <> nil) and
             ((CurAmmoGear^.AmmoType = amJetpack) or
             (CurAmmoGear^.AmmoType = amBirdy))) or
-          ((Gear^.dY.QWordValue + Gear^.dX.QWordValue) > _0_55.QWordValue)
-          then Gear^.dX := Gear^.dX + cWindSpeed * _0_2
+          ((Gear^.dY.QWordValue + Gear^.dX.QWordValue) > _0_55.QWordValue)))
+          then Gear^.dX := Gear^.dX + cWindSpeed / Gear^.Density
        end
    end 
 else
