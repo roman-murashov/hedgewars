@@ -118,6 +118,8 @@
 		6172FEEF1298D25D00D73365 /* mediumBackground~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 6172FEEB1298D25D00D73365 /* mediumBackground~ipad.png */; };
 		6172FEF11298D25D00D73365 /* smallerBackground~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 6172FEED1298D25D00D73365 /* smallerBackground~ipad.png */; };
 		6172FEF21298D25D00D73365 /* smallerBackground~iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = 6172FEEE1298D25D00D73365 /* smallerBackground~iphone.png */; };
+		6174F7C812CD62E300205D6F /* smallerTitle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6174F7C612CD62E300205D6F /* smallerTitle.png */; };
+		6174F7C912CD62E300205D6F /* smallerTitle@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 6174F7C712CD62E300205D6F /* smallerTitle@2x.png */; };
 		61798816114AA34C00BA94A9 /* hwengine.pas in Sources */ = {isa = PBXBuildFile; fileRef = 617987E7114AA34C00BA94A9 /* hwengine.pas */; };
 		61798818114AA34C00BA94A9 /* hwLibrary.pas in Sources */ = {isa = PBXBuildFile; fileRef = 617987E9114AA34C00BA94A9 /* hwLibrary.pas */; };
 		6179881B114AA34C00BA94A9 /* PascalExports.pas in Sources */ = {isa = PBXBuildFile; fileRef = 617987EC114AA34C00BA94A9 /* PascalExports.pas */; };
@@ -184,6 +186,7 @@
 		61A670C212747DBD00B06CE7 /* MapConfigViewController-iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6165924E11CA9CB400D6E256 /* MapConfigViewController-iPhone.xib */; };
 		61AC067412B2E32D000B52A2 /* Appirater.m in Sources */ = {isa = PBXBuildFile; fileRef = 61AC067312B2E32D000B52A2 /* Appirater.m */; };
 		61B3D71C11EA6F2700EC7420 /* uKeys.pas in Sources */ = {isa = PBXBuildFile; fileRef = 617987FE114AA34C00BA94A9 /* uKeys.pas */; };
+		61B7A33812CC21080086B604 /* StatsPageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61B7A33712CC21080086B604 /* StatsPageViewController.m */; };
 		61C079E411F35A300072BF46 /* EditableCellView.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C079E311F35A300072BF46 /* EditableCellView.m */; };
 		61D205A1127CDD1100ABD83E /* ObjcExports.m in Sources */ = {isa = PBXBuildFile; fileRef = 61D205A0127CDD1100ABD83E /* ObjcExports.m */; };
 		61D3D2A51290E03A003CE7C3 /* irc.png in Resources */ = {isa = PBXBuildFile; fileRef = 61D3D2A41290E03A003CE7C3 /* irc.png */; };
@@ -889,6 +892,8 @@
 		6172FEEC1298D25D00D73365 /* smallerBackground@2x~iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "smallerBackground@2x~iphone.png"; path = "Resources/Frontend/smallerBackground@2x~iphone.png"; sourceTree = "<group>"; };
 		6172FEED1298D25D00D73365 /* smallerBackground~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "smallerBackground~ipad.png"; path = "Resources/Frontend/smallerBackground~ipad.png"; sourceTree = "<group>"; };
 		6172FEEE1298D25D00D73365 /* smallerBackground~iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "smallerBackground~iphone.png"; path = "Resources/Frontend/smallerBackground~iphone.png"; sourceTree = "<group>"; };
+		6174F7C612CD62E300205D6F /* smallerTitle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smallerTitle.png; path = Resources/Frontend/smallerTitle.png; sourceTree = "<group>"; };
+		6174F7C712CD62E300205D6F /* smallerTitle@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "smallerTitle@2x.png"; path = "Resources/Frontend/smallerTitle@2x.png"; sourceTree = "<group>"; };
 		617987E4114AA34C00BA94A9 /* GSHandlers.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = GSHandlers.inc; path = ../../hedgewars/GSHandlers.inc; sourceTree = SOURCE_ROOT; };
 		617987E5114AA34C00BA94A9 /* HHHandlers.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = HHHandlers.inc; path = ../../hedgewars/HHHandlers.inc; sourceTree = SOURCE_ROOT; };
 		617987E7114AA34C00BA94A9 /* hwengine.pas */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = hwengine.pas; path = ../../hedgewars/hwengine.pas; sourceTree = SOURCE_ROOT; };
@@ -962,6 +967,8 @@
 		61A4A3A112A5CD56004D81E6 /* uCaptions.pas */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = uCaptions.pas; path = ../../hedgewars/uCaptions.pas; sourceTree = SOURCE_ROOT; };
 		61AC067212B2E32D000B52A2 /* Appirater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Appirater.h; path = Classes/Appirater.h; sourceTree = "<group>"; };
 		61AC067312B2E32D000B52A2 /* Appirater.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Appirater.m; path = Classes/Appirater.m; sourceTree = "<group>"; };
+		61B7A33612CC21080086B604 /* StatsPageViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StatsPageViewController.h; sourceTree = "<group>"; };
+		61B7A33712CC21080086B604 /* StatsPageViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StatsPageViewController.m; sourceTree = "<group>"; };
 		61C079E211F35A300072BF46 /* EditableCellView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EditableCellView.h; path = Classes/EditableCellView.h; sourceTree = "<group>"; };
 		61C079E311F35A300072BF46 /* EditableCellView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EditableCellView.m; path = Classes/EditableCellView.m; sourceTree = "<group>"; };
 		61D2059F127CDD1100ABD83E /* ObjcExports.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ObjcExports.h; path = Classes/ObjcExports.h; sourceTree = "<group>"; };
@@ -1154,6 +1161,8 @@
 		611D9BF312497B7700008271 /* Other Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				61B7A33612CC21080086B604 /* StatsPageViewController.h */,
+				61B7A33712CC21080086B604 /* StatsPageViewController.m */,
 				61F2E7CB1205EDE0005734F7 /* AboutViewController.h */,
 				61F2E7CC1205EDE0005734F7 /* AboutViewController.m */,
 				61F2E7CD1205EDE0005734F7 /* AboutViewController.xib */,
@@ -1494,6 +1503,8 @@
 				61EBA62811DFF2BC0048B68A /* title.png */,
 				618899811299516000D55FD6 /* title@2x.png */,
 				61889984129995B500D55FD6 /* title~ipad.png */,
+				6174F7C612CD62E300205D6F /* smallerTitle.png */,
+				6174F7C712CD62E300205D6F /* smallerTitle@2x.png */,
 				61F9040A11DF59370068B24D /* background.png */,
 				6172FED61298CF9800D73365 /* background@2x~iphone.png */,
 				6172FED71298CF9800D73365 /* background~iphone.png */,
@@ -2276,6 +2287,8 @@
 				61188C0712A6FE960026C5DA /* settingsButton@2x.png in Resources */,
 				61188C0812A6FE9A0026C5DA /* title@2x.png in Resources */,
 				61188C0912A6FE9C0026C5DA /* tw@2x.png in Resources */,
+				6174F7C812CD62E300205D6F /* smallerTitle.png in Resources */,
+				6174F7C912CD62E300205D6F /* smallerTitle@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2424,6 +2437,7 @@
 				61F544C712AF1748007FD913 /* HoldTableViewCell.m in Sources */,
 				61AC067412B2E32D000B52A2 /* Appirater.m in Sources */,
 				61E2E12E12BAAEE30051B659 /* ServerSetup.m in Sources */,
+				61B7A33812CC21080086B604 /* StatsPageViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
