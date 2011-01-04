@@ -25,6 +25,7 @@ var
     recordFileName  : shortstring = '';
     cReadyDelay     : Longword    = 5000;
     cLogfileBase    : shortstring = 'debug';
+    cStereoMode     : TStereoMode = smNone;
 //////////////////////////
 
     alsoShutdownFrontend: boolean = false;
@@ -2077,6 +2078,9 @@ var
     cntTicks: LongWord;
 {$ENDIF}
     cOffsetY: LongInt;
+    AFRToggle: Boolean;
+    bAFRRight: Boolean;
+
 
     PixelFormat: PSDL_PixelFormat;
     SDLPrimSurface: PSDL_Surface;
@@ -2091,7 +2095,11 @@ var
     ProgrTex: PTexture;
     MissionIcons: PSDL_Surface;
     ropeIconTex: PTexture;
+    // orientation of the viewport
     rotationQt: GLfloat;
+    // stereoscopic framebuffer and textures
+    framel, framer, depthl, depthr: GLuint;
+    texl, texr: GLuint;
 
 
     VisualGearsList: PVisualGear;
@@ -2271,7 +2279,7 @@ begin
     SDLwindow       := nil;
 {$ENDIF}
 
-    // those values still aren't perfect
+    // those values still are not perfect
     cLeftScreenBorder:= round(-cMinZoomLevel * cScreenWidth);
     cRightScreenBorder:= round(cMinZoomLevel * cScreenWidth + LAND_WIDTH);
     cScreenSpace:= cRightScreenBorder - cLeftScreenBorder;
@@ -2308,6 +2316,7 @@ begin
     //userNick is in uChat
     recordFileName  := '';
     cReadyDelay     := 5000;
+    cStereoMode     := smNone;
 end;
 
 end.
