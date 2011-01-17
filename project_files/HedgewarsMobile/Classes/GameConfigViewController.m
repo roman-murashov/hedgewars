@@ -25,6 +25,7 @@
 #import "TeamConfigViewController.h"
 #import "SchemeWeaponConfigViewController.h"
 #import "HelpPageViewController.h"
+#import "StatsPageViewController.h"
 #import "CommodityFunctions.h"
 #import "UIImageExtra.h"
 #import "PascalImports.h"
@@ -226,19 +227,30 @@
                                     [NSNumber numberWithInt:self.interfaceOrientation],@"orientation",
                                     nil];
 
-    NSDictionary *allDataNecessary = [NSDictionary dictionaryWithObjectsAndKeys:gameDictionary,@"game_dictionary", @"",@"savefile",
-                                      [NSNumber numberWithBool:NO],@"netgame", nil];
-    if (IS_IPAD())
-        [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
+    NSDictionary *allDataNecessary = [NSDictionary dictionaryWithObjectsAndKeys:
+                                      gameDictionary,@"game_dictionary",
+                                      [NSNumber numberWithBool:NO],@"netgame",
+                                      @"",@"savefile",
+                                      nil];
+
+
+    StatsPageViewController *statsPage = [[StatsPageViewController alloc] initWithStyle:UITableViewStyleGrouped];
+    statsPage.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    if ([statsPage respondsToSelector:@selector(setModalPresentationStyle:)])
+        statsPage.modalPresentationStyle = UIModalPresentationPageSheet;
+    [self presentModalViewController:statsPage animated:NO];
+
+    NSArray *stats = [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
+    if ([stats count] == 0)
+        [statsPage dismissModalViewControllerAnimated:NO];
     else {
-        // this causes a sporadic crash on the ipad but without this rotation doesn't work on iphone
-        UIViewController *dummy = [[UIViewController alloc] init];
-        [self presentModalViewController:dummy animated:NO];
-        [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
-        [self dismissModalViewControllerAnimated:NO];
-        [dummy release];
+        statsPage.statsArray = stats;
+        [statsPage.tableView reloadData];
+        [statsPage viewWillAppear:YES];
     }
 
+
+    [statsPage release];
 }
 
 -(void) loadNiceHogs {

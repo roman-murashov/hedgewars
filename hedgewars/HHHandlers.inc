@@ -100,6 +100,8 @@ var t: LongInt;
     Hedgehog: PHedgehog;
     s: boolean;
 begin
+s:= false;
+
 weap:= TAmmoType(Gear^.MsgParam);
 Hedgehog:= Gear^.Hedgehog;
 
@@ -223,7 +225,11 @@ with Gear^,
                         amSMine: FollowGear:= AddGear(hwRound(lx), hwRound(ly), gtSMine,    0, xx*Power/cPowerDivisor, yy*Power/cPowerDivisor, 0);
                        amDEagle: CurAmmoGear:= AddGear(hwRound(lx + xx * cHHRadius), hwRound(ly + yy * cHHRadius), gtDEagleShot, 0, xx * _0_5, yy * _0_5, 0);
                       amSineGun: CurAmmoGear:= AddGear(hwRound(lx + xx * cHHRadius), hwRound(ly + yy * cHHRadius), gtSineGunShot, 0, xx * _0_5, yy * _0_5, 0);
-                    amPortalGun: AddGear(hwRound(lx + xx * cHHRadius), hwRound(ly + yy * cHHRadius), gtPortal, 0, xx * _0_6, yy * _0_6, 0);
+                    amPortalGun: begin
+                                 AddGear(hwRound(lx + xx * cHHRadius), hwRound(ly + yy * cHHRadius), gtPortal, 0, xx * _0_6, yy * _0_6, 
+                                 // set selected color
+                                 CurWeapon^.Pos);
+                                 end;
                   amSniperRifle: begin
                                  PlaySound(sndSniperReload);
                                  CurAmmoGear:= AddGear(hwRound(lx + xx * cHHRadius), hwRound(ly + yy * cHHRadius), gtSniperRifleShot, 0, xx * _0_5, yy * _0_5, 0);
@@ -398,7 +404,7 @@ if Gear^.Timer > 1 then
 if Gear^.Timer = 1 then
     begin
     Gear^.State:= Gear^.State or gstNoDamage;
-    doMakeExplosion(hwRound(Gear^.X), hwRound(Gear^.Y), 30, EXPLAutoSound);
+    doMakeExplosion(hwRound(Gear^.X), hwRound(Gear^.Y), 30, CurrentHedgehog, EXPLAutoSound);
     AddGear(hwRound(Gear^.X), hwRound(Gear^.Y), gtGrave, 0, _0, _0, 0)^.Hedgehog:= Gear^.Hedgehog;
     DeleteGear(Gear);
     SetAllToActive
