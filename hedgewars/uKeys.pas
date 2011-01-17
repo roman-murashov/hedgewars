@@ -324,7 +324,6 @@ DefaultBinds[KeyNameToCode('left')]:= '+left';
 DefaultBinds[KeyNameToCode('right')]:= '+right';
 DefaultBinds[KeyNameToCode('left_shift')]:= '+precise';
 {$ENDIF}
-DefaultBinds[1000]:= 'forcequit';
 
 for i:= 1 to 10 do DefaultBinds[KeyNameToCode('f'+IntToStr(i))]:= 'slot '+IntToStr(i);
 

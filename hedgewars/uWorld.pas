@@ -394,10 +394,20 @@ var VertexBuffer: array [0..3] of TVertex2f;
     r: TSDL_Rect;
     lw, lh: GLfloat;
 begin
-    WaterColorArray[0].a := Alpha;
-    WaterColorArray[1].a := Alpha;
-    WaterColorArray[2].a := Alpha;
-    WaterColorArray[3].a := Alpha;
+    if SuddenDeathDmg then
+        begin
+        SDWaterColorArray[0].a := Alpha;
+        SDWaterColorArray[1].a := Alpha;
+        SDWaterColorArray[2].a := Alpha;
+        SDWaterColorArray[3].a := Alpha
+        end
+    else
+        begin
+        WaterColorArray[0].a := Alpha;
+        WaterColorArray[1].a := Alpha;
+        WaterColorArray[2].a := Alpha;
+        WaterColorArray[3].a := Alpha
+        end;
 
     lw:= cScreenWidth / cScaleFactor;
     lh:= trunc(cScreenHeight / cScaleFactor) + cScreenHeight div 2 + 16;
@@ -421,7 +431,10 @@ begin
 
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
-        glColorPointer(4, GL_UNSIGNED_BYTE, 0, @WaterColorArray[0]);
+        if SuddenDeathDmg then
+            glColorPointer(4, GL_UNSIGNED_BYTE, 0, @SDWaterColorArray[0])
+        else
+            glColorPointer(4, GL_UNSIGNED_BYTE, 0, @WaterColorArray[0]);
 
         glVertexPointer(2, GL_FLOAT, 0, @VertexBuffer[0]);
 
@@ -437,24 +450,39 @@ end;
 procedure DrawWaves(Dir, dX, dY: LongInt; tnt: Byte);
 var VertexBuffer, TextureBuffer: array [0..3] of TVertex2f;
     lw, waves, shift: GLfloat;
+    sprite: TSprite;
 begin
+if SuddenDeathDmg then
+    sprite:= sprSDWater
+else
+    sprite:= sprWater;
+
+cWaveWidth:= SpritesData[sprite].Width;
+
 lw:= cScreenWidth / cScaleFactor;
 waves:= lw * 2 / cWaveWidth;
 
-Tint(LongInt(tnt) * WaterColorArray[2].r div 255 + 255 - tnt,
-     LongInt(tnt) * WaterColorArray[2].g div 255 + 255 - tnt,
-     LongInt(tnt) * WaterColorArray[2].b div 255 + 255 - tnt,
-     255
-);
+if SuddenDeathDmg then
+    Tint(LongInt(tnt) * SDWaterColorArray[2].r div 255 + 255 - tnt,
+         LongInt(tnt) * SDWaterColorArray[2].g div 255 + 255 - tnt,
+         LongInt(tnt) * SDWaterColorArray[2].b div 255 + 255 - tnt,
+         255
+    )
+else
+    Tint(LongInt(tnt) * WaterColorArray[2].r div 255 + 255 - tnt,
+         LongInt(tnt) * WaterColorArray[2].g div 255 + 255 - tnt,
+         LongInt(tnt) * WaterColorArray[2].b div 255 + 255 - tnt,
+         255
+    );
 
-glBindTexture(GL_TEXTURE_2D, SpritesData[sprWater].Texture^.id);
+glBindTexture(GL_TEXTURE_2D, SpritesData[sprite].Texture^.id);
 
 VertexBuffer[0].X:= -lw;
 VertexBuffer[0].Y:= cWaterLine + WorldDy + dY;
 VertexBuffer[1].X:= lw;
 VertexBuffer[1].Y:= VertexBuffer[0].Y;
 VertexBuffer[2].X:= lw;
-VertexBuffer[2].Y:= VertexBuffer[0].Y + SpritesData[sprWater].Height;
+VertexBuffer[2].Y:= VertexBuffer[0].Y + SpritesData[sprite].Height;
 VertexBuffer[3].X:= -lw;
 VertexBuffer[3].Y:= VertexBuffer[2].Y;
 
@@ -464,7 +492,7 @@ TextureBuffer[0].Y:= 0;
 TextureBuffer[1].X:= TextureBuffer[0].X + waves;
 TextureBuffer[1].Y:= TextureBuffer[0].Y;
 TextureBuffer[2].X:= TextureBuffer[1].X;
-TextureBuffer[2].Y:= SpritesData[sprWater].Texture^.ry;
+TextureBuffer[2].Y:= SpritesData[sprite].Texture^.ry;
 TextureBuffer[3].X:= TextureBuffer[0].X;
 TextureBuffer[3].Y:= TextureBuffer[2].Y;
 
@@ -573,8 +601,10 @@ begin
             HorizontOffset:= HorizontOffset + ((ScreenBottom-SkyOffset) div 20);
 
         // background
+        if SuddenDeathDmg then Tint(SDTint, SDTint, SDTint, $FF);
         DrawRepeated(sprSky, sprSkyL, sprSkyR, (WorldDx + LAND_WIDTH div 2) * 3 div 8, SkyOffset);
         DrawRepeated(sprHorizont, sprHorizontL, sprHorizontR, (WorldDx + LAND_WIDTH div 2) * 3 div 5, HorizontOffset);
+        if SuddenDeathDmg then Tint($FF, $FF, $FF, $FF);
     end;
 
     DrawVisualGears(0);
@@ -623,7 +653,10 @@ begin
 
     DrawVisualGears(2);
 
-    DrawWater(cWaterOpacity, 0);
+    if SuddenDeathDmg then
+        DrawWater(cSDWaterOpacity, 0)
+    else
+        DrawWater(cWaterOpacity, 0);
 
     // Waves
     DrawWaves( 1, 25 - WorldDx div 9, - cWaveHeight, 12);
@@ -632,9 +665,15 @@ begin
     begin
         //DrawWater(cWaterOpacity, - offsetY div 40);
         DrawWaves(-1, 50 + WorldDx div 6, - cWaveHeight - offsetY div 40, 8);
-        DrawWater(cWaterOpacity, - offsetY div 20);
+        if SuddenDeathDmg then
+            DrawWater(cSDWaterOpacity, - offsetY div 20)
+        else
+            DrawWater(cWaterOpacity, - offsetY div 20);
         DrawWaves( 1, 75 - WorldDx div 4, - cWaveHeight - offsetY div 20, 2);
-        DrawWater(cWaterOpacity, - offsetY div 10);
+        if SuddenDeathDmg then
+            DrawWater(cSDWaterOpacity, - offsetY div 10)
+        else
+            DrawWater(cWaterOpacity, - offsetY div 10);
         DrawWaves( -1, 25 + WorldDx div 3, - cWaveHeight - offsetY div 10, 0);
     end
     else
@@ -686,52 +725,6 @@ if ((TurnTimeLeft <> 0) and (TurnTimeLeft < 1000000)) or (ReadyTimeLeft <> 0) th
    DrawSprite(sprFrame, -(cScreenWidth shr 1) + t - 4 + offsetY, cScreenHeight - offsetX, 0);
    end;
 
-{$IFNDEF IPHONEOS}
-// Timetrial
-if ((TrainingFlags and tfTimeTrial) <> 0) and (TimeTrialStartTime > 0) then
-    begin
-    if TimeTrialStopTime = 0 then i:= RealTicks - TimeTrialStartTime else i:= TimeTrialStopTime - TimeTrialStartTime;
-    t:= 272;
-    // right frame
-    DrawSprite(sprFrame, -cScreenWidth div 2 + t, 8, 1);
-    dec(t, 32);
-    // 1 ms
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, i mod 10);
-    dec(t, 32);
-    i:= i div 10;
-    // 10 ms
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, i mod 10);
-    dec(t, 32);
-    i:= i div 10;
-    // 100 ms
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, i mod 10);
-    dec(t, 16);
-    // Point
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, 11);
-    dec(t, 32);
-    i:= i div 10;
-    // 1 s
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, i mod 10);
-    dec(t, 32);
-    i:= i div 10;
-    // 10s
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, i mod 6);
-    dec(t, 16);
-    // Point
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, 10);
-    dec(t, 32);
-    i:= i div 6;
-    // 1 m
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, i mod 10);
-    dec(t, 32);
-    i:= i div 10;
-    // 10 m
-    DrawSprite(sprBigDigit, -cScreenWidth div 2 + t, 8, i mod 10);
-    // left frame
-    DrawSprite(sprFrame, -cScreenWidth div 2 + t - 4, 8, 0);
-    end;
-{$ENDIF}
-
 // Captions
 DrawCaptions;
 
@@ -742,7 +735,7 @@ for t:= 0 to Pred(TeamsCount) do
       highlight:= bShowFinger and (CurrentTeam = TeamsArray[t]) and ((RealTicks mod 1000) < 500);
 
       if highlight then
-         Tint(Clan^.Color);
+         Tint(Clan^.Color shl 8 or $FF);
 
       // draw name
       DrawTexture(-NameTagTex^.w - 16, cScreenHeight + DrawHealthY, NameTagTex);
