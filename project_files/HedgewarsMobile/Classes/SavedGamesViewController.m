@@ -21,6 +21,7 @@
 
 #import "SavedGamesViewController.h"
 #import "SDL_uikitappdelegate.h"
+#import "StatsPageViewController.h"
 #import "CommodityFunctions.h"
 
 @implementation SavedGamesViewController
@@ -90,7 +91,6 @@
     [self.listOfSavegames addObject:newSaveName];
     [self.listOfSavegames sortUsingSelector:@selector(compare:)];
 
-    //[self.tableView insertRowsAtIndexPaths:[NSArray arrayWithObject:[NSIndexPath indexPathForRow:[self.listOfSavegames indexOfObject:newSaveName] inSection:0]] withRowAnimation:UITableViewRowAnimationFade];
     [self.tableView reloadData];
 }
 
@@ -217,8 +217,26 @@
                                       [NSNumber numberWithBool:NO],@"netgame",
                                       [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:self.interfaceOrientation] forKey:@"orientation"],@"game_dictionary",
                                       nil];
-    [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
-    [self.parentViewController dismissModalViewControllerAnimated:NO];
+
+    // also modify GameConfigViewController.m
+    StatsPageViewController *statsPage = [[StatsPageViewController alloc] initWithStyle:UITableViewStyleGrouped];
+    statsPage.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    if ([statsPage respondsToSelector:@selector(setModalPresentationStyle:)])
+        statsPage.modalPresentationStyle = UIModalPresentationPageSheet;
+    // avoid showing the stat page immediately, but wait for 3 seconds
+    [self performSelector:@selector(presentModalViewController:animated:) withObject:statsPage afterDelay:3];
+
+    NSArray *stats = [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
+    if ([stats count] <= 1) {
+        DLog(@"%@",stats);
+        [statsPage dismissModalViewControllerAnimated:NO];
+    } else {
+        statsPage.statsArray = stats;
+        [statsPage.tableView reloadData];
+        [statsPage viewWillAppear:YES];
+    }
+    // reload needed because when ending game the entry remains there
+    [self.tableView reloadData];
 }
 
 #pragma mark -

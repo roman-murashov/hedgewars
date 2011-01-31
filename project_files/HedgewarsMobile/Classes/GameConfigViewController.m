@@ -25,6 +25,7 @@
 #import "TeamConfigViewController.h"
 #import "SchemeWeaponConfigViewController.h"
 #import "HelpPageViewController.h"
+#import "StatsPageViewController.h"
 #import "CommodityFunctions.h"
 #import "UIImageExtra.h"
 #import "PascalImports.h"
@@ -42,7 +43,6 @@
 
     switch (theButton.tag) {
         case 0:
-            playSound(@"backSound");
             if ([self.mapConfigViewController busy]) {
                 UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Wait for the Preview",@"")
                                                                 message:NSLocalizedString(@"Before returning the preview needs to be generated",@"")
@@ -51,8 +51,10 @@
                                                       otherButtonTitles:nil];
                 [alert show];
                 [alert release];
-            } else
+            } else {
+                playSound(@"backSound");
                 [[self parentViewController] dismissModalViewControllerAnimated:YES];
+            }
             break;
         case 1:
             playSound(@"clickSound");
@@ -226,19 +228,31 @@
                                     [NSNumber numberWithInt:self.interfaceOrientation],@"orientation",
                                     nil];
 
-    NSDictionary *allDataNecessary = [NSDictionary dictionaryWithObjectsAndKeys:gameDictionary,@"game_dictionary", @"",@"savefile",
-                                      [NSNumber numberWithBool:NO],@"netgame", nil];
-    if (IS_IPAD())
-        [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
-    else {
-        // this causes a sporadic crash on the ipad but without this rotation doesn't work on iphone
-        UIViewController *dummy = [[UIViewController alloc] init];
-        [self presentModalViewController:dummy animated:NO];
-        [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
-        [self dismissModalViewControllerAnimated:NO];
-        [dummy release];
+    NSDictionary *allDataNecessary = [NSDictionary dictionaryWithObjectsAndKeys:
+                                      gameDictionary,@"game_dictionary",
+                                      [NSNumber numberWithBool:NO],@"netgame",
+                                      @"",@"savefile",
+                                      nil];
+
+    // also modify SavedGamesViewController.m
+    StatsPageViewController *statsPage = [[StatsPageViewController alloc] initWithStyle:UITableViewStyleGrouped];
+    statsPage.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    if ([statsPage respondsToSelector:@selector(setModalPresentationStyle:)])
+        statsPage.modalPresentationStyle = UIModalPresentationPageSheet;
+    // avoid showing the stat page immediately, but wait for 3 seconds
+    [self performSelector:@selector(presentModalViewController:animated:) withObject:statsPage afterDelay:3];
+
+    NSArray *stats = [[SDLUIKitDelegate sharedAppDelegate] startSDLgame:allDataNecessary];
+    if ([stats count] <= 1) {
+        DLog(@"%@",stats);
+        [statsPage dismissModalViewControllerAnimated:NO];
+    } else {
+        statsPage.statsArray = stats;
+        [statsPage.tableView reloadData];
+        [statsPage viewWillAppear:YES];
     }
 
+    [statsPage release];
 }
 
 -(void) loadNiceHogs {

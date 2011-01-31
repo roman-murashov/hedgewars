@@ -10,7 +10,7 @@ var
     cScreenWidth    : LongInt     = 1024;
     cScreenHeight   : LongInt     = 768;
     cBits           : LongInt     = 32;
-    //ipcPort is in uIO
+    ipcPort         : Word        = 0;
     cFullScreen     : boolean     = false;
     isSoundEnabled  : boolean     = true;
     isMusicEnabled  : boolean     = false;
@@ -21,10 +21,11 @@ var
     cShowFPS        : boolean     = false;
     cAltDamage      : boolean     = true;
     cReducedQuality : LongWord    = rqNone;
-    //userNick is in uChat
+    UserNick        : shortstring = '';
     recordFileName  : shortstring = '';
     cReadyDelay     : Longword    = 5000;
     cLogfileBase    : shortstring = 'debug';
+    cStereoMode     : TStereoMode = smNone;
 //////////////////////////
 
     alsoShutdownFrontend: boolean = false;
@@ -45,7 +46,6 @@ var
     GameType        : TGameType;
     InputMask       : LongWord;
     GameFlags       : Longword;
-    TrainingFlags   : Longword;
     TurnTimeLeft    : Longword;
     ReadyTimeLeft   : Longword;
     cSuddenDTurns   : LongInt;
@@ -66,6 +66,7 @@ var
     cHealthDecrease  : LongInt;
 
     cCloudsNumber    : LongInt;
+    cSDCloudsNumber  : LongInt;
 
     cTagsMask        : byte;
     zoom             : GLfloat;
@@ -75,13 +76,6 @@ var
     cGearScrEdgesDist: LongInt;
 
     GameTicks   : LongWord;
-    TrainingTimeInc : Longword;
-    TrainingTimeInD : Longword;
-    TrainingTimeInM : Longword;
-    TrainingTimeMax : Longword;
-
-    TimeTrialStartTime: Longword;
-    TimeTrialStopTime : Longword;
 
     // originally from uConsts
     Pathz: array[TPathType] of shortstring;
@@ -131,6 +125,9 @@ var
     AttackBar       : LongInt;
 
     WaterColorArray : array[0..3] of HwColor4f;
+    SDWaterColorArray : array[0..3] of HwColor4f;
+    SDMusic         : shortstring;
+    SDTint          : LongInt;
 
     CursorPoint     : TPoint;
     TargetPoint     : TPoint;
@@ -148,6 +145,10 @@ var
 
     WorldDx: LongInt;
     WorldDy: LongInt;
+
+    hiTicks: Word;
+
+    LuaGoals        : shortstring;
 
 const
     cHHFileName = 'Hedgehog';
@@ -175,7 +176,8 @@ const
         'Sounds/voices',                 // ptVoices
         'Graphics/Hats',                 // ptHats
         'Graphics/Flags',                // ptFlags
-        'Missions/Maps'                  // ptMissionMaps
+        'Missions/Maps',                 // ptMissionMaps
+        'Graphics/SuddenDeath'           // ptSuddenDeath
     );
 
     cTagsMasks : array[0..15] of byte = (7, 0, 0, 0, 15, 6, 4, 5, 0, 0, 0, 0, 0, 14, 12, 13);
@@ -558,7 +560,17 @@ const
             (FileName:  'amSnowball'; Path: ptCurrTheme; AltPath: ptHedgehog; Texture: nil; Surface: nil;
             Width:  64; Height: 64; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpMedium; getDimensions: false; getImageDimensions: true),// sprHandSnowball
             (FileName:  'Snow'; Path: ptCurrTheme; AltPath: ptGraphics; Texture: nil; Surface: nil;
-            Width:  4; Height: 4; imageWidth: 0; imageHeight: 0; saveSurf: true; priority: tpMedium; getDimensions: false; getImageDimensions: true) // sprSnow
+            Width:  4; Height: 4; imageWidth: 0; imageHeight: 0; saveSurf: true; priority: tpMedium; getDimensions: false; getImageDimensions: true),// sprSnow
+            (FileName:    'SDFlake'; Path: ptCurrTheme; AltPath: ptSuddenDeath; Texture: nil; Surface: nil;
+            Width:  64; Height: 64; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpHighest; getDimensions: false; getImageDimensions: true),// sprSDFlake
+            (FileName:    'SDWater'; Path: ptCurrTheme; AltPath: ptSuddenDeath; Texture: nil; Surface: nil;
+            Width:   0; Height:  0; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpMedium; getDimensions: true; getImageDimensions: true),// sprSDWater
+            (FileName:   'SDClouds'; Path: ptCurrTheme; AltPath: ptSuddenDeath; Texture: nil; Surface: nil;
+            Width: 256; Height:128; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpHigh; getDimensions: false; getImageDimensions: true),// sprSDCloud
+            (FileName:   'SDSplash'; Path: ptCurrTheme; AltPath: ptSuddenDeath; Texture: nil; Surface: nil;
+            Width:  80; Height: 50; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpMedium; getDimensions: false; getImageDimensions: true),// sprSDSplash
+            (FileName:  'SDDroplet'; Path: ptCurrTheme; AltPath: ptSuddenDeath; Texture: nil; Surface: nil;
+            Width:  16; Height: 16; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpHighest; getDimensions: false; getImageDimensions: true)// sprSDDroplet
             );
 
 
@@ -1916,7 +1928,7 @@ const
             ejectX: 0;
             ejectY: 0),
 
-// Ressurrector
+// Resurrector
         (NameId: sidResurrector;
             NameTex: nil;
             Probability: 0;
@@ -1950,10 +1962,11 @@ const
                             ammoprop_NeedTarget or
                             ammoprop_AttackingPut or
                             ammoprop_DontHold or
+                            ammoprop_Timerable or
                             ammoprop_NotBorder;
                 Count: 1;
                 NumPerTurn: 0;
-                Timer: 0;
+                Timer: 5000;
                 Pos: 0;
                 AmmoType: amDrillStrike;
                 AttackVoice: sndIncoming);
@@ -1967,7 +1980,8 @@ const
             PosSprite: sprAmAirplane;
             ejectX: 0;
             ejectY: 0),
-// Snowball
+
+// Snowball/Mudball
             (NameId: sidSnowball;
             NameTex: nil;
             Probability: 0;
@@ -1988,6 +2002,57 @@ const
             PosCount: 1;
             PosSprite: sprWater;
             ejectX: 0; 
+            ejectY: 0),
+
+// Tardis (just a copy of teleport til nemo arives)
+            (NameId: sidTardis;
+            NameTex: nil;
+            Probability: 200;
+            NumberInCase: 1;
+            Ammo: (Propz: ammoprop_ForwMsgs or
+                          ammoprop_NoCrosshair or
+                          ammoprop_NeedTarget or
+                          ammoprop_AttackingPut or
+                          ammoprop_Utility or
+                          ammoprop_DontHold;
+                Count: 2;
+                NumPerTurn: 0;
+                Timer: 0;
+                Pos: 0;
+                AmmoType: amTardis;
+                AttackVoice: sndNone);
+            Slot: 7;
+            TimeAfterTurn: 0;
+            minAngle: 0;
+            maxAngle: 0;
+            isDamaging: false;
+            SkipTurns: 0;
+            PosCount: 2;
+            PosSprite: sprAmTeleport;
+            ejectX: 0;
+            ejectY: 0),
+
+// Structure
+            (NameId: sidStructure;
+            NameTex: nil;
+            Probability: 0;
+            NumberInCase: 1;
+            Ammo: (Propz: ammoprop_NoCrosshair or ammoprop_DontHold or ammoprop_Utility;
+                Count: 1;
+                NumPerTurn: 0;
+                Timer: 0;
+                Pos: 0;
+                AmmoType: amStructure;
+                AttackVoice: sndNone);
+            Slot: 6;
+            TimeAfterTurn: 0;
+            minAngle: 0;
+            maxAngle: 0;
+            isDamaging: false;
+            SkipTurns: 0;
+            PosCount: 1;
+            PosSprite: sprWater;
+            ejectX: 0;
             ejectY: 0)
         );
 
@@ -2031,14 +2096,15 @@ var
     LandBackSurface: PSDL_Surface;
     digest: shortstring;
     CurAmmoGear: PGear;
+    lastGearByUID: PGear;
     GearsList: PGear;
     AllInactive: boolean;
     PrvInactive: boolean;
     KilledHHs: Longword;
+    SuddenDeath: Boolean;
     SuddenDeathDmg: Boolean;
     SpeechType: Longword;
     SpeechText: shortstring;
-    TrainingTargetGear: PGear;
     skipFlag: boolean;
     PlacingHogs: boolean; // a convenience flag to indicate placement of hogs is still in progress
     StepSoundTimer: LongInt;
@@ -2064,12 +2130,16 @@ var
     bShowFinger: boolean;
     Frames: Longword;
     WaterColor, DeepWaterColor: TSDL_Color;
+    SDSkyColor: TSDL_Color;
     SkyOffset: LongInt;
     HorizontOffset: LongInt;
 {$IFDEF COUNTTICKS}
     cntTicks: LongWord;
 {$ENDIF}
     cOffsetY: LongInt;
+    AFRToggle: Boolean;
+    bAFRRight: Boolean;
+
 
     PixelFormat: PSDL_PixelFormat;
     SDLPrimSurface: PSDL_Surface;
@@ -2084,12 +2154,19 @@ var
     ProgrTex: PTexture;
     MissionIcons: PSDL_Surface;
     ropeIconTex: PTexture;
+    // orientation of the viewport
     rotationQt: GLfloat;
+    // stereoscopic framebuffer and textures
+    framel, framer, depthl, depthr: GLuint;
+    texl, texr: GLuint;
 
 
     VisualGearsList: PVisualGear;
+    lastVisualGearByUID: PVisualGear;
     vobFrameTicks, vobFramesCount, vobCount: Longword;
     vobVelocity, vobFallSpeed: LongInt;
+    vobSDFrameTicks, vobSDFramesCount, vobSDCount: Longword;
+    vobSDVelocity, vobSDFallSpeed: LongInt;
 
 
     hideAmmoMenu: boolean;
@@ -2108,6 +2185,8 @@ var
     ControllerButtons: array[0..5] of array[0..19] of Byte;
 
     DefaultBinds, CurrentBinds: TBinds;
+
+    coeff: LongInt;
 
 {$IFDEF HWLIBRARY}
     leftClick: boolean;
@@ -2143,6 +2222,9 @@ implementation
 
 procedure initModule;
 begin
+    lastVisualGearByUID:= nil;
+    lastGearByUID:= nil;
+    
     Pathz:= cPathz;
         {*  REFERENCE
       4096 -> $FFFFF000
@@ -2150,25 +2232,39 @@ begin
       1024 -> $FFFFFC00
        512 -> $FFFFFE00  *}
     if (cReducedQuality and rqLowRes) <> 0 then
-    begin
+        begin
         LAND_WIDTH:= 2048;
         LAND_HEIGHT:= 1024;
         LAND_WIDTH_MASK:= $FFFFF800;
         LAND_HEIGHT_MASK:= $FFFFFC00;
-    end
+        end
     else
-    begin
+        begin
         LAND_WIDTH:= 4096;
         LAND_HEIGHT:= 2048;
         LAND_WIDTH_MASK:= $FFFFF000;
         LAND_HEIGHT_MASK:= $FFFFF800
-    end;
+        end;
+
+    SDWaterColorArray[0].r := 182;
+    SDWaterColorArray[0].g := 144;
+    SDWaterColorArray[0].b := 201;
+    SDWaterColorArray[0].a := 255;
+    SDWaterColorArray[2].r := 150;
+    SDWaterColorArray[2].g := 112;
+    SDWaterColorArray[2].b := 169;
+    SDWaterColorArray[2].a := 255;
+    SDWaterColorArray[1]:= SDWaterColorArray[0];
+    SDWaterColorArray[3]:= SDWaterColorArray[2];
+
+    SDMusic:= 'main_theme.ogg';
+    SDTint:= $80;
 
     cDrownSpeed.QWordValue  := 257698038;       // 0.06
     cDrownSpeedf            := 0.06;
     cMaxWindSpeed.QWordValue:= 1073742;     // 0.00025
-    cWindSpeed.QWordValue   := 429496;      // 0.0001
-    cWindSpeedf             := 0.0001;
+    cWindSpeed.QWordValue   := 0;      // 0.0
+    cWindSpeedf             := 0.0;
     cGravity                := cMaxWindSpeed * 2;
     cGravityf               := 0.00025 * 2;
     cDamageModifier         := _1;
@@ -2178,18 +2274,11 @@ begin
     CursorMovementX     := 0;
     CursorMovementY     := 0;
     GameTicks           := 0;
-    TrainingTimeInc     := 10000;
-    TrainingTimeInD     := 500;
-    TrainingTimeInM     := 5000;
-    TrainingTimeMax     := 60000;
-    TimeTrialStartTime  := 0;
-    TimeTrialStopTime   := 0;
     cWaterLine          := LAND_HEIGHT;
     cGearScrEdgesDist   := 240;
 
     InputMask           := $FFFFFFFF;
     GameFlags           := 0;
-    TrainingFlags       := 0;
     TurnTimeLeft        := 0;
     cSuddenDTurns       := 15;
     cDamagePercent      := 100;
@@ -2202,6 +2291,7 @@ begin
     cMinesTime          := 3000;
     cMaxAIThinkTime     := 9000;
     cCloudsNumber       := 9;
+    cSDCloudsNumber     := 9;
     cHealthCaseProb     := 35;
     cHealthCaseAmount   := 25;
     cWaterRise          := 47;
@@ -2249,7 +2339,7 @@ begin
     SDLwindow       := nil;
 {$ENDIF}
 
-    // those values still aren't perfect
+    // those values still are not perfect
     cLeftScreenBorder:= round(-cMinZoomLevel * cScreenWidth);
     cRightScreenBorder:= round(cMinZoomLevel * cScreenWidth + LAND_WIDTH);
     cScreenSpace:= cRightScreenBorder - cLeftScreenBorder;
@@ -2258,6 +2348,14 @@ begin
         cMaxCaptions:= 3
     else
         cMaxCaptions:= 4;
+
+    vobSDFrameTicks:= 0;
+    vobSDFramesCount:= 0;
+    vobSDCount:= 30 * cScreenSpace div LAND_WIDTH;
+    vobSDVelocity:= 0;
+    vobSDFallSpeed:= 0;
+
+    LuaGoals:= '';
 end;
 
 procedure freeModule;
@@ -2266,20 +2364,21 @@ begin
     cScreenWidth    := 1024;
     cScreenHeight   := 768;
     cBits           := 32;
-    //ipcPort is in uIO
+    ipcPort         := 0;
     cFullScreen     := false;
     isSoundEnabled  := true;
     isMusicEnabled  := false;
     cLocaleFName    := 'en.txt';
     cInitVolume     := 100;
     cTimerInterval  := 8;
-    PathPrefix := './';
+    PathPrefix      := './';
     cShowFPS        := false;
     cAltDamage      := true;
     cReducedQuality := rqNone;
-    //userNick is in uChat
+    UserNick        := '';
     recordFileName  := '';
     cReadyDelay     := 5000;
+    cStereoMode     := smNone;
 end;
 
 end.

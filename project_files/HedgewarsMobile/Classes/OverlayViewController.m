@@ -35,7 +35,8 @@
 #define doDim()             [dimTimer setFireDate: (IS_DUALHEAD()) ? HIDING_TIME_NEVER : HIDING_TIME_DEFAULT]
 #define doNotDim()          [dimTimer setFireDate:HIDING_TIME_NEVER]
 
-#define removeConfirmationInput()   [[self.view viewWithTag:CONFIRMATION_TAG] removeFromSuperview];
+#define removeInputWidget() [[self.view viewWithTag:CONFIRMATION_TAG] removeFromSuperview]; \
+                            [[self.view viewWithTag:GRENADE_TAG] removeFromSuperview];
 
 @implementation OverlayViewController
 @synthesize popoverController, popupMenu, helpPage, amvc, isNetGame, useClassicMenu, initialOrientation, containerWindow;
@@ -185,11 +186,6 @@
                                                  name:@"show help ingame"
                                                object:nil];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(cleanup)
-                                                 name:@"remove overlay"
-                                               object:nil];
-
     // for iOS >= 3.2
     if ([UIScreen respondsToSelector:@selector(screens)]) {
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -234,7 +230,7 @@
                                               otherButtonTitles:nil];
         [alert show];
         [alert release];
-        [self cleanup];
+        HW_terminate(NO);
     }
 }
 
@@ -254,13 +250,6 @@
     self.helpPage.view.alpha = 1;
     [UIView commitAnimations];
     doNotDim();
-}
-
--(void) cleanup {
-    [self dismissPopover];
-    setGameRunning(NO);
-    HW_terminate(NO);
-    [self.view removeFromSuperview];
 }
 
 -(void) didReceiveMemoryWarning {
@@ -401,13 +390,13 @@
                 doDim();
                 [self.amvc disappear];
             }
-            removeConfirmationInput();
+            removeInputWidget();
             [self showPopover];
             break;
         case 11:
             playSound(@"clickSound");
             clearView();
-            removeConfirmationInput();
+            removeInputWidget();
             
             if (IS_DUALHEAD() || self.useClassicMenu == NO) {
                 if (self.amvc == nil)
@@ -439,7 +428,7 @@
 
 -(void) sendHWClick {
     HW_click();
-    removeConfirmationInput();
+    removeInputWidget();
     doDim();
 }
 
@@ -456,7 +445,7 @@
 // present a further check before closing game
 -(void) actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger) buttonIndex {
     if ([actionSheet cancelButtonIndex] != buttonIndex)
-        [self cleanup];
+        HW_terminate(NO);
     else
         HW_pause();
 }
@@ -541,11 +530,13 @@
     // reset default dimming
     doDim();
 
+    // remove other widgets
+    removeInputWidget();
+
     HW_setPianoSound([allTouches count]);
 
     switch ([allTouches count]) {
         case 1:
-            removeConfirmationInput();
             startingPoint = [[[allTouches allObjects] objectAtIndex:0] locationInView:self.view];
             if (2 == [[[allTouches allObjects] objectAtIndex:0] tapCount])
                 HW_zoomReset();
