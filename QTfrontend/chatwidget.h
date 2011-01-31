@@ -26,11 +26,28 @@
 
 #include "SDLs.h"
 
+class ListWidgetNickItem;
 class QTextBrowser;
 class QLineEdit;
 class QListWidget;
 class QSettings;
 class SDLInteraction;
+
+// this class is for custom nick sorting
+class ListWidgetNickItem : public QListWidgetItem
+{
+public:
+  ListWidgetNickItem(const QString& nick, bool isFriend, bool isIgnored);
+  bool operator<(const QListWidgetItem & other) const;
+  void setFriend(bool isFriend);
+  void setIgnored(bool isIgnored);
+  bool isFriend();
+  bool ignored();
+
+private:
+  bool aFriend;
+  bool isIgnored;
+};
 
 class HWChatWidget : public QWidget
 {
@@ -41,12 +58,13 @@ class HWChatWidget : public QWidget
   void loadLists(const QString & nick);
   void saveLists(const QString & nick);
   void setShowReady(bool s);
+  void setShowFollow(bool enabled);
 
 private:
   void loadList(QStringList & list, const QString & file);
   void saveList(QStringList & list, const QString & file);
-  void updateIcon(QListWidgetItem *item);
-  void updateIcons();
+  void updateNickItem(QListWidgetItem *item);
+  void updateNickItems();
 
  public slots:
   void onChatString(const QString& str);

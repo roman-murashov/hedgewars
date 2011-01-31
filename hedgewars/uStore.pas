@@ -17,6 +17,7 @@
  *)
 
 {$INCLUDE "options.inc"}
+{$IF GLunit = GL}{$DEFINE GLunit:=GL,GLext}{$ENDIF}
 
 unit uStore;
 interface
@@ -31,12 +32,14 @@ procedure RenderHealth(var Hedgehog: THedgehog);
 procedure AddProgress;
 procedure FinishProgress;
 function  LoadImage(const filename: shortstring; imageFlags: LongInt): PSDL_Surface;
+procedure LoadHedgehogHat(HHGear: PGear; newHat: shortstring);
 procedure SetupOpenGL;
 procedure SetScale(f: GLfloat);
 function  RenderHelpWindow(caption, subcaption, description, extra: ansistring; extracolor: LongInt; iconsurf: PSDL_Surface; iconrect: PSDL_Rect): PTexture;
 procedure RenderWeaponTooltip(atype: TAmmoType);
 procedure ShowWeaponTooltip(x, y: LongInt);
 procedure FreeWeaponTooltip;
+procedure MakeCrossHairs;
 
 implementation
 uses uMisc, uConsole, uMobile, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands, uDebug;
@@ -71,6 +74,47 @@ finalRect.y:= Y;
 finalRect.w:= w + FontBorder * 2 + 4;
 finalRect.h:= h + FontBorder * 2;
 WriteInRect:= finalRect
+end;
+
+procedure MakeCrossHairs;
+var t: LongInt;
+    tmpsurf, texsurf: PSDL_Surface;
+    Color, i: Longword;
+    s : shortstring;
+begin
+s:= Pathz[ptGraphics] + '/' + cCHFileName;
+tmpsurf:= LoadImage(s, ifAlpha or ifCritical);
+
+for t:= 0 to Pred(TeamsCount) do
+    with TeamsArray[t]^ do
+    begin
+    texsurf:= SDL_CreateRGBSurface(SDL_SWSURFACE, tmpsurf^.w, tmpsurf^.h, 32, RMask, GMask, BMask, AMask);
+    TryDo(texsurf <> nil, errmsgCreateSurface, true);
+
+    Color:= Clan^.Color;
+    Color:= SDL_MapRGB(texsurf^.format, Color shr 16, Color shr 8, Color and $FF);
+    SDL_FillRect(texsurf, nil, Color);
+
+    SDL_UpperBlit(tmpsurf, nil, texsurf, nil);
+
+    TryDo(tmpsurf^.format^.BytesPerPixel = 4, 'Ooops', true);
+
+    if SDL_MustLock(texsurf) then
+        SDLTry(SDL_LockSurface(texsurf) >= 0, true);
+
+    // make black pixel be alpha-transparent
+    for i:= 0 to texsurf^.w * texsurf^.h - 1 do
+        if PLongwordArray(texsurf^.pixels)^[i] = AMask then PLongwordArray(texsurf^.pixels)^[i]:= (RMask or GMask or BMask) and Color;
+
+    if SDL_MustLock(texsurf) then
+        SDL_UnlockSurface(texsurf);
+
+    if CrosshairTex <> nil then FreeTexture(CrosshairTex);
+    CrosshairTex:= Surface2Tex(texsurf, false);
+    SDL_FreeSurface(texsurf)
+    end;
+
+SDL_FreeSurface(tmpsurf)
 end;
 
 procedure StoreLoad;
@@ -140,6 +184,7 @@ var s: shortstring;
 
         FlagTex:= Surface2Tex(texsurf, false);
         SDL_FreeSurface(texsurf);
+        texsurf:= nil;
 
         AIKillsTex := RenderStringTex(inttostr(stats.AIKills), Clan^.Color, fnt16);
 
@@ -149,19 +194,13 @@ var s: shortstring;
             with Hedgehogs[i] do
                 if Gear <> nil then
                     begin
-                    NameTagTex:= RenderStringTex(Name, Clan^.Color, CheckCJKFont(Name,fnt16));
+                    NameTagTex:= RenderStringTex(Name, Clan^.Color, fnt16);
                     if Hat <> 'NoHat' then
                         begin
                         if (Length(Hat) > 39) and (Copy(Hat,1,8) = 'Reserved') and (Copy(Hat,9,32) = PlayerHash) then
-                            texsurf:= LoadImage(Pathz[ptHats] + '/Reserved/' + Copy(Hat,9,Length(s)-8), ifNone)
+                            LoadHedgehogHat(Gear, 'Reserved/' + Copy(Hat,9,Length(s)-8))
                         else
-                            texsurf:= LoadImage(Pathz[ptHats] + '/' + Hat, ifNone);
-                        if texsurf <> nil then
-                            begin
-                            HatTex:= Surface2Tex(texsurf, true);
-                            SDL_FreeSurface(texsurf)
-                            end;
-                        texsurf:= nil;
+                            LoadHedgehogHat(Gear, Hat);
                         end
                     end;
         end;
@@ -178,45 +217,6 @@ var s: shortstring;
         SDL_FreeSurface(iconsurf);
         iconsurf:= nil;
         end;
-    end;
-
-    procedure MakeCrossHairs;
-    var t: LongInt;
-        tmpsurf, texsurf: PSDL_Surface;
-        Color, i: Longword;
-    begin
-    s:= Pathz[ptGraphics] + '/' + cCHFileName;
-    tmpsurf:= LoadImage(s, ifAlpha or ifCritical);
-
-    for t:= 0 to Pred(TeamsCount) do
-        with TeamsArray[t]^ do
-        begin
-        texsurf:= SDL_CreateRGBSurface(SDL_SWSURFACE, tmpsurf^.w, tmpsurf^.h, 32, RMask, GMask, BMask, AMask);
-        TryDo(texsurf <> nil, errmsgCreateSurface, true);
-
-        Color:= Clan^.Color;
-        Color:= SDL_MapRGB(texsurf^.format, Color shr 16, Color shr 8, Color and $FF);
-        SDL_FillRect(texsurf, nil, Color);
-
-        SDL_UpperBlit(tmpsurf, nil, texsurf, nil);
-
-        TryDo(tmpsurf^.format^.BytesPerPixel = 4, 'Ooops', true);
-
-        if SDL_MustLock(texsurf) then
-            SDLTry(SDL_LockSurface(texsurf) >= 0, true);
-
-        // make black pixel be alpha-transparent
-        for i:= 0 to texsurf^.w * texsurf^.h - 1 do
-            if PLongwordArray(texsurf^.pixels)^[i] = AMask then PLongwordArray(texsurf^.pixels)^[i]:= (RMask or GMask or BMask) and Color;
-
-        if SDL_MustLock(texsurf) then
-            SDL_UnlockSurface(texsurf);
-
-        CrosshairTex:= Surface2Tex(texsurf, false);
-        SDL_FreeSurface(texsurf)
-        end;
-
-    SDL_FreeSurface(tmpsurf)
     end;
 
     procedure InitHealth;
@@ -274,7 +274,9 @@ AddProgress;
 for ii:= Low(TSprite) to High(TSprite) do
     with SpritesData[ii] do
         // FIXME - add a sprite attribute
-        if ((cReducedQuality and rqNoBackground) = 0) or (not (ii in [sprSky, sprSkyL, sprSkyR, sprHorizont, sprHorizontL, sprHorizontR, sprFlake, sprSplash, sprDroplet]) or (((Theme = 'Snow') or (Theme = 'Christmas')) and (ii = sprFlake))) then // FIXME: hack
+        if ((cReducedQuality and rqNoBackground) = 0) or // FIXME: should check for both rqNoBackground and rqKillFlakes
+            (not (ii in [sprSky, sprSkyL, sprSkyR, sprHorizont, sprHorizontL, sprHorizontR, sprFlake, sprSplash, sprDroplet, sprSDSplash, sprSDDroplet]) or
+            (((Theme = 'Snow') or (Theme = 'Christmas')) and ((ii = sprFlake) or (ii = sprSDFlake)))) then // FIXME: hack; also should checked against rqLowRes
         begin
             if AltPath = ptNone then
                 if ii in [sprHorizontL, sprHorizontR, sprSkyL, sprSkyR] then // FIXME: hack
@@ -307,7 +309,8 @@ for ii:= Low(TSprite) to High(TSprite) do
                 else
                 begin
                     Texture:= Surface2Tex(tmpsurf, false);
-                    if (ii = sprWater) and ((cReducedQuality and (rq2DWater or rqClampLess)) = 0) then // HACK: We should include some sprite attribute to define the texture wrap directions
+                    // HACK: We should include some sprite attribute to define the texture wrap directions
+                    if ((ii = sprWater) or (ii = sprSDWater)) and ((cReducedQuality and (rq2DWater or rqClampLess)) = 0) then
                         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                 end;
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, priority);
@@ -375,6 +378,17 @@ begin
     SDL_FreeSurface(MissionIcons);
     FreeTexture(ropeIconTex);
     FreeTexture(HHTexture);
+{$IFNDEF S3D_DISABLED}
+    if (cStereoMode = smHorizontal) or (cStereoMode = smVertical) or (cStereoMode = smAFR) then
+    begin
+        glDeleteTextures(1, @texl);
+        glDeleteRenderbuffersEXT(1, @depthl);
+        glDeleteFramebuffersEXT(1, @framel);
+        glDeleteTextures(1, @texr);
+        glDeleteRenderbuffersEXT(1, @depthr);
+        glDeleteFramebuffersEXT(1, @framer)
+    end
+{$ENDIF}
 end;
 
 
@@ -420,9 +434,29 @@ begin
     LoadImage:= tmpsurf //Result
 end;
 
+procedure LoadHedgehogHat(HHGear: PGear; newHat: shortstring);
+var texsurf: PSDL_Surface;
+begin
+    texsurf:= LoadImage(Pathz[ptHats] + '/' + newHat, ifNone);
+
+    // only do something if the hat could be loaded
+    if texsurf <> nil then
+        begin
+        // free the mem of any previously assigned texture
+        FreeTexture(HHGear^.Hedgehog^.HatTex);
+
+        // assign new hat to hedgehog
+        HHGear^.Hedgehog^.HatTex:= Surface2Tex(texsurf, true);
+
+        // cleanup: free temporary surface mem
+        SDL_FreeSurface(texsurf)
+        end;
+end;
+
 function glLoadExtension(extension : shortstring) : boolean;
 begin
-{$IFDEF IPHONEOS}
+{$IF GLunit = gles11}
+    // FreePascal doesn't come with OpenGL ES 1.1 Extension headers
     extension:= extension; // avoid hint
     glLoadExtension:= false;
 {$IFDEF DEBUGFILE}
@@ -431,10 +465,10 @@ begin
 {$ELSE}
     glLoadExtension:= glext_LoadExtension(extension);
 {$IFDEF DEBUGFILE}
-    if not glLoadExtension then
-        AddFileLog('OpenGL - "' + extension + '" failed to load')
+    if glLoadExtension then
+        AddFileLog('OpenGL - "' + extension + '" loaded')
     else
-        AddFileLog('OpenGL - "' + extension + '" loaded');
+        AddFileLog('OpenGL - "' + extension + '" failed to load');
 {$ENDIF}
 {$ENDIF}
 end;
@@ -492,16 +526,57 @@ begin
 {$ENDIF}
     end;
 
-{$IFNDEF IPHONEOS}
+{$IFDEF IPHONEOS}
+    cGPUVendor:= gvApple;
+{$ELSE}
     if StrPos(Str2PChar(vendor), Str2PChar('nvidia')) <> nil then
         cGPUVendor:= gvNVIDIA
     else if StrPos(Str2PChar(vendor), Str2PChar('intel')) <> nil then
         cGPUVendor:= gvATI
     else if StrPos(Str2PChar(vendor), Str2PChar('ati')) <> nil then
         cGPUVendor:= gvIntel;
+{$ENDIF}
 //SupportNPOTT:= glLoadExtension('GL_ARB_texture_non_power_of_two');
-{$ELSE}
-    cGPUVendor:= gvApple;
+{$IFNDEF S3D_DISABLED}
+    if (cStereoMode = smHorizontal) or (cStereoMode = smVertical) or (cStereoMode = smAFR) then
+    begin
+        // prepare left and right frame buffers and associated textures
+        if glLoadExtension('GL_EXT_framebuffer_object') then
+        begin
+            // left
+            glGenFramebuffersEXT(1, @framel);
+            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framel);
+            glGenRenderbuffersEXT(1, @depthl);
+            glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthl);
+            glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, cScreenWidth, cScreenHeight);
+            glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthl);
+            glGenTextures(1, @texl);
+            glBindTexture(GL_TEXTURE_2D, texl);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,  cScreenWidth, cScreenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, texl, 0);
+
+            // right
+            glGenFramebuffersEXT(1, @framer);
+            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framer);
+            glGenRenderbuffersEXT(1, @depthr);
+            glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthr);
+            glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, cScreenWidth, cScreenHeight);
+            glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthr);
+            glGenTextures(1, @texr);
+            glBindTexture(GL_TEXTURE_2D, texr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,  cScreenWidth, cScreenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, texr, 0);
+
+            // reset
+            glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0)
+        end
+        else
+            cStereoMode:= smNone;
+    end;
 {$ENDIF}
 
 {$IFDEF DEBUGFILE}

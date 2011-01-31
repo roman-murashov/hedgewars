@@ -60,6 +60,7 @@ begin
         gsStart: begin
                 if HasBorder then DisableSomeWeapons;
                 AddClouds;
+                AddFlakes;
                 AssignHHCoords;
                 AddMiscGears;
                 StoreLoad;
@@ -225,10 +226,12 @@ begin
     cAltDamage:= gameArgs[8] = '1';
     val(gameArgs[9], rotationQt);
     recordFileName:= gameArgs[10];
+    cStereoMode:= smNone;
 {$ENDIF}
 
     cLogfileBase:= 'game';
     initEverything(true);
+
     WriteLnToConsole('Hedgewars ' + cVersionString + ' engine (network protocol: ' + inttostr(cNetProtoVersion) + ')');
 {$IFDEF DEBUGFILE}
     AddFileLog('Prefix: "' + PathPrefix +'"');

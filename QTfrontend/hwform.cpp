@@ -550,7 +550,7 @@ void HWForm::GoBack()
             GoBack();
 
     if (curid == ID_PAGE_ROOMSLIST) NetDisconnect();
-    if (curid == ID_PAGE_NETGAME) hwnet->partRoom();
+    if (curid == ID_PAGE_NETGAME && hwnet) hwnet->partRoom();
     // need to work on this, can cause invalid state for admin quit trying to prevent bad state message on kick
     //if (curid == ID_PAGE_NETGAME && (!game || game->gameState != gsStarted)) hwnet->partRoom();
 
@@ -702,7 +702,7 @@ void HWForm::PlayDemo()
 
 void HWForm::NetConnectServer(const QString & host, quint16 port)
 {
-    _NetConnect(host, port, ui.pageOptions->editNetNick->text());
+    _NetConnect(host, port, ui.pageOptions->editNetNick->text().trimmed());
 }
 
 void HWForm::NetConnectOfficialServer()
@@ -985,7 +985,7 @@ void HWForm::GameStateChanged(GameState gameState)
                 if (wBackground) wBackground->startAnimation();
                 if (hwnet) hwnet->gameFinished();
             }
-            if (gameState == gsHalted) close();   
+            if (gameState == gsHalted) close();
         };
     }
 }

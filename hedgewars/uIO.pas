@@ -22,9 +22,6 @@ unit uIO;
 interface
 uses SDLh, uTypes;
 
-var ipcPort: Word = 0;
-    hiTicks: Word;
-
 procedure initModule;
 procedure freeModule;
 
@@ -99,18 +96,18 @@ end;
 procedure InitIPC;
 var ipaddr: TIPAddress;
 begin
-WriteToConsole('Init SDL_Net... ');
-SDLTry(SDLNet_Init = 0, true);
-fds:= SDLNet_AllocSocketSet(1);
-SDLTry(fds <> nil, true);
-WriteLnToConsole(msgOK);
-WriteToConsole('Establishing IPC connection... ');
-{$HINTS OFF}
-SDLTry(SDLNet_ResolveHost(ipaddr, '127.0.0.1', ipcPort) = 0, true);
-{$HINTS ON}
-IPCSock:= SDLNet_TCP_Open(ipaddr);
-SDLTry(IPCSock <> nil, true);
-WriteLnToConsole(msgOK)
+    WriteToConsole('Init SDL_Net... ');
+    SDLTry(SDLNet_Init = 0, true);
+    fds:= SDLNet_AllocSocketSet(1);
+    SDLTry(fds <> nil, true);
+    WriteLnToConsole(msgOK);
+    WriteToConsole('Establishing IPC connection to tcp 127.0.0.1:' + IntToStr(ipcPort) + ' ');
+    {$HINTS OFF}
+    SDLTry(SDLNet_ResolveHost(ipaddr, '127.0.0.1', ipcPort) = 0, true);
+    {$HINTS ON}
+    IPCSock:= SDLNet_TCP_Open(ipaddr);
+    SDLTry(IPCSock <> nil, true);
+    WriteLnToConsole(msgOK)
 end;
 
 procedure CloseIPC;
@@ -431,7 +428,6 @@ end;
 
 procedure freeModule;
 begin
-    ipcPort:= 0;
 end;
 
 end.
