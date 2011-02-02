@@ -23,7 +23,6 @@ interface
 
 uses    SDLh, uConsts, GLunit, uTypes;
 
-
 procedure movecursor(dx, dy: LongInt);
 function  doSurfaceConversion(tmpsurf: PSDL_Surface): PSDL_Surface;
 procedure MakeScreenshot(filename: shortstring);
@@ -122,11 +121,11 @@ function doSurfaceConversion(tmpsurf: PSDL_Surface): PSDL_Surface;
 var convertedSurf: PSDL_Surface = nil;
 begin
     if (tmpsurf^.format^.bitsperpixel = 24) or ((tmpsurf^.format^.bitsperpixel = 32) and (tmpsurf^.format^.rshift > tmpsurf^.format^.bshift)) then
-    begin
+        begin
         convertedSurf:= SDL_ConvertSurface(tmpsurf, @conversionFormat, SDL_SWSURFACE);
         SDL_FreeSurface(tmpsurf);
         exit(convertedSurf);
-    end;
+        end;
 
     exit(tmpsurf);
 end;

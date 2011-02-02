@@ -188,7 +188,7 @@ AmmoSchemeModel::AmmoSchemeModel(QObject* parent, const QString & fileName) :
         << QVariant(false)         // disable land objects 17
         << QVariant(false)         // AI survival    18
         << QVariant(false)         // inf. attack    19
-        << QVariant(false)         // reset weps     20
+        << QVariant(true)          // reset weps     20
         << QVariant(false)         // per hog ammo   21
         << QVariant(false)         // no wind        22
         << QVariant(false)         // more wind      23
@@ -628,12 +628,20 @@ bool AmmoSchemeModel::insertRows(int row, int count, const QModelIndex & parent)
 {
     Q_UNUSED(count);
 
-    beginInsertRows(parent, row, row);
+    beginInsertRows(parent, schemes.size(), schemes.size());
 
-    QList<QVariant> newScheme = defaultScheme;
-    newScheme[0] = QVariant(tr("new"));
-
-    schemes.insert(row, newScheme);
+    if (row == -1)
+    {
+        QList<QVariant> newScheme = defaultScheme;
+        newScheme[0] = QVariant(tr("new"));
+        schemes.insert(schemes.size(), newScheme);
+    }
+    else
+    {
+        QList<QVariant> newScheme = schemes[row];
+        newScheme[0] = QVariant(tr("copy of") + " " + newScheme[0].toString());
+        schemes.insert(schemes.size(), newScheme);
+    }
 
     endInsertRows();
 

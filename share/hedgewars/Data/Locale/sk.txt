@@ -12,7 +12,7 @@
 00:09=DEagle
 00:10=Dynamit
 00:11=Bejzbolka
-00:12=Úder ohňa
+00:12=Shoryuken
 00:13=sek
 00:14=Padák
 00:15=Vzdušné posily
@@ -50,6 +50,8 @@
 00:47=Lepkavá mína
 00:48=Kladivo
 00:49=Oživovač
+00:50=Útok raketovými vŕtačkami
+00:51=Blatová guľa
 
 01:00=Do boja!
 01:01=Remíza

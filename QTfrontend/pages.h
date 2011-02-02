@@ -74,7 +74,7 @@ class AbstractPage : public QWidget
     Q_UNUSED(parent);
 
     font14 = new QFont("MS Shell Dlg", 14);
-    setFocusPolicy(Qt::StrongFocus);
+    //setFocusPolicy(Qt::StrongFocus);
   }
   virtual ~AbstractPage() {};
 
@@ -234,6 +234,7 @@ public:
     QComboBox *CBTeamName;
     IconedGroupBox *AGGroupBox;
     QComboBox *CBResolution;
+    QComboBox *CBStereoMode;
     QCheckBox *CBEnableSound;
     QCheckBox *CBEnableFrontendSound;
     QCheckBox *CBEnableMusic;
@@ -254,6 +255,16 @@ public:
     QLineEdit *editNetNick;
     QSlider *SLQuality;
     QCheckBox *CBFrontendEffects;
+
+private:
+    bool previousFullscreenValue;
+    int previousResolutionIndex;
+    int previousQuality;
+
+private slots:
+    void forceFullscreen(int index);
+    void setFullscreen(void);
+    void trimNetNick();
 };
 
 class PageNet : public AbstractPage
@@ -395,6 +406,7 @@ public:
     QPushButton *BtnDefault;
     QPushButton *BtnDelete;
     QPushButton *BtnNew;
+    QPushButton *BtnCopy;
     QPushButton *BtnBack;
     SelWeaponWidget* pWeapons;
     QComboBox* selectWeaponSet;
@@ -469,6 +481,7 @@ public:
     PageScheme(QWidget* parent = 0);
 
     QPushButton * BtnBack;
+    QPushButton * BtnCopy;
     QPushButton * BtnNew;
     QPushButton * BtnDelete;
     QPushButton * BtnSave;
@@ -478,6 +491,7 @@ public:
 
 public slots:
     void newRow();
+    void copyRow();
     void deleteRow();
 
 private:
@@ -587,6 +601,10 @@ public:
     QPushButton * BtnBack;
 
     DrawMapWidget * drawMapWidget;
+
+private slots:
+    void load();
+    void save();
 };
 
 #endif // PAGES_H

@@ -99,8 +99,6 @@
     createWeaponNamed(@"Minefield", 5);
     createWeaponNamed(@"Thinking with Portals", 6);
     // merge not needed because weapons not present in the set are 0ed by GameSetup
-
-    DLog(@"Success");
 }
 
 #pragma mark -
@@ -125,7 +123,8 @@
         [userDefaults synchronize];
         [self createNecessaryFiles];
     }
-    
+
+    /*
     ServerSetup *setup = [[ServerSetup alloc] init];
     if ([setup isNetworkReachable]) {
         DLog(@"network is reachable");
@@ -134,6 +133,7 @@
                                withObject:nil];
     }
     [setup release];
+    */
 }
 
 

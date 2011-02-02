@@ -7,6 +7,10 @@
         <source>new</source>
         <translation>uusi</translation>
     </message>
+    <message>
+        <source>copy of</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FreqSpinBox</name>
@@ -182,6 +186,14 @@
         <source>Large floating islands</source>
         <translation>Suuria kelluvia saaria</translation>
     </message>
+    <message>
+        <source>Seed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>HWNetServersModel</name>
@@ -312,6 +324,37 @@ tai aseta eri nimimerkki asetuksissa:</translation>
     <message>
         <source>Connecting...</source>
         <translation>Yhdistetään...</translation>
+    </message>
+</context>
+<context>
+    <name>PageDrawMap</name>
+    <message>
+        <source>Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation type="unfinished">Tyhjennä</translation>
+    </message>
+    <message>
+        <source>Load</source>
+        <translation type="unfinished">Lataa</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load drawn map</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drawn Maps (*.hwmap);;All files (*.*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save drawn map</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -516,7 +559,7 @@ tai aseta eri nimimerkki asetuksissa:</translation>
     <message>
         <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgwars to its game list so your friends can see you playing.</source>
         <comment>Tips</comment>
-        <translation>Windows-versio Hedgewarsista tukee Xfireä. Lisää Hedgewars sen pelilistaan niin kaverisi näkee kun pelaat.</translation>
+        <translation type="obsolete">Windows-versio Hedgewarsista tukee Xfireä. Lisää Hedgewars sen pelilistaan niin kaverisi näkee kun pelaat.</translation>
     </message>
     <message>
         <source>You should never install Hedgewars on computers you don&apos;t own (school, university, work, etc.). Please ask the responsible person instead!</source>
@@ -586,7 +629,7 @@ tai aseta eri nimimerkki asetuksissa:</translation>
     <message>
         <source>The Homing Bee can be tricky to use. It&apos;s turn radius depends on it&apos;s velocity, so try to not use full power.</source>
         <comment>Tips</comment>
-        <translation>Mehiläinen voi olla hankala käyttää. Sen säde riippuu nopeudesta, joten älä käytä sitä täydellä voimalla</translation>
+        <translation type="obsolete">Mehiläinen voi olla hankala käyttää. Sen säde riippuu nopeudesta, joten älä käytä sitä täydellä voimalla</translation>
     </message>
     <message>
         <source>Sticky Mines are a perfect tool to create small chain reactions knocking enemy hedgehogs into dire situations ... or water.</source>
@@ -616,7 +659,7 @@ tai aseta eri nimimerkki asetuksissa:</translation>
     <message>
         <source>Use the Incinerating Grenade to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
         <comment>Tips</comment>
-        <translation>Käytä palavaa kranaattia estämään siilia kulkemasta esimerkiksi tunneleihin ja tasoille.</translation>
+        <translation type="obsolete">Käytä palavaa kranaattia estämään siilia kulkemasta esimerkiksi tunneleihin ja tasoille.</translation>
     </message>
     <message>
         <source>Want to know who&apos;s behind the game? Click on the Hedgewars logo in the main menu to see the credits.</source>
@@ -670,6 +713,21 @@ tai aseta eri nimimerkki asetuksissa:</translation>
     </message>
     <message>
         <source>You can find your Hedgewars configuration files under &quot;.hedgewars&quot; in your home directory. Create backups or take the files with you, but don&apos;t edit them by hand.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgewars to its game list so your friends can see you playing.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Homing Bee can be tricky to use. Its turn radius depends on it&apos;s velocity, so try to not use full power.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use the Molotov or Flame Thrower to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
         <comment>Tips</comment>
         <translation type="unfinished"></translation>
     </message>
@@ -1029,6 +1087,10 @@ Haluatko silti liittyä huoneeseen?</translation>
         <source>Wind will affect almost everything.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PageSelectWeapon</name>
@@ -1043,6 +1105,10 @@ Haluatko silti liittyä huoneeseen?</translation>
     <message>
         <source>New</source>
         <translation type="unfinished">Uusi</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1247,6 +1313,50 @@ Haluatko silti liittyä huoneeseen?</translation>
     <message>
         <source>Crazy</source>
         <translation type="obsolete">Sekopäinen</translation>
+    </message>
+    <message>
+        <source>hand drawn map...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Cyan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cyan/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Blue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Blue/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Green</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Green/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Side-by-side</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top-Bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wiggle</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1474,6 +1584,14 @@ Haluatko silti liittyä huoneeseen?</translation>
         <source>% Rope Length</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Gameplay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stereo rendering</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QLineEdit</name>
@@ -1657,6 +1775,10 @@ Ole hyvä ja tarkista asennuksesi</translation>
         <source>Associate file extensions</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>more</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QTableWidget</name>
@@ -1710,6 +1832,10 @@ Ole hyvä ja tarkista asennuksesi</translation>
     <message>
         <source>new</source>
         <translation type="unfinished">uusi</translation>
+    </message>
+    <message>
+        <source>copy of</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

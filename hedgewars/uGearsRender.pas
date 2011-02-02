@@ -186,7 +186,7 @@ begin
     if (Gear^.State and gstHHDeath) <> 0 then
         begin
         DrawSprite(sprHHDeath, ox - 16, oy - 26, Gear^.Pos);
-        Tint(HH^.Team^.Clan^.Color);
+        Tint(HH^.Team^.Clan^.Color shl 8 or $FF);
         DrawSprite(sprHHDeath, ox - 16, oy - 26, Gear^.Pos + 8);
         Tint($FF, $FF, $FF, $FF);
         exit
@@ -353,7 +353,7 @@ begin
                                 i*DxDy2Angle(CurAmmoGear^.dY, CurAmmoGear^.dX) + hAngle);
                             if HatTex^.w > 64 then
                                 begin
-                                Tint(HH^.Team^.Clan^.Color);
+                                Tint(HH^.Team^.Clan^.Color shl 8 or $FF);
                                 DrawRotatedTextureF(HatTex, 1.0, -1.0, -6.0, ox, oy, 32, i, 32, 32,
                                     i*DxDy2Angle(CurAmmoGear^.dY, CurAmmoGear^.dX) + hAngle);
                                 Tint($FF, $FF, $FF, $FF)
@@ -383,7 +383,7 @@ begin
                                 32);
                             if HatTex^.w > 64 then
                                 begin
-                                Tint(HH^.Team^.Clan^.Color);
+                                Tint(HH^.Team^.Clan^.Color shl 8 or $FF);
                                 DrawTextureF(HatTex,
                                     1,
                                     sx,
@@ -543,6 +543,7 @@ begin
             CurWeapon:= GetAmmoEntry(HH^);
             case amt of
                 amBazooka: DrawRotated(sprHandBazooka, hx, hy, sign, aangle);
+                amSnowball: DrawRotated(sprHandSnowball, hx, hy, sign, aangle);
                 amMortar: DrawRotated(sprHandMortar, hx, hy, sign, aangle);
                 amMolotov: DrawRotated(sprHandMolotov, hx, hy, sign, aangle);
                 amBallgun: DrawRotated(sprHandBallgun, hx, hy, sign, aangle);
@@ -554,7 +555,7 @@ begin
                 amPortalGun: if (CurWeapon^.Timer and 2) <> 0 then // Add a new Hedgehog value instead of abusing timer?
                                 DrawRotatedF(sprPortalGun, hx, hy, 0, sign, aangle)
                         else
-                                DrawRotatedF(sprPortalGun, hx, hy, 1+(CurWeapon^.Timer and 1), sign, aangle);
+                                DrawRotatedF(sprPortalGun, hx, hy, 1+CurWeapon^.Pos, sign, aangle);
                 amSniperRifle: DrawRotatedF(sprSniperRifle, hx, hy, 0, sign, aangle);
                 amBlowTorch: DrawRotated(sprHandBlowTorch, hx, hy, sign, aangle);
                 amCake: DrawRotated(sprHandCake, hx, hy, sign, aangle);
@@ -704,7 +705,7 @@ begin
                     32);
                 if HatTex^.w > 64 then
                     begin
-                    Tint(HH^.Team^.Clan^.Color);
+                    Tint(HH^.Team^.Clan^.Color shl 8 or $FF);
                     DrawTextureF(HatTex,
                         HatVisibility,
                         sx,
@@ -728,7 +729,7 @@ begin
                     32);
                 if HatTex^.w > 64 then
                     begin
-                    Tint(HH^.Team^.Clan^.Color);
+                    Tint(HH^.Team^.Clan^.Color shl 8 or $FF);
                     DrawTextureF(HatTex,
                         HatVisibility,
                         sx,
@@ -845,6 +846,7 @@ var
 begin
     case Gear^.Kind of
           gtBomb: DrawRotated(sprBomb, x, y, 0, Gear^.DirAngle);
+      gtSnowball: DrawRotated(sprSnowball, x, y, 0, Gear^.DirAngle);
        gtGasBomb: DrawRotated(sprCheese, x, y, 0, Gear^.DirAngle);
        gtMolotov: DrawRotated(sprMolotov, x, y, 0, Gear^.DirAngle);
 
@@ -853,8 +855,6 @@ begin
                      DrawRotated(sprPlane, x, y, -1,  DxDy2Angle(Gear^.dX, Gear^.dY) + 90)
                   else
                      DrawRotated(sprPlane, x, y,0,DxDy2Angle(Gear^.dY, Gear^.dX));
-                  if ((TrainingFlags and tfRCPlane) <> 0) and (TrainingTargetGear <> nil) and ((Gear^.State and gstDrowning) = 0) then
-                     DrawRotatedf(sprFinger, x, y, GameTicks div 32 mod 16, 0, DxDy2Angle(Gear^.X - TrainingTargetGear^.X, TrainingTargetGear^.Y - Gear^.Y));
                   end;
        gtBall: DrawRotatedf(sprBalls, x, y, Gear^.Tag,0, Gear^.DirAngle);
 
@@ -1015,6 +1015,17 @@ begin
                     Tint($FF, $FF, $FF, $FF);
                     end;
       gtNapalmBomb: DrawRotated(sprNapalmBomb, x, y, 0, DxDy2Angle(Gear^.dY, Gear^.dX));
+           gtFlake: if not isInLag then
+                   begin
+                        if vobVelocity = 0 then
+                      //DrawSprite(sprFlake, x-SpritesData[sprFlake].Width div 2, y-SpritesData[sprFlake].Height div 2, Gear^.Timer)
+                      DrawSprite(sprFlake, x, y, Gear^.Timer)
+                  else
+                      //DrawRotatedF(sprFlake, x-SpritesData[sprFlake].Width div 2, y-SpritesData[sprFlake].Height div 2, Gear^.Timer, 1, Gear^.DirAngle);
+                      DrawRotatedF(sprFlake, x, y, Gear^.Timer, 1, Gear^.DirAngle)
+                  end;
+       gtStructure: DrawSprite(sprTarget, x - 16, y - 16, 0);
+
          end;
       if Gear^.RenderTimer and (Gear^.Tex <> nil) then DrawCentered(x + 8, y + 8, Gear^.Tex);
 end;

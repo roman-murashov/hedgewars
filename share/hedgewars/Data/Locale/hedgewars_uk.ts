@@ -7,6 +7,10 @@
         <source>new</source>
         <translation>нова</translation>
     </message>
+    <message>
+        <source>copy of</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FreqSpinBox</name>
@@ -187,6 +191,14 @@
         <source>Large floating islands</source>
         <translation>Великі плавучі острова</translation>
     </message>
+    <message>
+        <source>Seed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>HWNetServersModel</name>
@@ -317,6 +329,37 @@ or pick another nickname in game config:</source>
     <message>
         <source>Connecting...</source>
         <translation>Під&apos;єднання...</translation>
+    </message>
+</context>
+<context>
+    <name>PageDrawMap</name>
+    <message>
+        <source>Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation type="unfinished">Очистити</translation>
+    </message>
+    <message>
+        <source>Load</source>
+        <translation type="unfinished">Завантажити</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load drawn map</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drawn Maps (*.hwmap);;All files (*.*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save drawn map</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -520,7 +563,7 @@ or pick another nickname in game config:</source>
     <message>
         <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgwars to its game list so your friends can see you playing.</source>
         <comment>Tips</comment>
-        <translation>Windows-версія Hedgewars підтримує Xfire. Переконайтеся в тому, що ви додали Hedgwars до списку ігор, щоб ваші друзі могли бачити вас в грі.</translation>
+        <translation type="obsolete">Windows-версія Hedgewars підтримує Xfire. Переконайтеся в тому, що ви додали Hedgwars до списку ігор, щоб ваші друзі могли бачити вас в грі.</translation>
     </message>
     <message>
         <source>You should never install Hedgewars on computers you don&apos;t own (school, university, work, etc.). Please ask the responsible person instead!</source>
@@ -590,7 +633,7 @@ or pick another nickname in game config:</source>
     <message>
         <source>The Homing Bee can be tricky to use. It&apos;s turn radius depends on it&apos;s velocity, so try to not use full power.</source>
         <comment>Tips</comment>
-        <translation>Навідна Бджілка може бути складною у керуванні. Радіус повороту залежить від її швидкості, тому постарайтеся не стріляти на повну силу.</translation>
+        <translation type="obsolete">Навідна Бджілка може бути складною у керуванні. Радіус повороту залежить від її швидкості, тому постарайтеся не стріляти на повну силу.</translation>
     </message>
     <message>
         <source>Sticky Mines are a perfect tool to create small chain reactions knocking enemy hedgehogs into dire situations ... or water.</source>
@@ -620,7 +663,7 @@ or pick another nickname in game config:</source>
     <message>
         <source>Use the Incinerating Grenade to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
         <comment>Tips</comment>
-        <translation>Використайте Горючу Гранату щоб тимчасово утримати їжаків від проходження такої місцевості як тунелі або платформи.</translation>
+        <translation type="obsolete">Використайте Горючу Гранату щоб тимчасово утримати їжаків від проходження такої місцевості як тунелі або платформи.</translation>
     </message>
     <message>
         <source>Want to know who&apos;s behind the game? Click on the Hedgewars logo in the main menu to see the credits.</source>
@@ -671,6 +714,21 @@ or pick another nickname in game config:</source>
         <source>You can find your Hedgewars configuration files under &quot;.hedgewars&quot; in your home directory. Create backups or take the files with you, but don&apos;t edit them by hand.</source>
         <comment>Tips</comment>
         <translation>Ви можете знайти файли конфігурації Hedgewars в &quot;.hedgewars&quot; в домашній теці. Ви можете створити резервні копії або взяти файли з собою, але не редагуйте їх.</translation>
+    </message>
+    <message>
+        <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgewars to its game list so your friends can see you playing.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Homing Bee can be tricky to use. Its turn radius depends on it&apos;s velocity, so try to not use full power.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use the Molotov or Flame Thrower to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1030,6 +1088,10 @@ Do you still want to join the room?</source>
         <source>Wind will affect almost everything.</source>
         <translation>Вітер вплине майже на все.</translation>
     </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PageSelectWeapon</name>
@@ -1044,6 +1106,10 @@ Do you still want to join the room?</source>
     <message>
         <source>New</source>
         <translation>Нова</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1220,6 +1286,50 @@ Do you still want to join the room?</source>
     <message>
         <source>Default</source>
         <translation type="obsolete">За замовчуванням</translation>
+    </message>
+    <message>
+        <source>hand drawn map...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Cyan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cyan/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Blue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Blue/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Green</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Green/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Side-by-side</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top-Bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wiggle</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1447,6 +1557,14 @@ Do you still want to join the room?</source>
         <source>% Rope Length</source>
         <translation>% Довжина Мотузки</translation>
     </message>
+    <message>
+        <source>Gameplay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stereo rendering</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QLineEdit</name>
@@ -1630,6 +1748,10 @@ Please check your installation</source>
         <source>Associate file extensions</source>
         <translation>Асоціювати файлові розширення</translation>
     </message>
+    <message>
+        <source>more</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QTableWidget</name>
@@ -1683,6 +1805,10 @@ Please check your installation</source>
     <message>
         <source>new</source>
         <translation>нова</translation>
+    </message>
+    <message>
+        <source>copy of</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2086,7 +2212,7 @@ info</source>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Видалити</translation>
     </message>
     <message>
         <source>Mouse: Left button</source>
@@ -2118,7 +2244,7 @@ info</source>
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Очистити</translation>
     </message>
     <message>
         <source>Return</source>

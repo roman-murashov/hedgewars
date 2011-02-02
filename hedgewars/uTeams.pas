@@ -216,7 +216,7 @@ if (GameFlags and gfDisableWind) = 0 then
         CWindSpeedf := -cWindSpeedf;
     g:= AddGear(0, 0, gtATSmoothWindCh, 0, _0, _0, 1);
     g^.Tag:= hwRound(cWindSpeed * 72 / cMaxWindSpeed);
-{$IFDEF DEBUGFILE}AddFileLog('Wind = '+FloatToStr(cWindSpeed));{$ENDIF}
+    AddFileLog('Wind = '+FloatToStr(cWindSpeed));
     end;
 
 ApplyAmmoChanges(CurrentHedgehog^);
@@ -372,7 +372,9 @@ with team^ do
     if not hasGone then
         for i:= 0 to cMaxHHIndex do
             if Hedgehogs[i].Gear <> nil then
-                inc(NewTeamHealthBarWidth, Hedgehogs[i].Gear^.Health);
+                inc(NewTeamHealthBarWidth, Hedgehogs[i].Gear^.Health)
+            else if Hedgehogs[i].GearHidden <> nil then
+                inc(NewTeamHealthBarWidth, Hedgehogs[i].GearHidden^.Health);
 
     TeamHealth:= NewTeamHealthBarWidth;
     if NewTeamHealthBarWidth > MaxTeamHealth then
@@ -529,11 +531,17 @@ begin
 end;
 
 procedure freeModule;
-var i: LongWord;
+var i, h: LongWord;
 begin
    if TeamsCount > 0 then
      begin
-     for i:= 0 to Pred(TeamsCount) do Dispose(TeamsArray[i]);
+     for i:= 0 to Pred(TeamsCount) do
+        begin
+            for h:= 0 to cMaxHHIndex do
+                if TeamsArray[i]^.Hedgehogs[h].GearHidden <> nil then
+                    Dispose(TeamsArray[i]^.Hedgehogs[h].GearHidden);
+            Dispose(TeamsArray[i]);
+        end;
      for i:= 0 to Pred(ClansCount) do Dispose(ClansArray[i]);
      end;
    TeamsCount:= 0;
