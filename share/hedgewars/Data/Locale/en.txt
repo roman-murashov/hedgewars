@@ -12,7 +12,7 @@
 00:09=Desert Eagle
 00:10=Dynamite
 00:11=Baseball Bat
-00:12=Fire Punch
+00:12=Shoryuken
 00:13=sec
 00:14=Parachute
 00:15=Air Attack
@@ -51,6 +51,10 @@
 00:48=Hammer
 00:49=Resurrector
 00:50=Drill Strike
+00:51=Mudball
+00:52=No weapon selected
+00:53=TARDIS
+00:54=Structure
 
 01:00=Let's fight!
 01:01=Round draw
@@ -433,6 +437,10 @@
 03:48=It's Hammer time!
 03:49=Does what you guess
 03:50=Moles fan
+03:51=Found on the ground
+03:52=UNUSED
+03:53=Type 40
+03:54=Build something
 
 ; Weapon Descriptions (use | as line breaks)
 04:00=Attack your enemies using a simple grenade.|It will explode once its timer reaches zero.|1-5: Set grenade's timer|Attack: Hold to throw with more power

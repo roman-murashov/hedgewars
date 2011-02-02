@@ -7,6 +7,10 @@
         <source>new</source>
         <translation>Nuevo</translation>
     </message>
+    <message>
+        <source>copy of</source>
+        <translation>Copia de</translation>
+    </message>
 </context>
 <context>
     <name>FreqSpinBox</name>
@@ -46,7 +50,7 @@
     </message>
     <message>
         <source>When this option is enabled selecting a game scheme will auto-select a weapon</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuando esta opción esté activada escoger un modo de juego escogerá el set de armas correspondiente</translation>
     </message>
 </context>
 <context>
@@ -190,6 +194,14 @@
         <source>Large floating islands</source>
         <translation>Islas grandes</translation>
     </message>
+    <message>
+        <source>Seed</source>
+        <translation>Semilla</translation>
+    </message>
+    <message>
+        <source>Set</source>
+        <translation type="unfinished">Establecer</translation>
+    </message>
 </context>
 <context>
     <name>HWNetServersModel</name>
@@ -320,6 +332,37 @@ o elige otro nick en las preferencias del juego:</translation>
     <message>
         <source>Connecting...</source>
         <translation>Conectando...</translation>
+    </message>
+</context>
+<context>
+    <name>PageDrawMap</name>
+    <message>
+        <source>Undo</source>
+        <translation>Deshacer</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Limpiar</translation>
+    </message>
+    <message>
+        <source>Load</source>
+        <translation>Cargar</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Guardar</translation>
+    </message>
+    <message>
+        <source>Load drawn map</source>
+        <translation>Cargar mapa</translation>
+    </message>
+    <message>
+        <source>Drawn Maps (*.hwmap);;All files (*.*)</source>
+        <translation>Mapas dibujados a mano (*.hwmap);;Todos los ficheros (*.*)</translation>
+    </message>
+    <message>
+        <source>Save drawn map</source>
+        <translation>Guardar mapa</translation>
     </message>
 </context>
 <context>
@@ -524,7 +567,7 @@ o elige otro nick en las preferencias del juego:</translation>
     <message>
         <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgwars to its game list so your friends can see you playing.</source>
         <comment>Tips</comment>
-        <translation>La versión para Windows de Hedgewars soporta Xfire. Recuerda añadie Hedgewars a tu lista de juegos favoritos para que tus amigos sepan cuándo estás jugando.</translation>
+        <translation type="obsolete">La versión para Windows de Hedgewars soporta Xfire. Recuerda añadie Hedgewars a tu lista de juegos favoritos para que tus amigos sepan cuándo estás jugando.</translation>
     </message>
     <message>
         <source>You should never install Hedgewars on computers you don&apos;t own (school, university, work, etc.). Please ask the responsible person instead!</source>
@@ -594,7 +637,7 @@ o elige otro nick en las preferencias del juego:</translation>
     <message>
         <source>The Homing Bee can be tricky to use. It&apos;s turn radius depends on it&apos;s velocity, so try to not use full power.</source>
         <comment>Tips</comment>
-        <translation>El abejorro puede ser complicado de usar. Su maniobrabilidad depende de su velocidad, así que intenta no lanzarlo a máxima potencia.</translation>
+        <translation type="obsolete">El abejorro puede ser complicado de usar. Su maniobrabilidad depende de su velocidad, así que intenta no lanzarlo a máxima potencia.</translation>
     </message>
     <message>
         <source>Sticky Mines are a perfect tool to create small chain reactions knocking enemy hedgehogs into dire situations ... or water.</source>
@@ -624,7 +667,7 @@ o elige otro nick en las preferencias del juego:</translation>
     <message>
         <source>Use the Incinerating Grenade to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
         <comment>Tips</comment>
-        <translation>Puedes usar el cóctel molotov para evitar que erizos enemigos crucen túneles angostos o puentes.</translation>
+        <translation type="obsolete">Puedes usar el cóctel molotov para evitar que erizos enemigos crucen túneles angostos o puentes.</translation>
     </message>
     <message>
         <source>Want to know who&apos;s behind the game? Click on the Hedgewars logo in the main menu to see the credits.</source>
@@ -680,6 +723,21 @@ o elige otro nick en las preferencias del juego:</translation>
         <source>You can find your Hedgewars configuration files under &quot;.hedgewars&quot; in your home directory. Create backups or take the files with you, but don&apos;t edit them by hand.</source>
         <comment>Tips</comment>
         <translation>Puedes encontrar los archivos de configuración del juego en la carpeta &quot;.hedgewars&quot; dentro de tu directorio personal. Puedes hacer copias de seguridad de los mismos o copiarlos a otro ordenador si lo deseas, pero no intentes editarlos a mano para evitar posibles pérdidas de datos.</translation>
+    </message>
+    <message>
+        <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgewars to its game list so your friends can see you playing.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Homing Bee can be tricky to use. Its turn radius depends on it&apos;s velocity, so try to not use full power.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use the Molotov or Flame Thrower to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -750,27 +808,27 @@ o elige otro nick en las preferencias del juego:</translation>
     </message>
     <message>
         <source>New scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuevo modo de juego</translation>
     </message>
     <message>
         <source>Edit scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Editar modo de juego</translation>
     </message>
     <message>
         <source>Delete scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar modo de juego</translation>
     </message>
     <message>
         <source>New weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuevo set de armas</translation>
     </message>
     <message>
         <source>Edit weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Editar set de armas</translation>
     </message>
     <message>
         <source>Delete weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar set de armas</translation>
     </message>
 </context>
 <context>
@@ -1031,11 +1089,15 @@ Do you still want to join the room?</source>
     </message>
     <message>
         <source>You will not have to worry about wind anymore.</source>
-        <translation type="unfinished"></translation>
+        <translation>No tendrás que volver a preocuparte del viento.</translation>
     </message>
     <message>
         <source>Wind will affect almost everything.</source>
-        <translation type="unfinished"></translation>
+        <translation>El viento afectará a (casi) todo.</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Copiar</translation>
     </message>
 </context>
 <context>
@@ -1050,7 +1112,11 @@ Do you still want to join the room?</source>
     </message>
     <message>
         <source>New</source>
-        <translation type="unfinished">Nuevo</translation>
+        <translation>Nuevo</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Copiar</translation>
     </message>
 </context>
 <context>
@@ -1256,6 +1322,54 @@ Do you still want to join the room?</source>
         <source>Crazy</source>
         <translation type="obsolete">Lunático</translation>
     </message>
+    <message>
+        <source>Normal</source>
+        <translation type="obsolete">Normal</translation>
+    </message>
+    <message>
+        <source>hand drawn map...</source>
+        <translation>Mapa dibujado a mano...</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Cyan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cyan/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Blue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Blue/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Green</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Green/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Side-by-side</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top-Bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wiggle</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QGroupBox</name>
@@ -1309,7 +1423,7 @@ Do you still want to join the room?</source>
     </message>
     <message>
         <source>Schemes and Weapons</source>
-        <translation type="unfinished"></translation>
+        <translation>Modos de juego y sets de armas</translation>
     </message>
 </context>
 <context>
@@ -1493,6 +1607,14 @@ así como carecer de algunas funcionalidades o simplemente funcionar mal.
     </message>
     <message>
         <source>% Rope Length</source>
+        <translation>% longitud de las cuerdas</translation>
+    </message>
+    <message>
+        <source>Gameplay</source>
+        <translation>Tipo de juego</translation>
+    </message>
+    <message>
+        <source>Stereo rendering</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1562,27 +1684,27 @@ Por favor, compruebe que el juego está debidamente instalado</translation>
     </message>
     <message>
         <source>Teams</source>
-        <translation type="unfinished">Equipos</translation>
+        <translation>Equipos</translation>
     </message>
     <message>
         <source>Really delete this team?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿De verdad quieres eliminar este equipo?</translation>
     </message>
     <message>
         <source>Schemes</source>
-        <translation type="unfinished"></translation>
+        <translation>Modos de juego</translation>
     </message>
     <message>
         <source>Can not delete default scheme &apos;%1&apos;!</source>
-        <translation type="unfinished"></translation>
+        <translation>¡No se puede eliminar el modo de juego predefinido &apos;%1&apos;!</translation>
     </message>
     <message>
         <source>Really delete this game scheme?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿De verdad quieres eliminar este modo de juego?</translation>
     </message>
     <message>
         <source>Can not delete default weapon set &apos;%1&apos;!</source>
-        <translation type="unfinished"></translation>
+        <translation>¡No se puede eliminar el set de armas predefinido &apos;%1&apos;!</translation>
     </message>
 </context>
 <context>
@@ -1678,6 +1800,14 @@ Por favor, compruebe que el juego está debidamente instalado</translation>
         <source>Associate file extensions</source>
         <translation>Asociar tipos de archivo</translation>
     </message>
+    <message>
+        <source>Set</source>
+        <translation type="obsolete">Establecer</translation>
+    </message>
+    <message>
+        <source>more</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QTableWidget</name>
@@ -1718,7 +1848,7 @@ Por favor, compruebe que el juego está debidamente instalado</translation>
     </message>
     <message>
         <source>Probabilities</source>
-        <translation>Probabilidad</translation>
+        <translation>Probabilidades</translation>
     </message>
     <message>
         <source>Ammo in boxes</source>
@@ -1730,7 +1860,11 @@ Por favor, compruebe que el juego está debidamente instalado</translation>
     </message>
     <message>
         <source>new</source>
-        <translation type="unfinished">Nuevo</translation>
+        <translation>Nuevo</translation>
+    </message>
+    <message>
+        <source>copy of</source>
+        <translation>Copia de</translation>
     </message>
 </context>
 <context>
@@ -1840,11 +1974,11 @@ Por favor, compruebe que el juego está debidamente instalado</translation>
     </message>
     <message>
         <source>Disable Wind</source>
-        <translation type="unfinished"></translation>
+        <translation>Deshabilitar viento</translation>
     </message>
     <message>
         <source>More Wind</source>
-        <translation type="unfinished"></translation>
+        <translation>Más viento</translation>
     </message>
 </context>
 <context>

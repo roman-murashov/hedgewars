@@ -36,6 +36,7 @@
 #include <QTableView>
 #include <QCryptographicHash>
 #include <QSignalMapper>
+#include <QShortcut>
 
 #include "hwform.h"
 #include "game.h"
@@ -86,7 +87,7 @@ HWForm::HWForm(QWidget *parent)
 
     ui.setupUi(this);
     setMinimumSize(760, 580);
-    setFocusPolicy(Qt::StrongFocus);
+    //setFocusPolicy(Qt::StrongFocus);
     CustomizePalettes();
 
     ui.pageOptions->CBResolution->addItems(sdli.getResolutions());
@@ -104,6 +105,10 @@ HWForm::HWForm(QWidget *parent)
     if (updater && config->isAutoUpdateEnabled())
         updater->checkForUpdates();
 #endif
+#else
+    // ctrl+q closes frontend for consistency
+    QShortcut *closeFrontend = new QShortcut(QKeySequence("Ctrl+Q"), this);
+    connect (closeFrontend, SIGNAL(activated()), this, SLOT(close()));
 #endif
 
     UpdateTeamsLists();
@@ -308,11 +313,13 @@ void HWForm::onFrontendFullscreen(bool value)
   }
 }
 
+/*
 void HWForm::keyReleaseEvent(QKeyEvent *event)
 {
-  if (event->key() == Qt::Key_Escape /*|| event->key() == Qt::Key_Backspace*/ ) 
+  if (event->key() == Qt::Key_Escape) 
     this->GoBack();
 }
+*/
 
 void HWForm::CustomizePalettes()
 {
@@ -543,7 +550,7 @@ void HWForm::GoBack()
             GoBack();
 
     if (curid == ID_PAGE_ROOMSLIST) NetDisconnect();
-    if (curid == ID_PAGE_NETGAME) hwnet->partRoom();
+    if (curid == ID_PAGE_NETGAME && hwnet) hwnet->partRoom();
     // need to work on this, can cause invalid state for admin quit trying to prevent bad state message on kick
     //if (curid == ID_PAGE_NETGAME && (!game || game->gameState != gsStarted)) hwnet->partRoom();
 
@@ -662,6 +669,7 @@ void HWForm::DeleteScheme()
         QMessageBox::warning(0, QMessageBox::tr("Schemes"), QMessageBox::tr("Can not delete default scheme '%1'!").arg(ui.pageOptions->SchemesName->currentText()));
     } else {
         ui.pageScheme->deleteRow();
+        ammoSchemeModel->Save();
     }
 }
 
@@ -694,7 +702,7 @@ void HWForm::PlayDemo()
 
 void HWForm::NetConnectServer(const QString & host, quint16 port)
 {
-    _NetConnect(host, port, ui.pageOptions->editNetNick->text());
+    _NetConnect(host, port, ui.pageOptions->editNetNick->text().trimmed());
 }
 
 void HWForm::NetConnectOfficialServer()
@@ -789,6 +797,8 @@ void HWForm::_NetConnect(const QString & hostName, quint16 port, const QString &
         hwnet, SLOT(chatLineToLobby(const QString&)));
     connect(hwnet, SIGNAL(chatStringLobby(const QString&)),
         ui.pageRoomsList->chatWidget, SLOT(onChatString(const QString&)));
+    connect(hwnet, SIGNAL(chatStringLobby(const QString&, const QString&)),
+        ui.pageRoomsList->chatWidget, SLOT(onChatString(const QString&, const QString&)));
     connect(hwnet, SIGNAL(chatStringFromMeLobby(const QString&)),
         ui.pageRoomsList->chatWidget, SLOT(onChatString(const QString&)));
 
@@ -971,12 +981,13 @@ void HWForm::GameStateChanged(GameState gameState)
             if (id == ID_PAGE_INGAME ||
 // was room chief and the game was aborted
                 (hwnet && hwnet->isRoomChief() && hwnet->isInRoom() && 
-                    (gameState == gsInterrupted || gameState == gsStopped || gameState == gsDestroyed))) {
+                    (gameState == gsInterrupted || gameState == gsStopped || gameState == gsDestroyed || gameState == gsHalted))) {
                 if (id == ID_PAGE_INGAME) GoBack();
                 Music(ui.pageOptions->CBEnableFrontendMusic->isChecked());
                 if (wBackground) wBackground->startAnimation();
                 if (hwnet) hwnet->gameFinished();
             }
+            if (gameState == gsHalted) close();
         };
     }
 }
@@ -1005,6 +1016,10 @@ void HWForm::GetRecord(bool isDemo, const QByteArray & record)
             config->appendDateTimeToRecordName() ?
                 QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm") :
                 "LastRound";
+
+    QStringList versionParts = cVersionString->split('-');
+    if ( (versionParts.size() == 2) && (!versionParts[1].isEmpty()) && (versionParts[1].contains(':')) )
+        recordFileName = recordFileName + "_" + versionParts[1].replace(':','-');
 
     if (isDemo)
     {
@@ -1169,7 +1184,7 @@ void HWForm::UpdateCampaignPage(int index)
     QStringList entries = tmpdir.entryList(QStringList("*#*.lua"));
     //entries.sort();
     for(int i = 0; (i < entries.count()) && (i <= team.CampaignProgress); i++)
-        ui.pageCampaign->CBSelect->addItem(QString(entries[i]).replace(QRegExp("^(\\d+)#(.+)\\.lua"), QComboBox::tr("Mission") + " \\1: \\2"), QString(entries[i]).replace(QRegExp("^(.*)\\.lua"), "\\1"));
+        ui.pageCampaign->CBSelect->addItem(QString(entries[i]).replace(QRegExp("^(\\d+)#(.+)\\.lua"), QComboBox::tr("Mission") + " \\1: \\2").replace("_", " "), QString(entries[i]).replace(QRegExp("^(.*)\\.lua"), "\\1"));
 }
 
 void HWForm::AssociateFiles()

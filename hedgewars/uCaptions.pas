@@ -10,7 +10,7 @@ procedure initModule;
 procedure freeModule;
 
 implementation
-uses uTextures, uRenderUtils, uVariables, uRender, uConsts;
+uses uTextures, uRenderUtils, uVariables, uRender;
 
 type TCaptionStr = record
                    Tex: PTexture;
@@ -39,14 +39,11 @@ var
     grp: TCapGroup;
     offset: LongInt;
 begin
-    {$IFDEF IPHONEOS}
+{$IFDEF IPHONEOS}
     offset:= 40;
-    {$ELSE}
-    if ((TrainingFlags and tfTimeTrial) <> 0) and (TimeTrialStartTime > 0) then
-        offset:= 48
-    else
-        offset:= 8;
-    {$ENDIF}
+{$ELSE}
+    offset:= 8;
+{$ENDIF}
 
     for grp:= Low(TCapGroup) to High(TCapGroup) do
         with Captions[grp] do
@@ -69,7 +66,13 @@ begin
 end;
 
 procedure freeModule;
+var
+    group: TCapGroup;
 begin
+    for group:= Low(TCapGroup) to High(TCapGroup) do
+    begin
+        FreeTexture(Captions[group].Tex);
+    end;
 end;
 
 end.

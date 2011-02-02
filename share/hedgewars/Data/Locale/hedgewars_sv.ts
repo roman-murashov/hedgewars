@@ -7,6 +7,10 @@
         <source>new</source>
         <translation>ny</translation>
     </message>
+    <message>
+        <source>copy of</source>
+        <translation>kopia av</translation>
+    </message>
 </context>
 <context>
     <name>FreqSpinBox</name>
@@ -26,7 +30,7 @@
     <name>GameCFGWidget</name>
     <message>
         <source>Edit weapons</source>
-        <translation>Redigera vapenscheman</translation>
+        <translation>Redigera vapenset</translation>
     </message>
     <message>
         <source>Error</source>
@@ -42,7 +46,7 @@
     </message>
     <message>
         <source>When this option is enabled selecting a game scheme will auto-select a weapon</source>
-        <translation type="unfinished"></translation>
+        <translation>När det här valet är aktivt kommer vapnen att ändras när du ändrar spelschema</translation>
     </message>
 </context>
 <context>
@@ -182,6 +186,14 @@
         <source>Large floating islands</source>
         <translation>Stora flytande öar</translation>
     </message>
+    <message>
+        <source>Seed</source>
+        <translation>Frö</translation>
+    </message>
+    <message>
+        <source>Set</source>
+        <translation type="unfinished">Ange</translation>
+    </message>
 </context>
 <context>
     <name>HWNetServersModel</name>
@@ -312,6 +324,37 @@ ett annat smeknamn i spelinställningarna:</translation>
     <message>
         <source>Connecting...</source>
         <translation>Ansluter...</translation>
+    </message>
+</context>
+<context>
+    <name>PageDrawMap</name>
+    <message>
+        <source>Undo</source>
+        <translation>Ångra</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Rensa</translation>
+    </message>
+    <message>
+        <source>Load</source>
+        <translation>Läs in</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Spara</translation>
+    </message>
+    <message>
+        <source>Load drawn map</source>
+        <translation>Läs in ritad karta</translation>
+    </message>
+    <message>
+        <source>Drawn Maps (*.hwmap);;All files (*.*)</source>
+        <translation>Ritade kartor (*.hwmap);;Alla filer (*.*)</translation>
+    </message>
+    <message>
+        <source>Save drawn map</source>
+        <translation>Spara ritad karta</translation>
     </message>
 </context>
 <context>
@@ -516,7 +559,7 @@ ett annat smeknamn i spelinställningarna:</translation>
     <message>
         <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgwars to its game list so your friends can see you playing.</source>
         <comment>Tips</comment>
-        <translation>Windows-versionen av Hedgewars har stöd för Xfire. Se till att lägga till Hedgewars till spellistan så att dina vänner kan se dig spela.</translation>
+        <translation type="obsolete">Windows-versionen av Hedgewars har stöd för Xfire. Se till att lägga till Hedgewars till spellistan så att dina vänner kan se dig spela.</translation>
     </message>
     <message>
         <source>You should never install Hedgewars on computers you don&apos;t own (school, university, work, etc.). Please ask the responsible person instead!</source>
@@ -586,7 +629,7 @@ ett annat smeknamn i spelinställningarna:</translation>
     <message>
         <source>The Homing Bee can be tricky to use. It&apos;s turn radius depends on it&apos;s velocity, so try to not use full power.</source>
         <comment>Tips</comment>
-        <translation>Målsökande biet kan vara svårt att använda. Biets sväng beror på hastigheten, så försök inte att använda full kraft.</translation>
+        <translation type="obsolete">Målsökande biet kan vara svårt att använda. Biets sväng beror på hastigheten, så försök inte att använda full kraft.</translation>
     </message>
     <message>
         <source>Sticky Mines are a perfect tool to create small chain reactions knocking enemy hedgehogs into dire situations ... or water.</source>
@@ -616,7 +659,7 @@ ett annat smeknamn i spelinställningarna:</translation>
     <message>
         <source>Use the Incinerating Grenade to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
         <comment>Tips</comment>
-        <translation>Använd Molotov för att tillfälligt förhindra igelkottar från att passera terräng såsom tunnlar och platformer.</translation>
+        <translation type="obsolete">Använd Molotov för att tillfälligt förhindra igelkottar från att passera terräng såsom tunnlar och platformer.</translation>
     </message>
     <message>
         <source>Want to know who&apos;s behind the game? Click on the Hedgewars logo in the main menu to see the credits.</source>
@@ -666,10 +709,25 @@ ett annat smeknamn i spelinställningarna:</translation>
     <message>
         <source>You can find your Hedgewars configuration files under &quot;Library/Application Support/Hedgewars&quot; in your home directory. Create backups or take the files with you, but don&apos;t edit them by hand.</source>
         <comment>Tips</comment>
-        <translation type="unfinished"></translation>
+        <translation>Du kan hitta dina konfigurationsfiler under &quot;Library/Application Support/Hedgewars&quot; i din hem-mapp. Gör en säkerhetskopia eller ta med dig filerna, men redigera dem inte för hand.</translation>
     </message>
     <message>
         <source>You can find your Hedgewars configuration files under &quot;.hedgewars&quot; in your home directory. Create backups or take the files with you, but don&apos;t edit them by hand.</source>
+        <comment>Tips</comment>
+        <translation>Du kan hitta dina konfigurationsfiler under &quot;.hedgewars&quot; i din hem-mapp. Gör en säkerhetskopia eller ta med dig filerna, men redigera dem inte för hand.</translation>
+    </message>
+    <message>
+        <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgewars to its game list so your friends can see you playing.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Homing Bee can be tricky to use. Its turn radius depends on it&apos;s velocity, so try to not use full power.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use the Molotov or Flame Thrower to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
         <comment>Tips</comment>
         <translation type="unfinished"></translation>
     </message>
@@ -742,27 +800,27 @@ ett annat smeknamn i spelinställningarna:</translation>
     </message>
     <message>
         <source>New scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Nytt schema</translation>
     </message>
     <message>
         <source>Edit scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Redigera schema</translation>
     </message>
     <message>
         <source>Delete scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Ta bort schema</translation>
     </message>
     <message>
         <source>New weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Nytt vapenset</translation>
     </message>
     <message>
         <source>Edit weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Redigera vapenset</translation>
     </message>
     <message>
         <source>Delete weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Ta bort vapenset</translation>
     </message>
 </context>
 <context>
@@ -1023,11 +1081,15 @@ Vill du fortfarande gå med i rummet?</translation>
     </message>
     <message>
         <source>You will not have to worry about wind anymore.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nu behöver du inte oroa dig för vinden längre.</translation>
     </message>
     <message>
         <source>Wind will affect almost everything.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vind påverkar nästan allting.</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Kopiera</translation>
     </message>
 </context>
 <context>
@@ -1042,7 +1104,11 @@ Vill du fortfarande gå med i rummet?</translation>
     </message>
     <message>
         <source>New</source>
-        <translation type="unfinished">Ny</translation>
+        <translation>Ny</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Kopiera</translation>
     </message>
 </context>
 <context>
@@ -1248,6 +1314,54 @@ Vill du fortfarande gå med i rummet?</translation>
         <source>Crazy</source>
         <translation type="obsolete">Galet</translation>
     </message>
+    <message>
+        <source>Normal</source>
+        <translation type="obsolete">Vanligt</translation>
+    </message>
+    <message>
+        <source>hand drawn map...</source>
+        <translation>handritad karta...</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Cyan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cyan/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Blue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Blue/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Green</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Green/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Side-by-side</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top-Bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wiggle</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QGroupBox</name>
@@ -1301,7 +1415,7 @@ Vill du fortfarande gå med i rummet?</translation>
     </message>
     <message>
         <source>Schemes and Weapons</source>
-        <translation type="unfinished"></translation>
+        <translation>Scheman och vapen</translation>
     </message>
 </context>
 <context>
@@ -1478,6 +1592,14 @@ Det kan finnas trasiga eller ofullständiga funktioner. Använd på egen risk!</
     </message>
     <message>
         <source>% Rope Length</source>
+        <translation>% replängd</translation>
+    </message>
+    <message>
+        <source>Gameplay</source>
+        <translation>Speltyp</translation>
+    </message>
+    <message>
+        <source>Stereo rendering</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1547,27 +1669,27 @@ Var god kontrollera din installation</translation>
     </message>
     <message>
         <source>Teams</source>
-        <translation type="unfinished">Lag</translation>
+        <translation>Lag</translation>
     </message>
     <message>
         <source>Really delete this team?</source>
-        <translation type="unfinished"></translation>
+        <translation>Vill du verkligen ta bort detta lag?</translation>
     </message>
     <message>
         <source>Schemes</source>
-        <translation type="unfinished"></translation>
+        <translation>Scheman</translation>
     </message>
     <message>
         <source>Can not delete default scheme &apos;%1&apos;!</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan inte ta bort standardschema &apos;%1&apos;!</translation>
     </message>
     <message>
         <source>Really delete this game scheme?</source>
-        <translation type="unfinished"></translation>
+        <translation>Vill du verkligen ta bort detta spelschema?</translation>
     </message>
     <message>
         <source>Can not delete default weapon set &apos;%1&apos;!</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan inte ta bort standardvapenset &apos;%1&apos;!</translation>
     </message>
 </context>
 <context>
@@ -1663,6 +1785,14 @@ Var god kontrollera din installation</translation>
         <source>Associate file extensions</source>
         <translation>Associera filextentioner</translation>
     </message>
+    <message>
+        <source>Set</source>
+        <translation type="obsolete">Ange</translation>
+    </message>
+    <message>
+        <source>more</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QTableWidget</name>
@@ -1715,7 +1845,11 @@ Var god kontrollera din installation</translation>
     </message>
     <message>
         <source>new</source>
-        <translation type="unfinished">ny</translation>
+        <translation>ny</translation>
+    </message>
+    <message>
+        <source>copy of</source>
+        <translation>kopia av</translation>
     </message>
 </context>
 <context>
@@ -1825,11 +1959,11 @@ Var god kontrollera din installation</translation>
     </message>
     <message>
         <source>Disable Wind</source>
-        <translation type="unfinished"></translation>
+        <translation>Avaktivera vind</translation>
     </message>
     <message>
         <source>More Wind</source>
-        <translation type="unfinished"></translation>
+        <translation>Mer vind</translation>
     </message>
 </context>
 <context>

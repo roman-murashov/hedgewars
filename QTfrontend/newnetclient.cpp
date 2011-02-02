@@ -276,7 +276,7 @@ void HWNewNet::ParseCmd(const QStringList & lst)
             return;
         }
         if (netClientState == 2)
-            emit chatStringLobby(HWProto::formatChatMsg(lst[1], lst[2]));
+            emit chatStringLobby(lst[1], HWProto::formatChatMsgForFrontend(lst[2]));
         else
             emit chatStringFromNet(HWProto::formatChatMsg(lst[1], lst[2]));
         return;
@@ -418,7 +418,7 @@ void HWNewNet::ParseCmd(const QStringList & lst)
             }
 
             emit nickAddedLobby(lst[i], false);
-            emit chatStringLobby(tr("%1 *** %2 has joined").arg('\x03').arg(lst[i]));
+            emit chatStringLobby(lst[i], tr("%1 *** %2 has joined").arg('\x03').arg("|nick|"));
         }
         return;
     }
@@ -486,6 +486,26 @@ void HWNewNet::ParseCmd(const QStringList & lst)
         }
 
         RawSendNet(QString("PASSWORD%1%2").arg(delimeter).arg(hash));
+        return;
+    }
+
+    if (lst[0] == "NOTICE") {
+        if(lst.size() < 2)
+        {
+            qWarning("Net: Bad NOTICE message");
+            return;
+        }
+
+        bool ok;
+        int n = lst[1].toInt(&ok);
+        if(!ok)
+        {
+            qWarning("Net: Bad NOTICE message");
+            return;
+        }
+
+        handleNotice(n);
+
         return;
     }
 
@@ -751,4 +771,29 @@ void HWNewNet::setLatestProtocolVar(int proto)
 void HWNewNet::askServerVars()
 {
     RawSendNet(QString("GET_SERVER_VAR"));
+}
+
+void HWNewNet::handleNotice(int n)
+{
+    switch(n)
+    {
+        case 0:
+        {
+            bool ok = false;
+            QString newNick = QInputDialog::getText(0, tr("Nickname"), tr("Some one already uses\n your nickname %1\non the server.\nPlease pick another nickname:").arg(mynick), QLineEdit::Normal, mynick, &ok);
+
+            if (!ok || newNick.isEmpty()) {
+                Disconnect();
+                emit Disconnected();
+                return;
+            }
+
+            config->setValue("net/nick", newNick);
+            mynick = newNick;
+
+            RawSendNet(QString("NICK%1%2").arg(delimeter).arg(newNick));
+
+            break;
+        }
+    }
 }

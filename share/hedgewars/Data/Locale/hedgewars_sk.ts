@@ -7,6 +7,10 @@
         <source>new</source>
         <translation>nový</translation>
     </message>
+    <message>
+        <source>copy of</source>
+        <translation>kópia z</translation>
+    </message>
 </context>
 <context>
     <name>FreqSpinBox</name>
@@ -47,7 +51,7 @@
     </message>
     <message>
         <source>When this option is enabled selecting a game scheme will auto-select a weapon</source>
-        <translation type="unfinished"></translation>
+        <translation>Keď je vybraná táto voľba výberom hernej schémy vyberiete automaticky aj zbraň</translation>
     </message>
 </context>
 <context>
@@ -187,6 +191,14 @@
         <source>Large floating islands</source>
         <translation>Veľké plávajúce ostrovčeky</translation>
     </message>
+    <message>
+        <source>Seed</source>
+        <translation>Zrno</translation>
+    </message>
+    <message>
+        <source>Set</source>
+        <translation>Nastaviť</translation>
+    </message>
 </context>
 <context>
     <name>HWNetServersModel</name>
@@ -319,6 +331,37 @@ v nastaveniach hry:</translation>
     <message>
         <source>Connecting...</source>
         <translation>Pripájam sa...</translation>
+    </message>
+</context>
+<context>
+    <name>PageDrawMap</name>
+    <message>
+        <source>Undo</source>
+        <translation>Odvolať</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Vyčistiť</translation>
+    </message>
+    <message>
+        <source>Load</source>
+        <translation>Načítať</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Uložiť</translation>
+    </message>
+    <message>
+        <source>Load drawn map</source>
+        <translation>Načítať nakreslenú mapu</translation>
+    </message>
+    <message>
+        <source>Drawn Maps (*.hwmap);;All files (*.*)</source>
+        <translation>Nakreslené mapy (*.hwmap);;Všetky súbory (*.*)</translation>
+    </message>
+    <message>
+        <source>Save drawn map</source>
+        <translation>Uložiť nakreslenú mapu</translation>
     </message>
 </context>
 <context>
@@ -531,7 +574,7 @@ v nastaveniach hry:</translation>
     <message>
         <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgwars to its game list so your friends can see you playing.</source>
         <comment>Tips</comment>
-        <translation>Verzia Hedgewars pre Windows podporuje Xfire. Ubezpečte sa, že ste pridali Hedgewars do zoznamu hier tak, aby vaši priatelia videli, že hráte.</translation>
+        <translation type="obsolete">Verzia Hedgewars pre Windows podporuje Xfire. Ubezpečte sa, že ste pridali Hedgewars do zoznamu hier tak, aby vaši priatelia videli, že hráte.</translation>
     </message>
     <message>
         <source>You should never install Hedgewars on computers you don&apos;t own (school, university, work, etc.). Please ask the responsible person instead!</source>
@@ -601,7 +644,7 @@ v nastaveniach hry:</translation>
     <message>
         <source>The Homing Bee can be tricky to use. It&apos;s turn radius depends on it&apos;s velocity, so try to not use full power.</source>
         <comment>Tips</comment>
-        <translation>Navádzaná včela je trošku zložitejšia na použitie. Jej polomer otočenia závisí na jej rýchlosti, takže ju radšej nepoužívajte pri plnej sile.</translation>
+        <translation type="obsolete">Navádzaná včela je trošku zložitejšia na použitie. Jej polomer otočenia závisí na jej rýchlosti, takže ju radšej nepoužívajte pri plnej sile.</translation>
     </message>
     <message>
         <source>Sticky Mines are a perfect tool to create small chain reactions knocking enemy hedgehogs into dire situations ... or water.</source>
@@ -631,7 +674,7 @@ v nastaveniach hry:</translation>
     <message>
         <source>Use the Incinerating Grenade to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
         <comment>Tips</comment>
-        <translation>Použite spaľujúci granát na dočasné zabránenie ježkom prejsť terénom ako sú tunely alebo plošiny.</translation>
+        <translation type="obsolete">Použite spaľujúci granát na dočasné zabránenie ježkom prejsť terénom ako sú tunely alebo plošiny.</translation>
     </message>
     <message>
         <source>Want to know who&apos;s behind the game? Click on the Hedgewars logo in the main menu to see the credits.</source>
@@ -692,6 +735,21 @@ v nastaveniach hry:</translation>
         <source>You can find your Hedgewars configuration files under &quot;.hedgewars&quot; in your home directory. Create backups or take the files with you, but don&apos;t edit them by hand.</source>
         <comment>Tips</comment>
         <translation>Konfiguračné súbory Hedgewars nájdete v &quot;.hedgewars&quot; vo vašom domovskom adresári. Vytvárajte si zálohy alebo prenášajte si tieto súbory medzi počítačmi, ale needitujte ich ručne.</translation>
+    </message>
+    <message>
+        <source>The Windows version of Hedgewars supports Xfire. Make sure to add Hedgewars to its game list so your friends can see you playing.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Homing Bee can be tricky to use. Its turn radius depends on it&apos;s velocity, so try to not use full power.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use the Molotov or Flame Thrower to temporary keep hedgehogs from passing terrain such as tunnels or platforms.</source>
+        <comment>Tips</comment>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -762,27 +820,27 @@ v nastaveniach hry:</translation>
     </message>
     <message>
         <source>New scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Nová schéma</translation>
     </message>
     <message>
         <source>Edit scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Upraviť schému</translation>
     </message>
     <message>
         <source>Delete scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymazať schému</translation>
     </message>
     <message>
         <source>New weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Nová sada zbraní</translation>
     </message>
     <message>
         <source>Edit weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Upraviť sadu zbraní</translation>
     </message>
     <message>
         <source>Delete weapon set</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymazať sadu zbraní</translation>
     </message>
 </context>
 <context>
@@ -1045,11 +1103,15 @@ Aj napriek tomu chcete vojsť do miestnosti?</translation>
     </message>
     <message>
         <source>You will not have to worry about wind anymore.</source>
-        <translation type="unfinished"></translation>
+        <translation>Už sa viac nebudete musieť zaujímať o vietor.</translation>
     </message>
     <message>
         <source>Wind will affect almost everything.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vietor bude ovplyvňovať takmer všetko.</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Kopírovať</translation>
     </message>
 </context>
 <context>
@@ -1064,7 +1126,11 @@ Aj napriek tomu chcete vojsť do miestnosti?</translation>
     </message>
     <message>
         <source>New</source>
-        <translation type="unfinished">Nová</translation>
+        <translation>Nová</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Kopírovať</translation>
     </message>
 </context>
 <context>
@@ -1270,6 +1336,54 @@ Aj napriek tomu chcete vojsť do miestnosti?</translation>
         <source>Crazy</source>
         <translation type="obsolete">Šialené</translation>
     </message>
+    <message>
+        <source>Normal</source>
+        <translation type="obsolete">Normálna</translation>
+    </message>
+    <message>
+        <source>hand drawn map...</source>
+        <translation>ručne kreslená mapa...</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Cyan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cyan/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Blue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Blue/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Red/Green</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Green/Red</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Side-by-side</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top-Bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wiggle</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QGroupBox</name>
@@ -1323,7 +1437,7 @@ Aj napriek tomu chcete vojsť do miestnosti?</translation>
     </message>
     <message>
         <source>Schemes and Weapons</source>
-        <translation type="unfinished"></translation>
+        <translation>Schémy a zbrane</translation>
     </message>
 </context>
 <context>
@@ -1505,6 +1619,14 @@ Niektoré vlastnosti nemusia fungovať alebo nemusia byť dokončené. Používa
     </message>
     <message>
         <source>% Rope Length</source>
+        <translation>% dĺžka lana</translation>
+    </message>
+    <message>
+        <source>Gameplay</source>
+        <translation>Hra</translation>
+    </message>
+    <message>
+        <source>Stereo rendering</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1574,27 +1696,27 @@ Skontrolujte si vašu inštaláciu</translation>
     </message>
     <message>
         <source>Teams</source>
-        <translation type="unfinished">Tímy</translation>
+        <translation>Tímy</translation>
     </message>
     <message>
         <source>Really delete this team?</source>
-        <translation type="unfinished"></translation>
+        <translation>Naozaj vymazať tento tím?</translation>
     </message>
     <message>
         <source>Schemes</source>
-        <translation type="unfinished"></translation>
+        <translation>Schémy</translation>
     </message>
     <message>
         <source>Can not delete default scheme &apos;%1&apos;!</source>
-        <translation type="unfinished"></translation>
+        <translation>Nie je možné vymazať východziu schému &apos;%1&apos;!</translation>
     </message>
     <message>
         <source>Really delete this game scheme?</source>
-        <translation type="unfinished"></translation>
+        <translation>Naozaj chcete vymazať túto hernú schému?</translation>
     </message>
     <message>
         <source>Can not delete default weapon set &apos;%1&apos;!</source>
-        <translation type="unfinished"></translation>
+        <translation>Nie je možné vymazať východziu sadu zbraní &apos;%1&apos;!</translation>
     </message>
 </context>
 <context>
@@ -1690,6 +1812,14 @@ Skontrolujte si vašu inštaláciu</translation>
         <source>Associate file extensions</source>
         <translation>Asociovať prípony súborov.</translation>
     </message>
+    <message>
+        <source>Set</source>
+        <translation type="obsolete">Nastaviť</translation>
+    </message>
+    <message>
+        <source>more</source>
+        <translation>viac</translation>
+    </message>
 </context>
 <context>
     <name>QTableWidget</name>
@@ -1742,7 +1872,11 @@ Skontrolujte si vašu inštaláciu</translation>
     </message>
     <message>
         <source>new</source>
-        <translation type="unfinished">nový</translation>
+        <translation>nový</translation>
+    </message>
+    <message>
+        <source>copy of</source>
+        <translation>kópia z</translation>
     </message>
 </context>
 <context>
@@ -1852,11 +1986,11 @@ Skontrolujte si vašu inštaláciu</translation>
     </message>
     <message>
         <source>Disable Wind</source>
-        <translation type="unfinished"></translation>
+        <translation>Vypnúť vietor</translation>
     </message>
     <message>
         <source>More Wind</source>
-        <translation type="unfinished"></translation>
+        <translation>Viac vetra</translation>
     </message>
 </context>
 <context>

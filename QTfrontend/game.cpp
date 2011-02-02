@@ -56,7 +56,7 @@ void HWGame::onClientDisconnect()
             emit HaveRecord(true, demo);
             break;
         default:
-            if (gameState == gsInterrupted) emit HaveRecord(false, demo);
+            if (gameState == gsInterrupted || gameState == gsHalted) emit HaveRecord(false, demo);
             else if (gameState == gsFinished) emit HaveRecord(true, demo);
     }
     SetGameState(gsStopped);
@@ -229,6 +229,10 @@ void HWGame::ParseMessage(const QByteArray & msg)
             SetGameState(gsFinished);
             break;
         }
+        case 'H': {
+            SetGameState(gsHalted);
+            break;
+        }
         case 's': {
             int size = msg.size();
             QString msgbody = QString::fromUtf8(msg.mid(2).left(size - 4));
@@ -250,8 +254,8 @@ void HWGame::ParseMessage(const QByteArray & msg)
             {
                 emit SendNet(msg);
             }
-        if (msg.at(1) != 's')
-            demo.append(msg);
+            if (msg.at(1) != 's')
+                demo.append(msg);
         }
     }
 }
@@ -300,6 +304,7 @@ QStringList HWGame::setArguments()
     arguments << (config->isAltDamageEnabled() ? "1" : "0");
     arguments << config->netNick().toUtf8().toBase64();
     arguments << QString::number(config->translateQuality());
+    arguments << QString::number(config->stereoMode());
     arguments << tr("en.txt");
 
     return arguments;
