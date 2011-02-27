@@ -1692,6 +1692,27 @@ begin
     else
         if ((GameTicks and $3F) = 25) then
             doStepFallingGear(Gear);
+    if (Gear^.Health = 0) then
+        begin
+            if not Gear^.dY.isNegative and (Gear^.dY > _0_2) and TestCollisionYwithGear(Gear, 1) then
+                inc(Gear^.Damage, hwRound(Gear^.dY * _70))
+            else if not Gear^.dX.isNegative and (Gear^.dX > _0_2) and TestCollisionXwithGear(Gear, 1) then
+                 inc(Gear^.Damage, hwRound(Gear^.dX * _70))
+            else if Gear^.dY.isNegative and (Gear^.dY < -_0_2) and TestCollisionYwithGear(Gear, -1) then
+                 inc(Gear^.Damage, hwRound(Gear^.dY * -_70))
+            else if Gear^.dX.isNegative and (Gear^.dX < -_0_2) and TestCollisionXwithGear(Gear, -1) then
+                 inc(Gear^.Damage, hwRound(Gear^.dX * -_70));
+        
+        if (Gear^.Damage > random(30)) and ((GameTicks and $FF) = 0) then
+            AddVisualGear(hwRound(Gear^.X) - 4  + Random(8), hwRound(Gear^.Y) - 4 - Random(4), vgtSmoke);
+
+        if (Gear^.Damage > 35) then
+            begin
+            doMakeExplosion(hwRound(Gear^.X), hwRound(Gear^.Y), 50, Gear^.Hedgehog, EXPLAutoSound);
+            DeleteGear(Gear);
+            exit
+            end
+        end;
 
     if ((Gear^.State and gsttmpFlag) <> 0) and (Gear^.Health <> 0) then
         if ((Gear^.State and gstAttacking) = 0) then
@@ -1719,6 +1740,8 @@ begin
                     vgtSmoke);
                     PlaySound(sndVaporize);
                     Gear^.Health := 0;
+                    Gear^.Damage := 0;
+AddFileLog('initial mine damage:'+IntToStr(Gear^.Damage));
                     end;
                 exit
                 end;
@@ -2307,13 +2330,19 @@ begin
             //4: FollowGear := AddGear(hwRound(Gear^.X), hwRound(Gear^.Y), gtWaterMelon, 0, cBombsSpeed *
             //                 Gear^.Tag, _0, 5000);
         end;
-        Gear^.dX := Gear^.dX + int2hwFloat(30 * Gear^.Tag)
+        Gear^.dX := Gear^.dX + int2hwFloat(30 * Gear^.Tag);
+        StopSound(Gear^.SoundChannel, 4000);
     end;
 
     if (GameTicks and $3F) = 0 then
         AddVisualGear(hwRound(Gear^.X), hwRound(Gear^.Y), vgtSmokeTrace);
 
-    if (hwRound(Gear^.X) > (LAND_WIDTH+1024)) or (hwRound(Gear^.X) < -1024) then DeleteGear(Gear)
+    if (hwRound(Gear^.X) > (LAND_WIDTH+1024)) or (hwRound(Gear^.X) < -1024) then
+    begin
+        // avoid to play forever (is this necessary?)
+        StopSound(Gear^.SoundChannel);
+        DeleteGear(Gear)
+    end;
 end;
 
 procedure doStepAirAttack(Gear: PGear);
@@ -2344,6 +2373,8 @@ begin
 
     Gear^.Health := 6;
     Gear^.doStep := @doStepAirAttackWork;
+    Gear^.SoundChannel := LoopSound(sndPlane, 4000);
+
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
