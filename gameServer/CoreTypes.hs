@@ -39,9 +39,6 @@ data ClientInfo =
         teamsInGame :: Word
     }
 
-instance Show ClientInfo where
-    show ci = " nick: " ++ unpack (nick ci) ++ " host: " ++ unpack (host ci)
-
 instance Eq ClientInfo where
     (==) = (==) `on` clientSocket
 
@@ -64,11 +61,6 @@ data TeamInfo =
         hedgehogs :: [HedgehogInfo]
     }
 
-instance Show TeamInfo where
-    show ti = "owner: " ++ unpack (teamowner ti)
-            ++ "name: " ++ unpack (teamname ti)
-            ++ "color: " ++ unpack (teamcolor ti)
-
 data RoomInfo =
     RoomInfo
     {
@@ -88,11 +80,6 @@ data RoomInfo =
         mapParams :: Map.Map B.ByteString B.ByteString,
         params :: Map.Map B.ByteString [B.ByteString]
     }
-
-instance Show RoomInfo where
-    show ri = ", players: " ++ show (playersIn ri)
-            ++ ", ready: " ++ show (readyPlayers ri)
-            ++ ", teams: " ++ show (teams ri)
 
 newRoom :: RoomInfo
 newRoom =
@@ -138,15 +125,13 @@ data ServerInfo =
         dbName :: B.ByteString,
         dbLogin :: B.ByteString,
         dbPassword :: B.ByteString,
-        lastLogins :: [(B.ByteString, (UTCTime, B.ByteString))],
+        bans :: [BanInfo],
         restartPending :: Bool,
         coreChan :: Chan CoreMessage,
         dbQueries :: Chan DBQuery,
         serverConfig :: Maybe Conf
     }
 
-instance Show ServerInfo where
-    show _ = "Server Info"
 
 newServerInfo :: Chan CoreMessage -> Chan DBQuery -> Maybe Conf -> ServerInfo
 newServerInfo =
@@ -184,13 +169,6 @@ data CoreMessage =
     | TimerAction Int
     | Remove ClientIndex
 
-instance Show CoreMessage where
-    show (Accept _) = "Accept"
-    show (ClientMessage _) = "ClientMessage"
-    show (ClientAccountInfo {}) = "ClientAccountInfo"
-    show (TimerAction _) = "TimerAction"
-    show (Remove _) = "Remove"
-
 type MRnC = MRoomsAndClients RoomInfo ClientInfo
 type IRnC = IRoomsAndClients RoomInfo ClientInfo
 
@@ -212,3 +190,8 @@ data ShutdownThreadException = ShutdownThreadException String
 instance Show ShutdownThreadException where
     show (ShutdownThreadException s) = s
 instance Exception ShutdownThreadException
+
+data BanInfo =
+    BanByIP B.ByteString B.ByteString UTCTime
+    | BanByNick B.ByteString B.ByteString UTCTime
+    deriving (Show, Read)
