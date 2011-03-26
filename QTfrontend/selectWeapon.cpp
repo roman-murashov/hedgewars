@@ -30,7 +30,6 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QTabWidget>
-#include <QDebug>
 #include <math.h>
 
 QImage getAmmoImage(int num)
