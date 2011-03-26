@@ -90,7 +90,14 @@ with HHGear^.Hedgehog^ do
         if i <= cMaxSlotAmmoIndex then ammoidx:= i
         else ammoidx:= -1
         end;
-        if ammoidx >= 0 then CurAmmoType:= Ammo^[slot, ammoidx].AmmoType;
+        if ammoidx >= 0 then 
+            begin
+            CurAmmoType:= Ammo^[slot, ammoidx].AmmoType;
+            if (CurAmmoGear <> nil) and ((Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_AltAttack) <> 0) then
+                ShowCrosshair:= (Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_NoCrossHair) = 0
+            else
+                ShowCrosshair:= (Ammoz[CurAmmoType].Ammo.Propz and ammoprop_NoCrosshair) = 0;
+            end
     end
 end;
 
@@ -382,7 +389,10 @@ with CurrentHedgehog^.Gear^,
             if ((Ammoz[a].Ammo.Propz and ammoprop_NoRoundEnd) = 0) and ((GameFlags and gfInfAttack) = 0) then
                 begin
                 if TagTurnTimeLeft = 0 then TagTurnTimeLeft:= TurnTimeLeft;
-                TurnTimeLeft:=round(Ammoz[a].TimeAfterTurn * (cGetAwayTime / 100));
+                TurnTimeLeft:=(Ammoz[a].TimeAfterTurn * cGetAwayTime) div 100;
+                if (CurAmmoGear <> nil) and ((Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_AltAttack) <> 0) then
+                    ShowCrosshair:= (Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_NoCrossHair) = 0
+                else ShowCrosshair:= false;
                 end;
             if ((Ammoz[a].Ammo.Propz and ammoprop_NoRoundEnd) = 0) then State:= State or gstAttacked;
             if (Ammoz[a].Ammo.Propz and ammoprop_NoRoundEnd) <> 0 then ApplyAmmoChanges(CurrentHedgehog^)
