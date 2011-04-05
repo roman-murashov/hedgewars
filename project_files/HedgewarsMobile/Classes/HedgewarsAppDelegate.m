@@ -35,25 +35,14 @@
 
 #define BLACKVIEW_TAG 17935
 #define SECONDBLACKVIEW_TAG 48620
-#define VALGRIND "/opt/fink/bin/valgrind"
 
-int main (int argc, char *argv[]) {
-#ifdef VALGRIND_REXEC
-    // Using the valgrind build config, rexec ourself in valgrind
-    // from http://landonf.bikemonkey.org/code/iphone/iPhone_Simulator_Valgrind.20081224.html
-    if (argc < 2 || (argc >= 2 && strcmp(argv[1], "-valgrind") != 0))
-        execl(VALGRIND, VALGRIND, "--leak-check=full", "--dsymutil=yes", argv[0], "-valgrind", NULL);
-#endif
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    int retVal = UIApplicationMain(argc, argv, nil, @"HedgewarsAppDelegate");
-    [pool release];
-    return retVal;
+@implementation SDLUIKitDelegate (customDelegate)
+
++(NSString *)getAppDelegateClassName {
+    return @"HedgewarsAppDelegate";
 }
 
-int SDL_main(int argc, char **argv) {
-    // dummy function to prevent linkage fail
-    return 0;
-}
+@end
 
 @implementation HedgewarsAppDelegate
 @synthesize mainViewController, overlayController, uiwindow, secondWindow, isInGame;
@@ -222,8 +211,12 @@ int SDL_main(int argc, char **argv) {
     print_free_memory();
 }
 
+//TODO: when the SDLUIKitDelegate methods applicationWillResignActive and applicationDidBecomeActive do work
+// you'll be able to remove the methods below and just handle the SDL_WINDOWEVENT_MINIMIZED/SDL_WINDOWEVENT_RESTORED
+// events in the MainLoop
+
 -(void) applicationWillResignActive:(UIApplication *)application {
-    [super applicationWillResignActive: application];
+    //[super applicationWillResignActive:application];
 
     UIDevice* device = [UIDevice currentDevice];
     if ([device respondsToSelector:@selector(isMultitaskingSupported)] &&
@@ -247,7 +240,7 @@ int SDL_main(int argc, char **argv) {
 }
 
 -(void) applicationDidBecomeActive:(UIApplication *)application {
-    [super applicationDidBecomeActive:application];
+    //[super applicationDidBecomeActive:application];
 
     UIDevice* device = [UIDevice currentDevice];
     if ([device respondsToSelector:@selector(isMultitaskingSupported)] &&
