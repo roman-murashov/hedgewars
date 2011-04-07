@@ -310,7 +310,7 @@ void HWForm::onFrontendFullscreen(bool value)
   if (value)
     setWindowState(windowState() | Qt::WindowFullScreen);
   else {
-    setWindowState(windowState() & !Qt::WindowFullScreen);
+    setWindowState(windowState() & static_cast<int>(!Qt::WindowFullScreen));
   }
 }
 
@@ -635,7 +635,7 @@ void HWForm::DeleteTeam()
 void HWForm::RandomNames()
 {
     editedTeam->GetFromPage(this);
-    namegen->TeamRandomNames(editedTeam,FALSE);
+    namegen->TeamRandomNames(editedTeam, true);
     editedTeam->SetToPage(this);
 }
 

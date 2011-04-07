@@ -209,11 +209,7 @@ begin
     cFullScreen:= false;
     cTimerInterval:= 8;
     PathPrefix:= 'Data';
-{$IFDEF DEBUGFILE}
-    cShowFPS:= true;
-{$ELSE}
-    cShowFPS:= false;
-{$ENDIF}
+    cShowFPS:= {$IFDEF DEBUGFILE}true{$ELSE}false{$ENDIF};
     val(gameArgs[0], ipcPort);
     val(gameArgs[1], cScreenWidth);
     val(gameArgs[2], cScreenHeight);
@@ -264,13 +260,16 @@ begin
     InitKbdKeyTable();
 
     LoadLocale(Pathz[ptLocale] + '/en.txt');  // Do an initial load with english
+    if (Length(cLocaleFName) > 6) then cLocale := Copy(cLocaleFName,1,5)
+    else cLocale := Copy(cLocaleFName,1,2);
     if cLocaleFName <> 'en.txt' then
         begin
         // Try two letter locale first before trying specific locale overrides
-        if (Length(cLocaleFName) > 6) and (Copy(cLocaleFName,1,2)+'.txt' <> 'en.txt') then
-            LoadLocale(Pathz[ptLocale] + '/' + Copy(cLocaleFName,1,2)+'.txt');
+        if (Length(cLocale) > 2) and (Copy(cLocale,1,2) <> 'en') then
+            LoadLocale(Pathz[ptLocale] + '/' + Copy(cLocale,1,2)+'.txt');
         LoadLocale(Pathz[ptLocale] + '/' + cLocaleFName);
-        end;
+        end
+    else cLocale := 'en';
 
     WriteLnToConsole(msgGettingConfig);
 
