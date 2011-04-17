@@ -1,0 +1,36 @@
+foreach(dir
+	Art
+	Bamboo
+	Bath
+	Beach
+	Blox
+	Brick
+	Cake
+	Castle
+	Cheese
+	Christmas
+	Compost
+	Deepspace
+	Desert
+	Digital
+	City
+	CrazyMission
+	EarthRise
+	Eyes
+	Freeway
+	Halloween
+	Hell
+	Island
+	Jungle
+	Nature
+	Olympics
+	Planes
+	Sheep
+	Snow
+	Stage
+	Underwater
+	)
+	add_subdirectory(${dir})
+endforeach(dir)
+
+install(FILES themes.cfg DESTINATION ${SHAREPATH}Data/Themes)
