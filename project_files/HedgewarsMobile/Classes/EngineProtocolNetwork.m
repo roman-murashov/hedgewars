@@ -19,55 +19,59 @@
  */
 
 
-#import "GameSetup.h"
+#import "EngineProtocolNetwork.h"
 #import "PascalImports.h"
 #import "CommodityFunctions.h"
 #import "OverlayViewController.h"
 
 #define BUFFER_SIZE 255     // like in original frontend
 
-@implementation GameSetup
-@synthesize systemSettings, gameConfig, statsArray, savePath, menuStyle;
+@implementation EngineProtocolNetwork
+@synthesize delegate, stream, ipcPort, csd;
 
--(id) initWithDictionary:(NSDictionary *)gameDictionary {
+-(id) init {
     if (self = [super init]) {
-        ipcPort = randomPort();
+        self.delegate = nil;
 
-        // the general settings file + menu style (read by the overlay)
-        NSDictionary *dictSett = [[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE()];
-        self.menuStyle = [[dictSett objectForKey:@"menu"] boolValue];
-        self.systemSettings = dictSett;
-        [dictSett release];
-
-        // this game run settings
-        self.gameConfig = [gameDictionary objectForKey:@"game_dictionary"];
-
-        // is it a netgame?
-        isNetGame = [[gameDictionary objectForKey:@"netgame"] boolValue];
-
-        // is it a Save?
-        NSString *path = [gameDictionary objectForKey:@"savefile"];
-        // if path is empty it means that you have to create a new file, otherwise read from that file
-        if ([path isEqualToString:@""] == YES) {
-            NSDateFormatter *outputFormatter = [[NSDateFormatter alloc] init];
-            [outputFormatter setDateFormat:@"yyyy-MM-dd '@' HH.mm"];
-            NSString *newDateString = [outputFormatter stringFromDate:[NSDate date]];
-            self.savePath = [SAVES_DIRECTORY() stringByAppendingFormat:@"%@.hws", newDateString];
-            [outputFormatter release];
-        } else
-            self.savePath = path;
-
-        self.statsArray = nil;
+        self.ipcPort = 0;
+        self.csd = NULL;
+        self.stream = nil;
     }
     return self;
 }
 
+-(id) initOnPort:(NSInteger) port {
+    if (self = [self init])
+        self.ipcPort = port;
+    return self;
+}
+
+-(void) gameHasEndedWithStats:(NSArray *)stats {
+    if (self.delegate != nil && [self.delegate respondsToSelector:@selector(gameHasEndedWithStats:)])
+        [self.delegate gameHasEndedWithStats:stats];
+    else
+        DLog(@"Error! delegate == nil");
+}
+
 -(void) dealloc {
-    [statsArray release];
-    [gameConfig release];
-    [systemSettings release];
-    [savePath release];
+    self.delegate = nil;
+    releaseAndNil(stream);
     [super dealloc];
+}
+
+#pragma mark -
+#pragma mark Spawner functions
+-(void) spawnThread:(NSString *)onSaveFile withOptions:(NSDictionary *)dictionary {
+    self.stream = [[NSOutputStream alloc] initToFileAtPath:onSaveFile append:YES];
+    [self.stream open];
+
+    [NSThread detachNewThreadSelector:@selector(engineProtocol:)
+                             toTarget:self
+                           withObject:dictionary];
+}
+
+-(void) spawnThread:(NSString *)onSaveFile {
+    [self spawnThread:onSaveFile withOptions:nil];
 }
 
 #pragma mark -
@@ -207,13 +211,8 @@
 #pragma mark -
 #pragma mark Network relevant code
 -(void) dumpRawData:(const char *)buffer ofSize:(uint8_t) length {
-    // is it performant to reopen the stream every time?
-    NSOutputStream *os = [[NSOutputStream alloc] initToFileAtPath:self.savePath append:YES];
-    [os open];
-    [os write:&length maxLength:1];
-    [os write:(const uint8_t *)buffer maxLength:length];
-    [os close];
-    [os release];
+    [self.stream write:&length maxLength:1];
+    [self.stream write:(const uint8_t *)buffer maxLength:length];
 }
 
 // wrapper that computes the length of the message and then sends the command string, saving the command on a file
@@ -233,9 +232,11 @@
     return SDLNet_TCP_Send(csd, [string UTF8String], length);
 }
 
-// method that handles net setup with engine and keeps connection alive
--(void) engineProtocol {
+// this is launched as thread and handles all IPC with engine
+-(void) engineProtocol:(id) object {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSDictionary *gameConfig = (NSDictionary *)object;
+    NSMutableArray *statsArray = nil;
     TCPsocket sd;
     IPaddress ip;
     int eProto;
@@ -278,42 +279,42 @@
 
         switch (buffer[0]) {
             case 'C':
-                DLog(@"sending game config...\n%@",self.gameConfig);
+                DLog(@"Sending game config...\n%@", gameConfig);
 
-                if (isNetGame == YES)
+                /*if (isNetGame == YES)
                     [self sendToEngineNoSave:@"TN"];
-                else
+                else*/
                     [self sendToEngineNoSave:@"TL"];
                 NSString *saveHeader = @"TS";
                 [self dumpRawData:[saveHeader UTF8String] ofSize:[saveHeader length]];
 
                 // seed info
-                [self sendToEngine:[self.gameConfig objectForKey:@"seed_command"]];
+                [self sendToEngine:[gameConfig objectForKey:@"seed_command"]];
 
                 // dimension of the map
-                [self sendToEngine:[self.gameConfig objectForKey:@"templatefilter_command"]];
-                [self sendToEngine:[self.gameConfig objectForKey:@"mapgen_command"]];
-                [self sendToEngine:[self.gameConfig objectForKey:@"mazesize_command"]];
+                [self sendToEngine:[gameConfig objectForKey:@"templatefilter_command"]];
+                [self sendToEngine:[gameConfig objectForKey:@"mapgen_command"]];
+                [self sendToEngine:[gameConfig objectForKey:@"mazesize_command"]];
 
                 // static land (if set)
-                NSString *staticMap = [self.gameConfig objectForKey:@"staticmap_command"];
+                NSString *staticMap = [gameConfig objectForKey:@"staticmap_command"];
                 if ([staticMap length] != 0)
                     [self sendToEngine:staticMap];
 
                 // lua script (if set)
-                NSString *script = [self.gameConfig objectForKey:@"mission_command"];
+                NSString *script = [gameConfig objectForKey:@"mission_command"];
                 if ([script length] != 0)
                     [self sendToEngine:script];
-                
+
                 // theme info
-                [self sendToEngine:[self.gameConfig objectForKey:@"theme_command"]];
+                [self sendToEngine:[gameConfig objectForKey:@"theme_command"]];
 
                 // scheme (returns initial health)
-                NSInteger health = [self provideScheme:[self.gameConfig objectForKey:@"scheme"]];
+                NSInteger health = [self provideScheme:[gameConfig objectForKey:@"scheme"]];
 
                 // send an ammostore for each team
-                NSArray *teamsConfig = [self.gameConfig objectForKey:@"teams_list"];
-                [self provideAmmoData:[self.gameConfig objectForKey:@"weapon"] forPlayingTeams:[teamsConfig count]];
+                NSArray *teamsConfig = [gameConfig objectForKey:@"teams_list"];
+                [self provideAmmoData:[gameConfig objectForKey:@"weapon"] forPlayingTeams:[teamsConfig count]];
 
                 // finally add hogs
                 for (NSDictionary *teamData in teamsConfig) {
@@ -347,10 +348,10 @@
                 }
                 break;
             case 'i':
-                if (self.statsArray == nil) {
-                    self.statsArray = [[NSMutableArray alloc] initWithCapacity:10 - 2];
+                if (statsArray == nil) {
+                    statsArray = [[NSMutableArray alloc] initWithCapacity:10 - 2];
                     NSMutableArray *ranking = [[NSMutableArray alloc] initWithCapacity:4];
-                    [self.statsArray insertObject:ranking atIndex:0];
+                    [statsArray insertObject:ranking atIndex:0];
                     [ranking release];
                 }
                 NSString *tempStr = [NSString stringWithUTF8String:&buffer[2]];
@@ -359,16 +360,16 @@
                 int index = [arg length] + 3;
                 switch (buffer[1]) {
                     case 'r':           // winning team
-                        [self.statsArray insertObject:[NSString stringWithUTF8String:&buffer[2]] atIndex:1];
+                        [statsArray insertObject:[NSString stringWithUTF8String:&buffer[2]] atIndex:1];
                         break;
                     case 'D':           // best shot
-                        [self.statsArray addObject:[NSString stringWithFormat:@"The best shot award won by %s (with %@ points)", &buffer[index], arg]];
+                        [statsArray addObject:[NSString stringWithFormat:@"The best shot award won by %s (with %@ points)", &buffer[index], arg]];
                         break;
                     case 'k':           // best hedgehog
-                        [self.statsArray addObject:[NSString stringWithFormat:@"The best killer is %s with %@ kills in a turn", &buffer[index], arg]];
+                        [statsArray addObject:[NSString stringWithFormat:@"The best killer is %s with %@ kills in a turn", &buffer[index], arg]];
                         break;
                     case 'K':           // number of hogs killed
-                        [self.statsArray addObject:[NSString stringWithFormat:@"%@ hedgehog(s) were killed during this round", arg]];
+                        [statsArray addObject:[NSString stringWithFormat:@"%@ hedgehog(s) were killed during this round", arg]];
                         break;
                     case 'H':           // team health/graph
                         break;
@@ -376,16 +377,16 @@
                         // still WIP in statsPage.cpp
                         break;
                     case 'P':           // teams ranking
-                        [[self.statsArray objectAtIndex:0] addObject:tempStr];
+                        [[statsArray objectAtIndex:0] addObject:tempStr];
                         break;
                     case 's':           // self damage
-                        [self.statsArray addObject:[NSString stringWithFormat:@"%s thought it's good to shoot his own hedgehogs with %@ points", &buffer[index], arg]];
+                        [statsArray addObject:[NSString stringWithFormat:@"%s thought it's good to shoot his own hedgehogs with %@ points", &buffer[index], arg]];
                         break;
                     case 'S':           // friendly fire
-                        [self.statsArray addObject:[NSString stringWithFormat:@"%s killed %@ of his own hedgehogs", &buffer[index], arg]];
+                        [statsArray addObject:[NSString stringWithFormat:@"%s killed %@ of his own hedgehogs", &buffer[index], arg]];
                         break;
                     case 'B':           // turn skipped
-                        [self.statsArray addObject:[NSString stringWithFormat:@"%s was scared and skipped turn %@ times", &buffer[index], arg]];
+                        [statsArray addObject:[NSString stringWithFormat:@"%s was scared and skipped turn %@ times", &buffer[index], arg]];
                         break;
                     default:
                         DLog(@"Unhandled stat message, see statsPage.cpp");
@@ -394,9 +395,7 @@
                 break;
             case 'q':
                 // game ended, can remove the savefile and the trailing overlay (when dualhead)
-                [[NSFileManager defaultManager] removeItemAtPath:self.savePath error:nil];
-                if (IS_DUALHEAD())
-                    [[NSNotificationCenter defaultCenter] postNotificationName:@"remove overlay" object:nil];
+                [self gameHasEndedWithStats:statsArray];
                 break;
             case 'Q':
                 // game exited but not completed, nothing to do (just don't save the message)
@@ -407,6 +406,7 @@
         }
     }
     DLog(@"Engine exited, ending thread");
+    [self.stream close];
 
     // Close the client socket
     SDLNet_TCP_Close(csd);
@@ -417,77 +417,5 @@
     // to clean up any resources it allocated during its execution.
     //[NSThread exit];
 }
-
-#pragma mark -
-#pragma mark Setting methods
-// returns an array of c-strings that are read by engine at startup
--(const char **)getGameSettings:(NSString *)recordFile {
-    NSInteger width, height;
-    NSString *ipcString = [[NSString alloc] initWithFormat:@"%d", ipcPort];
-    NSString *localeString = [[NSString alloc] initWithFormat:@"%@.txt", [[NSLocale currentLocale] objectForKey:NSLocaleLanguageCode]];
-    NSString *rotation;
-    if (IS_DUALHEAD()) {
-        CGRect screenBounds = [[[UIScreen screens] objectAtIndex:1] bounds];
-        width = (int) screenBounds.size.width;
-        height = (int) screenBounds.size.height;
-        rotation = @"0";
-    } else {
-        CGRect screenBounds = [[UIScreen mainScreen] bounds];
-        width = (int) screenBounds.size.height;
-        height = (int) screenBounds.size.width;
-        UIDeviceOrientation orientation = (UIDeviceOrientation) [[self.gameConfig objectForKey:@"orientation"] intValue];
-        if (orientation == UIDeviceOrientationLandscapeLeft)
-            rotation = @"-90";
-        else
-            rotation = @"90";
-    }
-        
-    NSString *horizontalSize = [[NSString alloc] initWithFormat:@"%d", width];
-    NSString *verticalSize = [[NSString alloc] initWithFormat:@"%d", height];
-    const char **gameArgs = (const char **)malloc(sizeof(char *) * 10);
-    BOOL enhanced = [[self.systemSettings objectForKey:@"enhanced"] boolValue];
-
-    NSString *modelId = modelType();
-    NSInteger tmpQuality;
-    if ([modelId hasPrefix:@"iPhone1"] || [modelId hasPrefix:@"iPod1,1"] || [modelId hasPrefix:@"iPod2,1"])     // = iPhone and iPhone 3G or iPod Touch or iPod Touch 2G
-        tmpQuality = 0x00000001 | 0x00000002 | 0x00000008 | 0x00000040;                 // rqLowRes | rqBlurryLand | rqSimpleRope | rqKillFlakes
-    else if ([modelId hasPrefix:@"iPhone2"] || [modelId hasPrefix:@"iPod3"])                                    // = iPhone 3GS or iPod Touch 3G
-        tmpQuality = 0x00000002 | 0x00000040;                                           // rqBlurryLand | rqKillFlakes
-    else if ([modelId hasPrefix:@"iPad1"] || [modelId hasPrefix:@"iPod4"] || enhanced == NO)                    // = iPad 1G or iPod Touch 4G or not enhanced mode
-        tmpQuality = 0x00000002;                                                        // rqBlurryLand
-    else                                                                                                        // = everything else
-        tmpQuality = 0;                                                                 // full quality
-
-    if (IS_IPAD() == NO)                                                                                        // = disable tooltips on phone
-        tmpQuality = tmpQuality | 0x00000400;
-
-    // prevents using an empty nickname
-    NSString *username;
-    NSString *originalUsername = [self.systemSettings objectForKey:@"username"];
-    if ([originalUsername length] == 0)
-        username = [[NSString alloc] initWithFormat:@"MobileUser-%@",ipcString];
-    else
-        username = [[NSString alloc] initWithString:originalUsername];
-
-    gameArgs[ 0] = [ipcString UTF8String];                                                       //ipcPort
-    gameArgs[ 1] = [horizontalSize UTF8String];                                                  //cScreenWidth
-    gameArgs[ 2] = [verticalSize UTF8String];                                                    //cScreenHeight
-    gameArgs[ 3] = [[[NSNumber numberWithInteger:tmpQuality] stringValue] UTF8String];           //quality
-    gameArgs[ 4] = "en.txt";//[localeString UTF8String];                                                    //cLocaleFName
-    gameArgs[ 5] = [username UTF8String];                                                        //UserNick
-    gameArgs[ 6] = [[[self.systemSettings objectForKey:@"sound"] stringValue] UTF8String];       //isSoundEnabled
-    gameArgs[ 7] = [[[self.systemSettings objectForKey:@"music"] stringValue] UTF8String];       //isMusicEnabled
-    gameArgs[ 8] = [[[self.systemSettings objectForKey:@"alternate"] stringValue] UTF8String];   //cAltDamage
-    gameArgs[ 9] = [rotation UTF8String];                                                        //rotateQt
-    gameArgs[10] = [recordFile UTF8String];                                                      //recordFileName
-
-    [verticalSize release];
-    [horizontalSize release];
-    [localeString release];
-    [ipcString release];
-    [username release];
-    return gameArgs;
-}
-
 
 @end

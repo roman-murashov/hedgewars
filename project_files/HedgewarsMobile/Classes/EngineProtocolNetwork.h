@@ -22,34 +22,38 @@
 #import <Foundation/Foundation.h>
 #import "SDL_net.h"
 
-@interface GameSetup : NSObject {
-    NSDictionary *systemSettings;
-    NSDictionary *gameConfig;
-    NSMutableArray *statsArray;
+@protocol EngineProtocolDelegate <NSObject>
 
-    NSInteger ipcPort;  // Port on which engine will listen
-    TCPsocket csd;      // Client socket descriptor
-    TCPsocket esd;      // External socket descriptor
+-(void) gameHasEndedWithStats:(NSArray *)stats;
 
-    NSString *savePath;
-    BOOL isNetGame;
-    BOOL menuStyle;
+@end
+
+@interface EngineProtocolNetwork : NSObject {
+    id<EngineProtocolDelegate> delegate;
+
+    NSOutputStream *stream;
+    NSInteger ipcPort;              // Port on which engine will listen
+    TCPsocket csd;                  // Client socket descriptor
 }
 
-@property (nonatomic, retain) NSDictionary *systemSettings;
-@property (nonatomic, retain) NSDictionary *gameConfig;
-@property (nonatomic, retain) NSMutableArray *statsArray;
-@property (nonatomic, retain) NSString *savePath;
-@property (assign) BOOL menuStyle;
+@property (nonatomic,assign) id<EngineProtocolDelegate> delegate;
+@property (nonatomic,retain) NSOutputStream *stream;
+@property (assign) NSInteger ipcPort;
+@property (assign) TCPsocket csd;
 
--(id) initWithDictionary:(NSDictionary *)gameDictionary;
--(void) engineProtocol;
--(int) sendToEngine:(NSString *)string;
--(int) sendToEngineNoSave:(NSString *)string;
+
+-(id)   init;
+-(id)   initOnPort:(NSInteger) port;
+
+-(void) spawnThread:(NSString *)onSaveFile;
+-(void) spawnThread:(NSString *)onSaveFile withOptions:(NSDictionary *)dictionary;
+-(void) engineProtocol:(id) object;
+-(void) gameHasEndedWithStats:(NSArray *)stats;
+
+-(int)  sendToEngine:(NSString *)string;
+-(int)  sendToEngineNoSave:(NSString *)string;
 -(void) provideTeamData:(NSString *)teamName forHogs:(NSInteger) numberOfPlayingHogs withHealth:(NSInteger) initialHealth ofColor:(NSNumber *)teamColor;
 -(void) provideAmmoData:(NSString *)ammostoreName forPlayingTeams:(NSInteger) numberOfTeams;
 -(NSInteger) provideScheme:(NSString *)schemeName;
-
--(const char **)getGameSettings:(NSString *)recordFile;
 
 @end
