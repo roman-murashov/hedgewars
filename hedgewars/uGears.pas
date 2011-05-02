@@ -72,6 +72,7 @@ procedure SpawnBoxOfSmth; forward;
 procedure AfterAttack; forward;
 procedure HedgehogStep(Gear: PGear); forward;
 procedure doStepHedgehogMoving(Gear: PGear); forward;
+procedure doStepHedgehogReturn(Gear: PGear); forward;
 procedure HedgehogChAngle(HHGear: PGear); forward;
 procedure ShotgunShot(Gear: PGear); forward;
 procedure PickUp(HH, Gear: PGear); forward;
@@ -147,8 +148,8 @@ const doStepHandlers: array[TGearType] of TGearStepProcedure = (
             @doStepSnowball,
             @doStepSnowflake,
             @doStepPlaceStructure,
-            @doStepLandGun
-            );
+            @doStepLandGun,
+            @doStepTardis);
 
 procedure InsertGearToList(Gear: PGear);
 var tmp, ptmp: PGear;
@@ -1042,7 +1043,6 @@ begin
     Gear^.LastDamage := AttackerHog;
 
     Gear^.Hedgehog^.Team^.Clan^.Flawless:= false;
-    uStats.HedgehogDamaged(Gear, AttackerHog);
     HHHurt(Gear^.Hedgehog, Source);
     AddDamageTag(hwRound(Gear^.X), hwRound(Gear^.Y), Damage, Gear^.Hedgehog^.Team^.Clan^.Color);
     tmpDmg:= min(Damage, max(0,Gear^.Health-Gear^.Damage));
@@ -1084,6 +1084,8 @@ begin
         Gear^.Hedgehog:= AttackerHog;
         end;
     inc(Gear^.Damage, Damage);
+    
+    uStats.HedgehogDamaged(Gear, AttackerHog);    
     ScriptCall('onGearDamage', Gear^.UID, Damage);
 end;
 
