@@ -72,7 +72,8 @@ uses LuaPas in 'LuaPas.pas',
     uRenderUtils,
     uTextures,
     uLandGraphics,
-    SDLh; 
+    SDLh,
+    sysutils; 
 
 var luaState : Plua_State;
     ScriptAmmoLoadout : shortstring;
@@ -1220,6 +1221,18 @@ begin
     lc_getdatapath:= 1
 end;
 
+function lc_getuserdatapath(L : Plua_State) : LongInt; Cdecl;
+begin
+    if lua_gettop(L) <> 0 then
+        begin
+        LuaError('Lua: Wrong number of parameters passed to GetUserDataPath!');
+        lua_pushnil(L);
+        end
+    else
+        lua_pushstring(L, str2pchar(UserPathz[ptData]));
+    lc_getuserdatapath:= 1
+end;
+
 function lc_maphasborder(L : Plua_State) : LongInt; Cdecl;
 begin
     if lua_gettop(L) <> 0 then
@@ -1424,8 +1437,11 @@ end;
 
 procedure ScriptLoad(name : shortstring);
 var ret : LongInt;
+      s : shortstring;
 begin
-ret:= luaL_loadfile(luaState, Str2PChar(Pathz[ptData] + '/' + name));
+s:= UserPathz[ptData] + '/' + name;
+if not FileExists(s) then s:= Pathz[ptData] + '/' + name;
+ret:= luaL_loadfile(luaState, Str2PChar(s));
 if ret <> 0 then
     begin
     LuaError('Lua: Failed to load ' + name + '(error ' + IntToStr(ret) + ')');
@@ -1722,6 +1738,7 @@ lua_register(luaState, 'SetGearMessage', @lc_setgearmessage);
 lua_register(luaState, 'GetRandom', @lc_getrandom);
 lua_register(luaState, 'SetWind', @lc_setwind);
 lua_register(luaState, 'GetDataPath', @lc_getdatapath);
+lua_register(luaState, 'GetUserDataPath', @lc_getuserdatapath);
 lua_register(luaState, 'MapHasBorder', @lc_maphasborder);
 lua_register(luaState, 'GetHogHat', @lc_gethoghat);
 lua_register(luaState, 'SetHogHat', @lc_sethoghat);
