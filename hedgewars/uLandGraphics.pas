@@ -29,7 +29,7 @@ type PRangeArray = ^TRangeArray;
 
 function  addBgColor(OldColor, NewColor: LongWord): LongWord;
 function  SweepDirty: boolean;
-function  Despeckle(X, Y: LongInt): boolean;
+function  Despeckle(X, Y: LongInt; gfxOnly: boolean): LongWord;
 procedure Smooth(X, Y: LongInt);
 function  CheckLandValue(X, Y: LongInt; LandFlag: Word): boolean;
 function  DrawExplosion(X, Y, Radius: LongInt): Longword;
@@ -480,9 +480,12 @@ end;
 procedure DrawTunnel(X, Y, dX, dY: hwFloat; ticks, HalfWidth: LongInt);
 var nx, ny, dX8, dY8: hwFloat;
     i, t, tx, ty, stX, stY, ddy, ddx: Longint;
+    despeckle : Boolean;
 begin  // (-dY, dX) is (dX, dY) rotated by PI/2
 stY:= hwRound(Y);
 stX:= hwRound(X);
+
+despeckle:= HalfWidth > 1;
 
 nx:= X + dY * (HalfWidth + 8);
 ny:= Y - dX * (HalfWidth + 8);
@@ -505,10 +508,10 @@ for i:= 0 to 7 do
        ((Land[ty, tx] and lfObject) <> 0)) then
         begin
         Land[ty, tx]:= Land[ty, tx] or lfDamaged;
-            if (cReducedQuality and rqBlurryLand) = 0 then
+        if despeckle then LandDirty[ty div 32, tx div 32]:= 1;
+        if (cReducedQuality and rqBlurryLand) = 0 then
             LandPixels[ty, tx]:= cExplosionBorderColor
-            else
-            LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
+        else LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
         end
     end;
     nx:= nx - dY;
@@ -531,11 +534,10 @@ for i:= -HalfWidth to HalfWidth do
        ((Land[ty, tx] and lfObject) <> 0)) then
         begin
         Land[ty, tx]:= Land[ty, tx] or lfDamaged;
-            if (cReducedQuality and rqBlurryLand) = 0 then
-        LandPixels[ty, tx]:= cExplosionBorderColor
-            else
-        LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
-
+        if despeckle then LandDirty[ty div 32, tx div 32]:= 1;
+        if (cReducedQuality and rqBlurryLand) = 0 then
+            LandPixels[ty, tx]:= cExplosionBorderColor
+        else LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
         end
     end;
     X:= nx;
@@ -575,11 +577,10 @@ for i:= -HalfWidth to HalfWidth do
        ((Land[ty, tx] and lfObject) <> 0)) then
         begin
         Land[ty, tx]:= Land[ty, tx] or lfDamaged;
+        if despeckle then LandDirty[ty div 32, tx div 32]:= 1;
         if (cReducedQuality and rqBlurryLand) = 0 then
-        LandPixels[ty, tx]:= cExplosionBorderColor
-        else
-        LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
-
+            LandPixels[ty, tx]:= cExplosionBorderColor
+        else LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
         end
     end;
     nx:= nx - dY;
@@ -602,10 +603,10 @@ for i:= 0 to 7 do
        ((Land[ty, tx] and lfObject) <> 0)) then
         begin
         Land[ty, tx]:= Land[ty, tx] or lfDamaged;
+        if despeckle then LandDirty[ty div 32, tx div 32]:= 1;
         if (cReducedQuality and rqBlurryLand) = 0 then
-        LandPixels[ty, tx]:= cExplosionBorderColor
-        else
-        LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
+            LandPixels[ty, tx]:= cExplosionBorderColor
+        else LandPixels[ty div 2, tx div 2]:= cExplosionBorderColor
         end
     end;
     nx:= nx - dY;
@@ -699,7 +700,7 @@ UpdateLandTexture(x, w, y, h)
 end;
 
 // was experimenting with applying as damage occurred.
-function Despeckle(X, Y: LongInt): boolean;
+function Despeckle(X, Y: LongInt; gfxOnly: boolean): LongWord;
 var nx, ny, i, j, c, xx, yy: LongInt;
     pixelsweep: boolean;
 begin
@@ -714,7 +715,8 @@ else
    yy:= Y div 2;
    end;
 pixelsweep:= ((Land[Y, X] and $FF00) = 0) and (LandPixels[yy, xx] <> 0);
-if (((Land[Y, X] and lfDamaged) <> 0) and ((Land[Y, X] and lfIndestructible) = 0)) or pixelsweep then
+if not pixelsweep and gfxOnly then exit(0);
+if ((Land[Y, X] > 255) and ((Land[Y, X] and lfIndestructible) = 0)) or pixelsweep then
     begin
     c:= 0;
     for i:= -1 to 1 do
@@ -737,8 +739,8 @@ if (((Land[Y, X] and lfDamaged) <> 0) and ((Land[Y, X] and lfIndestructible) = 0
                     else if Land[ny, nx] > 255 then inc(c);
                     end
                 end;
-
-    if c < 4 then // 0-3 neighbours
+    if (c < 2) or
+       ((c < 4) and (((Land[Y, X] and lfDamaged) <> 0) or pixelsweep)) then
         begin
         if ((Land[Y, X] and lfBasic) <> 0) and not disableLandBack then
             LandPixels[yy, xx]:= LandBackPixel(X, Y)
@@ -746,10 +748,11 @@ if (((Land[Y, X] and lfDamaged) <> 0) and ((Land[Y, X] and lfIndestructible) = 0
             LandPixels[yy, xx]:= 0;
 
         Land[Y, X]:= 0;
-        if not pixelsweep then exit(true);
+        if not pixelsweep then exit(1)  // cannot exit true on pixel sweep, or risk desyncs due to inconsistent resweeps
+        else exit(2)
         end;
     end;
-Despeckle:= false
+Despeckle:= 0
 end;
 
 procedure Smooth(X, Y: LongInt);
@@ -796,8 +799,8 @@ if (Land[Y, X] = 0) and (Y > topY+1) and
 end;
 
 function SweepDirty: boolean;
-var x, y, xx, yy, ty, tx: LongInt;
-    bRes, updateBlock, resweep, recheck, firstpass: boolean;
+var x, y, xx, yy, ty, tx, d: LongInt;
+    bRes, updateBlock, resweepCol, resweepGfx, gfxOnly, recheck, firstpass: boolean;
 begin
 bRes:= false;
 reCheck:= true;
@@ -812,41 +815,47 @@ while recheck do
             if LandDirty[y, x] <> 0 then
                 begin
                 updateBlock:= false;
-                resweep:= true;
+                resweepCol:= true;
+                resweepGfx:= true;
                 firstpass:= true;
                 ty:= y * 32;
                 tx:= x * 32;
-                while(resweep) do
+                while(resweepCol or resweepGfx) do
                     begin
-                    resweep:= false;
+                    gfxOnly:= resweepGfx and not resweepCol;
+                    resweepCol:= false;
+                    resweepGfx:= false;
                     for yy:= ty to ty + 31 do
                         for xx:= tx to tx + 31 do
                             begin
-                            if Despeckle(xx, yy) then
+                            d:= Despeckle(xx, yy, gfxOnly);
+                            if d <> 0 then
                                 begin
                                 bRes:= true;
                                 updateBlock:= true;
-                                resweep:= true;
-                                if (yy = ty) and (y > 0) then
-                                    begin
-                                    LandDirty[y-1, x]:= 1;
-                                    recheck:= true;
-                                    end
-                                else if (yy = ty+31) and (y < LAND_HEIGHT div 32 - 1) then
-                                    begin
-                                    LandDirty[y+1, x]:= 1;
-                                    recheck:= true;
-                                    end;
-                                if (xx = tx) and (x > 0) then
-                                    begin
-                                    LandDirty[y, x-1]:= 1;
-                                    recheck:= true;
-                                    end
-                                else if (xx = tx+31) and (x < LAND_WIDTH div 32 - 1) then
-                                    begin
-                                    LandDirty[y, x+1]:= 1;
-                                    recheck:= true;
-                                    end
+                                if d = 1 then resweepCol:= true
+                                else resweepGfx:= true;
+                                if d = 1 then
+                                    if (yy = ty) and (y > 0) then
+                                        begin
+                                        LandDirty[y-1, x]:= 1;
+                                        recheck:= true;
+                                        end
+                                    else if (yy = ty+31) and (y < LAND_HEIGHT div 32 - 1) then
+                                        begin
+                                        LandDirty[y+1, x]:= 1;
+                                        recheck:= true;
+                                        end;
+                                    if (xx = tx) and (x > 0) then
+                                        begin
+                                        LandDirty[y, x-1]:= 1;
+                                        recheck:= true;
+                                        end
+                                    else if (xx = tx+31) and (x < LAND_WIDTH div 32 - 1) then
+                                        begin
+                                        LandDirty[y, x+1]:= 1;
+                                        recheck:= true;
+                                        end
                                 end;
                             if firstpass then Smooth(xx,yy);
                             end;

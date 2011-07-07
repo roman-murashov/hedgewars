@@ -74,6 +74,9 @@ for i:= 0 to Pred(Targets.Count) do
        with CurrentHedgehog^ do
             a:= CurAmmoType;
        aa:= a;
+       
+       ThreadSwitch();
+       
        repeat
         if (CanUseAmmo[a]) and
            ((not isMoved) or ((AmmoTests[a].flags and amtest_OnTurn) = 0)) then
@@ -86,7 +89,6 @@ for i:= 0 to Pred(Targets.Count) do
               begin
               BestActions:= Actions;
               inc(BestActions.Score, Score);
-         addfilelog('AI: curr score ' + inttostr(bestactions.score));
 
               if (ap.Angle > 0) then AddAction(BestActions, aia_LookRight, 0, 200, 0, 0)
               else if (ap.Angle < 0) then AddAction(BestActions, aia_LookLeft, 0, 200, 0, 0);
@@ -280,10 +282,9 @@ if (PGear(Me)^.State and gstAttacked) = 0 then
       begin
       WalkMe:= BackMe;
       Walk(@WalkMe);
-      if (StartTicks > GameTicks - 1500) and not StopThinking then SDL_Delay(2000);
+      if (StartTicks > GameTicks - 1500) and not StopThinking then SDL_Delay(1000);
       if BestActions.Score < -1023 then
          begin
-         addfilelog('AI: best score ' + inttostr(bestactions.score));
          BestActions.Count:= 0;
          AddAction(BestActions, aia_Skip, 0, 250, 0, 0);
          end;
