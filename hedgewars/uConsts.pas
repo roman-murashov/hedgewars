@@ -209,6 +209,7 @@ const
     gstNotKickable    = $00040000;
     gstLoser          = $00080000;
     gstHHGone         = $00100000;
+    gstInvisible      = $00200000;
 
     gmLeft   = $00000001;
     gmRight  = $00000002;
@@ -242,6 +243,7 @@ const
     ammoprop_NotBorder    = $00000800;
     ammoprop_Utility      = $00001000;
     ammoprop_Effect       = $00002000;
+    ammoprop_SetBounce    = $00004000;
     ammoprop_NoRoundEnd   = $10000000;
 
     AMMO_INFINITE = 100;
@@ -258,6 +260,9 @@ const
     posCaseAmmo    = $00000001;
     posCaseHealth  = $00000002;
     posCaseUtility = $00000004;
+    posCaseDummy   = $00000008;
+    posCaseExplode = $00000010;
+    posCasePoison  = $00000020;
 
     NoPointX = Low(LongInt);
     cTargetPointRef : TPoint = (X: NoPointX; Y: 0);
