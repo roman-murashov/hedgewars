@@ -1,0 +1,293 @@
+/*
+ * Hedgewars-iOS, a Hedgewars port for iOS devices
+ * Copyright (c) 2009-2011 Vittorio Giovara <vittorio.giovara@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; version 2 of the License
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * File created on 08/01/2010.
+ */
+
+
+#import "GeneralSettingsViewController.h"
+#import "CommodityFunctions.h"
+
+@implementation GeneralSettingsViewController
+
+
+-(BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation) interfaceOrientation {
+    return rotationManager(interfaceOrientation);
+}
+
+#pragma mark -
+#pragma mark View Lifecycle
+-(void) viewDidLoad {
+    [super viewDidLoad];
+}
+
+-(void) viewWillAppear:(BOOL)animated {
+    [self.tableView setContentOffset:CGPointMake(0,0) animated:NO];
+    [super viewWillAppear:animated];
+}
+
+-(void) viewWillDisappear:(BOOL)animated {
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults synchronize];
+    if ([[userDefaults objectForKey:@"music"] boolValue] == NO)
+        [HedgewarsAppDelegate stopBackgroundMusic];
+
+    [super viewWillDisappear:animated];
+}
+
+#pragma mark -
+-(void) switchValueChanged:(id) sender {
+    UISwitch *theSwitch = (UISwitch *)sender;
+    UISwitch *theOtherSwitch = nil;
+    NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+
+    switch (theSwitch.tag) {
+        case 10:    //soundSwitch
+            // setting this off will turn off also the switch below (music)
+            [settings setObject:[NSNumber numberWithBool:theSwitch.on] forKey:@"sound"];
+            [settings setObject:[NSNumber numberWithBool:NO] forKey:@"music"];
+            theOtherSwitch = (UISwitch *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:1]].accessoryView;
+            [theOtherSwitch setOn:NO animated:YES];
+
+            if (theOtherSwitch.on)
+                [HedgewarsAppDelegate pauseBackgroundMusic];
+            break;
+        case 20:    //musicSwitch
+            // if switch above (sound) is off, never turn on
+            if (NO == [[settings objectForKey:@"sound"] boolValue]) {
+                [settings setObject:[NSNumber numberWithBool:NO] forKey:@"music"];
+                theOtherSwitch = (UISwitch *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:1]].accessoryView;
+                [theOtherSwitch setOn:NO animated:YES];
+            } else
+                [settings setObject:[NSNumber numberWithBool:theSwitch.on] forKey:@"music"];
+
+            if (theSwitch.on)
+                [HedgewarsAppDelegate playBackgroundMusic];
+            else
+                [HedgewarsAppDelegate pauseBackgroundMusic];
+
+            break;
+        case 30:    //alternateSwitch
+            [settings setObject:[NSNumber numberWithBool:theSwitch.on] forKey:@"alternate"];
+            break;
+        case 70:    //enhanced graphics
+            [settings setObject:[NSNumber numberWithBool:theSwitch.on] forKey:@"enhanced"];
+            break;
+        case 80:    //nomultitasking
+            [settings setObject:[NSNumber numberWithBool:theSwitch.on] forKey:@"multitasking"];
+            break;
+        case 60:    //classic menu
+            [settings setObject:[NSNumber numberWithBool:theSwitch.on] forKey:@"classic_menu"];
+            break;
+        default:
+            DLog(@"Wrong tag");
+            break;
+    }
+}
+
+-(void) saveTextFieldValue:(NSString *)textString withTag:(NSInteger) tagValue {
+    NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+
+    if (tagValue == 40)
+        [settings setObject:textString forKey:@"username"];
+    else
+        [settings setObject:[textString MD5hash] forKey:@"password"];
+}
+
+#pragma mark -
+#pragma mark TableView Methods
+-(NSInteger) numberOfSectionsInTableView:(UITableView *)tableView {
+    return 3;
+}
+
+-(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger )section {
+    switch (section) {
+        case 0:     // user and pass
+            return 1;   // set 2 here for the password field
+            break;
+        case 1:     // audio
+            return 2;
+            break;
+        case 2:     // other stuff
+            if (IS_IPAD() == YES)
+                return 4;
+            else
+                return 3;
+            break;
+        default:
+            DLog(@"Nope");
+            break;
+    }
+    return 0;
+}
+
+-(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    NSString *sectionTitle = nil;
+    switch (section) {
+        case 0:
+            sectionTitle = NSLocalizedString(@"Main Configuration", @"");
+            break;
+        case 1:
+            sectionTitle = NSLocalizedString(@"Audio Preferences", @"");
+            break;
+        case 2:
+            sectionTitle = NSLocalizedString(@"Other Settings", @"");
+            break;
+        default:
+            DLog(@"Nope");
+            break;
+    }
+    return sectionTitle;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)aTableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString *cellIdentifier0 = @"Cell0";
+    static NSString *cellIdentifier1 = @"Cell1";
+    static NSString *cellIdentifier2 = @"Cell2";
+    NSInteger row = [indexPath row];
+    NSInteger section = [indexPath section];
+    NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+
+    UITableViewCell *cell = nil;
+    EditableCellView *editableCell = nil;
+    UISwitch *switchContent = nil;
+    switch(section) {
+        case 0:
+            editableCell = (EditableCellView *)[aTableView dequeueReusableCellWithIdentifier:cellIdentifier0];
+            if (nil == editableCell) {
+                editableCell = [[[EditableCellView alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier0] autorelease];
+                editableCell.minimumCharacters = 0;
+                editableCell.delegate = self;
+                editableCell.textField.font = [UIFont systemFontOfSize:[UIFont systemFontSize]];
+                editableCell.textField.textColor = [UIColor blackColor];
+            }
+            
+            if (row == 0) {
+                editableCell.titleLabel.text = NSLocalizedString(@"Nickname","from the settings table");
+                editableCell.textField.placeholder = NSLocalizedString(@"Insert your username (if you have one)",@"");
+                editableCell.textField.text = [settings objectForKey:@"username"];
+                editableCell.textField.secureTextEntry = NO;
+                editableCell.tag = 40;
+            } else {
+                editableCell.titleLabel.text = NSLocalizedString(@"Password","from the settings table");
+                editableCell.textField.placeholder = NSLocalizedString(@"Insert your password",@"");
+                editableCell.textField.text = [settings objectForKey:@"password"];
+                editableCell.textField.secureTextEntry = YES;
+                editableCell.tag = 50;
+            }
+            
+            editableCell.accessoryView = nil;
+            cell = editableCell;
+            break;
+        case 1:
+            cell = [aTableView dequeueReusableCellWithIdentifier:cellIdentifier1];
+            if (nil == cell) {
+                cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier1] autorelease];
+                UISwitch *theSwitch = [[UISwitch alloc] init];
+                [theSwitch addTarget:self action:@selector(switchValueChanged:) forControlEvents:UIControlEventValueChanged];
+                cell.accessoryView = theSwitch;
+                [theSwitch release];
+            }
+            
+            switchContent = (UISwitch *)cell.accessoryView;
+            if (row == 0) {
+                cell.textLabel.text = NSLocalizedString(@"Sound", @"");
+                switchContent.on = [[settings objectForKey:@"sound"] boolValue];
+                switchContent.tag = 10;
+            } else {
+                cell.textLabel.text = NSLocalizedString(@"Music", @"");
+                switchContent.on = [[settings objectForKey:@"music"] boolValue];
+                switchContent.tag = 20;
+            }
+            break;
+        case 2:
+            cell = [aTableView dequeueReusableCellWithIdentifier:cellIdentifier2];
+            if (nil == cell) {
+                cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier2] autorelease];
+                UISwitch *theSwitch = [[UISwitch alloc] init];
+                [theSwitch addTarget:self action:@selector(switchValueChanged:) forControlEvents:UIControlEventValueChanged];
+                cell.accessoryView = theSwitch;
+                [theSwitch release];
+            }
+            
+            switchContent = (UISwitch *)cell.accessoryView;
+            switch (row) {
+                case 0:
+                    cell.textLabel.text = NSLocalizedString(@"Alternate Damage", @"");
+                    cell.detailTextLabel.text = NSLocalizedString(@"Damage popups will notify you on every single hit", @"");
+                    switchContent.on = [[settings objectForKey:@"alternate"] boolValue];
+                    switchContent.tag = 30;
+                    break;
+                case 1:
+                    cell.textLabel.text = NSLocalizedString(@"Enanched Graphics Mode", @"");
+                    cell.detailTextLabel.text = NSLocalizedString(@"The game will use more memory so it could crash!", @"");
+                    switchContent.on = [[settings objectForKey:@"enhanced"] boolValue];
+                    switchContent.tag = 70;
+                    break;
+                case 2:
+                    cell.textLabel.text = NSLocalizedString(@"Multitasking Enabled", @"");
+                    cell.detailTextLabel.text = NSLocalizedString(@"Disable it in case of issues when returing in game", @"");
+                    switchContent.on = [[settings objectForKey:@"multitasking"] boolValue];
+                    switchContent.tag = 80;
+                    break;
+                case 3:
+                    cell.textLabel.text = NSLocalizedString(@"Classic Ammo Menu", @"");
+                    cell.detailTextLabel.text = NSLocalizedString(@"Select which style of ammo menu you prefer",@"");
+                    switchContent.on = [[settings objectForKey:@"classic_menu"] boolValue];
+                    switchContent.tag = 60;
+                    break;
+                default:
+                    DLog(@"Nope");
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+    
+    cell.accessoryType = UITableViewCellAccessoryNone;
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.imageView.image = nil;
+
+    return cell;
+}
+
+#pragma mark -
+#pragma mark Table view delegate
+-(void) tableView:(UITableView *)aTableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (0 == [indexPath section]) {
+        EditableCellView *cell = (EditableCellView *)[aTableView cellForRowAtIndexPath:indexPath];
+        [cell replyKeyboard];
+    }
+}
+
+
+#pragma mark -
+#pragma mark Memory management
+-(void) didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+-(void) viewDidUnload {
+    [super viewDidUnload];
+}
+
+-(void) dealloc {
+    [super dealloc];
+}
+
+@end
