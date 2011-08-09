@@ -35,13 +35,15 @@ interface
 {$ENDIF}
 
 {$IFDEF UNIX}
-  {$IFNDEF DARWIN}
+  {$IFNDEF DARWIN}    
     {$linklib c}
   {$ENDIF}
   {$IFDEF HAIKU}
     {$linklib root}
   {$ELSE}
-    {$linklib pthread}
+    {$IFNDEF ANDROID}    
+	{$linklib pthread}
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
@@ -81,11 +83,19 @@ const
     SDL_ImageLibName = 'SDL_image';
     SDL_NetLibName = 'SDL_net';
   {$ELSE}
-    SDLLibName = 'libSDL.so';
-    SDL_TTFLibName = 'libSDL_ttf.so';
-    SDL_MixerLibName = 'libSDL_mixer.so';
-    SDL_ImageLibName = 'libSDL_image.so';
-    SDL_NetLibName = 'libSDL_net.so';
+    {$IFDEF ANDROID}
+        SDLLibName = 'SDL';
+	SDL_TTFLibName = 'libSDL_ttf.so';
+	SDL_MixerLibName = 'libSDL_mixer.so';
+	SDL_ImageLibName = 'libSDL_image.so';
+	SDL_NetLibName = 'libSDL_net.so';
+    {$ELSE}
+        SDLLibName = 'SDL';
+        SDL_TTFLibName = 'libSDL_ttf.so';
+        SDL_MixerLibName = 'libSDL_mixer.so';
+	SDL_ImageLibName = 'libSDL_image.so';
+	SDL_NetLibName = 'libSDL_net.so';
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
@@ -346,7 +356,8 @@ type
         alpha: Byte;
 {$ENDIF}
         end;
-
+   
+    SDL_eventaction = (SDL_ADDEVENT = 0, SDL_PEEPEVENT, SDL_GETEVENT);
 
     PSDL_Surface = ^TSDL_Surface;
     TSDL_Surface = record
@@ -474,7 +485,7 @@ type
         type_: LongInt;
         windowID: LongInt;
         padding1, padding2: byte;
-        x, y, z, xrel, yrel : LongInt;
+        x, y, z,xrel, yrel : LongInt;
         pressure, pressure_max, pressure_min,
         rotation, tilt, cursor: LongInt;
 {$ELSE}
@@ -791,8 +802,13 @@ function  SDL_GetRelativeMouseState(x, y: PLongInt): Byte; cdecl; external SDLLi
 function  SDL_GetNumMice: LongInt; cdecl; external SDLLibName;
 function  SDL_PixelFormatEnumToMasks(format: TSDL_ArrayByteOrder; bpp: PLongInt; Rmask, Gmask, Bmask, Amask: PLongInt): boolean; cdecl; external SDLLibName;
 
-procedure SDL_WarpMouseInWindow(window: PSDL_Window; x, y: LongInt); cdecl; external SDLLibName;
-function  SDL_SetHint(name, value: PChar): boolean; cdecl; external SDLLibName;
+
+procedure SDL_WarpMouseInWindow(window: PSDL_Window; x, y: LongInt); cdecl; external SDLLibName ;
+
+function  SDL_SetHint(name, value: PChar): boolean; cdecl; external SDLLibName; 
+
+function  SDL_PeepEvents(event: PSDL_Event; numevents: LongInt; action: SDL_eventaction; minType, maxType: LongInt): LongInt; cdecl; external SDLLibName;
+
 {$ENDIF}
 
 function  SDL_GetMouseState(x, y: PLongInt): Byte; cdecl; external SDLLibName;
@@ -808,6 +824,8 @@ procedure SDL_WM_SetIcon(icon: PSDL_Surface; mask : byte); cdecl; external SDLLi
 procedure SDL_WM_SetCaption(title: PChar; icon: PChar); cdecl; external SDLLibName;
 function  SDL_WM_ToggleFullScreen(surface: PSDL_Surface): LongInt; cdecl; external SDLLibName;
 
+function  SDL_CreateThread(fn: pointer; data: pointer): PSDL_Thread; cdecl; external SDLLibName;
+procedure SDL_WaitThread(thread: PSDL_Thread; status: PLongInt); cdecl; external SDLLibName;
 function  SDL_CreateMutex: PSDL_mutex; cdecl; external SDLLibName;
 procedure SDL_DestroyMutex(mutex: PSDL_mutex); cdecl; external SDLLibName;
 function  SDL_LockMutex(mutex: PSDL_mutex): LongInt; cdecl; external SDLLibName name 'SDL_mutexP';
@@ -857,7 +875,6 @@ function  TTF_SizeUTF8(font: PTTF_Font; const text: PChar; out w, h: LongInt): L
 function  TTF_RenderUTF8_Solid(font: PTTF_Font; const text: PChar; fg: TSDL_Color): PSDL_Surface; cdecl; external SDL_TTFLibName;
 function  TTF_RenderUTF8_Blended(font: PTTF_Font; const text: PChar; fg: TSDL_Color): PSDL_Surface; cdecl; external SDL_TTFLibName;
 function  TTF_RenderUTF8_Shaded(font: PTTF_Font; const text: PChar; fg, bg: TSDL_Color): PSDL_Surface; cdecl; external SDL_TTFLibName;
-
 function  TTF_OpenFont(const filename: PChar; size: LongInt): PTTF_Font; cdecl; external SDL_TTFLibName;
 procedure TTF_SetFontStyle(font: PTTF_Font; style: LongInt); cdecl; external SDL_TTFLibName;
 
@@ -988,6 +1005,4 @@ begin
                   (PByteArray(buf)^[1] shl 16) or
                   (PByteArray(buf)^[0] shl 24)
 end;
-
 end.
-
