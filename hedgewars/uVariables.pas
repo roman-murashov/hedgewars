@@ -633,7 +633,9 @@ const
             (FileName:        'shotgunreload.ogg'; Path: ptSounds),// sndShotgunReload
             (FileName:          'shotgunfire.ogg'; Path: ptSounds),// sndShotgunFire
             (FileName:          'graveimpact.ogg'; Path: ptSounds),// sndGraveImpact
+            (FileName:           'mineimpact.ogg'; Path: ptSounds),// sndMineImpact
             (FileName:             'minetick.ogg'; Path: ptSounds),// sndMineTicks
+            (FileName:             'Droplet1.ogg'; Path: ptSounds),// sndMudballImpact
             (FileName:           'pickhammer.ogg'; Path: ptSounds),// sndPickhammer
             (FileName:                  'gun.ogg'; Path: ptSounds),// sndGun
             (FileName:                  'bee.ogg'; Path: ptSounds),// sndBee
@@ -725,11 +727,11 @@ const
             (FileName:                   '8C.ogg'; Path: ptSounds),// sndPiano7
             (FileName:                   '9D.ogg'; Path: ptSounds),// sndPiano8
             (FileName:                 'skip.ogg'; Path: ptSounds),// sndSkip
-            (FileName:          'shotgunfire.ogg'; Path: ptSounds),// sndSineGun
+            (FileName:              'sinegun.ogg'; Path: ptSounds),// sndSineGun
             (FileName:                'Ooff1.ogg'; Path: ptVoices),// sndOoff1
             (FileName:                'Ooff2.ogg'; Path: ptVoices),// sndOoff2
             (FileName:                'Ooff3.ogg'; Path: ptVoices),// sndOoff3
-            (FileName:            'whipcrack.ogg'; Path: ptSounds),// sndWhack
+            (FileName:               'hammer.ogg'; Path: ptSounds),// sndWhack
             (FileName:           'Comeonthen.ogg'; Path: ptVoices),// sndComeonthen
             (FileName:            'parachute.ogg'; Path: ptSounds),// sndParachute
             (FileName:                 'bump.ogg'; Path: ptSounds),// sndBump
