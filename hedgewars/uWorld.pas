@@ -182,7 +182,7 @@ prevPoint.Y:= cScreenHeight div 2;
 WorldDx:=  - (LAND_WIDTH div 2) + cScreenWidth div 2;
 WorldDy:=  - (LAND_HEIGHT - (playHeight div 2)) + (cScreenHeight div 2);
 AMSlotSize:= 33;
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 AMxOffset:= 10;
 AMyOffset:= 10 + 123;   // moved downwards
 AMWidth:= (cMaxSlotAmmoIndex + 1) * AMSlotSize + AMxOffset;
@@ -247,7 +247,7 @@ if Ammo = nil then
 SlotsNum:= 0;
 x:= (cScreenWidth shr 1) - AMWidth + AMxShift;
 
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 Slot:= cMaxSlotIndex;
 x:= x - cOffsetY;
 y:= AMyOffset;
@@ -371,7 +371,7 @@ if (Pos >= 0) then
             RenderWeaponTooltip(amSel)
             end;
 
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
         DrawTexture(cScreenWidth div 2 - (AMWidth - 10) + AMxShift, AMyOffset - 25, Ammoz[Ammo^[Slot, Pos].AmmoType].NameTex);
 
         if Ammo^[Slot, Pos].Count < AMMO_INFINITE then
@@ -395,7 +395,7 @@ if (Pos >= 0) then
 else
     FreeWeaponTooltip;
 if (WeaponTooltipTex <> nil) and (AMxShift = 0) then
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     ShowWeaponTooltip(x - WeaponTooltipTex^.w - 3, AMyOffset - 1);
 {$ELSE}
     ShowWeaponTooltip(x - WeaponTooltipTex^.w - 3, Min(y + 1, cScreenHeight - WeaponTooltipTex^.h - 40));
@@ -879,7 +879,7 @@ if (TargetPoint.X <> NoPointX) and (CurrentTeam <> nil) and (CurrentHedgehog <> 
 SetScale(cDefaultZoomLevel);
 
 // Turn time
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 offsetX:= cScreenHeight - 13;
 {$ELSE}
 offsetX:= 48;
@@ -981,7 +981,7 @@ if smallScreenOffset <> 0 then
 if isInLag then DrawSprite(sprLag, 32 - (cScreenWidth shr 1), 32, (RealTicks shr 7) mod 12);
 
 // Wind bar
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     offsetX:= cScreenHeight - 13;
     offsetY:= (cScreenWidth shr 1) + 74;
 {$ELSE}
@@ -1033,7 +1033,7 @@ if not isFirstFrame and (missionTimer <> 0) or isPaused or fastUntilLag or (Game
     end;
 
 // fps
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 offsetX:= 8;
 {$ELSE}
 offsetX:= 10;
@@ -1176,7 +1176,7 @@ procedure MoveCamera;
 var EdgesDist, wdy, shs: LongInt;
     PrevSentPointTime: LongWord = 0;
 begin
-{$IFNDEF IPHONEOS}
+{$IFNDEF MOBILE}
 if (not (CurrentTeam^.ExtDriven and isCursorVisible and not bShowAmmoMenu)) and cHasFocus and (GameState <> gsConfirm) then
     uCursor.updatePosition();
 {$ENDIF}
@@ -1201,7 +1201,7 @@ if ((CursorPoint.X = prevPoint.X) and (CursorPoint.Y = prevpoint.Y)) then exit;
 
 if AMxShift < AMWidth then
 begin
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     if CursorPoint.X < cScreenWidth div 2 + AMxShift - AMWidth then CursorPoint.X:= cScreenWidth div 2 + AMxShift - AMWidth;
     if CursorPoint.X > cScreenWidth div 2 + AMxShift - AMxOffset then CursorPoint.X:= cScreenWidth div 2 + AMxShift - AMxOffset;
     if CursorPoint.Y < cScreenHeight - AMyOffset - SlotsNum * AMSlotSize then CursorPoint.Y:= cScreenHeight - AMyOffset - SlotsNum * AMSlotSize;
