@@ -536,7 +536,7 @@ begin
     SDL_GL_SetSwapInterval(1);
 {$ENDIF}
 
-{$IFDEF IPHONEOS}
+{$IFDEF IHPONE}
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
     SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 1);
     vendor:= vendor; // avoid hint
@@ -957,7 +957,7 @@ begin
     y:= SDL_WINDOWPOS_CENTERED_MASK;
     flags:= SDL_WINDOW_OPENGL or SDL_WINDOW_SHOWN;
 
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     // make the sdl window appear on the second monitor when present
     x:= x or (SDL_GetNumVideoDisplays() - 1);
     y:= y or (SDL_GetNumVideoDisplays() - 1);
