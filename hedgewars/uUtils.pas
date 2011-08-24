@@ -21,7 +21,7 @@
 unit uUtils;
 
 interface
-uses uTypes, uFloat, GLunit;
+uses uTypes, uFloat, GLunit, uConsole;
 
 procedure SplitBySpace(var a, b: shortstring);
 procedure SplitByChar(var a, b: ansistring; c: char);
@@ -262,8 +262,12 @@ procedure AddFileLog(s: shortstring);
 begin
 s:= s;
 {$IFDEF DEBUGFILE}
+{$IFDEF ANDROID}
+ WriteToConsole(s);
+{$ELSE}
 writeln(f, GameTicks: 6, ': ', s);
 flush(f)
+{$ENDIF}
 {$ENDIF}
 end;
 
@@ -274,7 +278,7 @@ var l, i : LongInt;
     tmpstr: array[0..256] of WideChar;
 begin
 
-{$IFNDEF IPHONEOS}
+{$IFNDEF MOBILE}
 // remove chinese fonts for now
 if (font >= CJKfnt16) or (length(s) = 0) then
 {$ENDIF}
