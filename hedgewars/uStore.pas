@@ -998,7 +998,7 @@ begin
     y:= SDL_WINDOWPOS_CENTERED_MASK;
     flags:= SDL_WINDOW_OPENGL or SDL_WINDOW_SHOWN;
 
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     // make the sdl window appear on the second monitor when present
     x:= x or (SDL_GetNumVideoDisplays() - 1);
     y:= y or (SDL_GetNumVideoDisplays() - 1);
