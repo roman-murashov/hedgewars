@@ -41,7 +41,9 @@ interface
   {$IFDEF HAIKU}
     {$linklib root}
   {$ELSE}
-    {$linklib pthread}
+    {$IFNDEF ANDROID}    
+	{$linklib pthread}
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
@@ -81,11 +83,19 @@ const
     SDL_ImageLibName = 'SDL_image';
     SDL_NetLibName = 'SDL_net';
   {$ELSE}
-    SDLLibName = 'libSDL.so';
-    SDL_TTFLibName = 'libSDL_ttf.so';
-    SDL_MixerLibName = 'libSDL_mixer.so';
-    SDL_ImageLibName = 'libSDL_image.so';
-    SDL_NetLibName = 'libSDL_net.so';
+    {$IFDEF ANDROID}
+        SDLLibName = 'SDL';
+	SDL_TTFLibName = 'libSDL_ttf.so';
+	SDL_MixerLibName = 'libSDL_mixer.so';
+	SDL_ImageLibName = 'libSDL_image.so';
+	SDL_NetLibName = 'libSDL_net.so';
+    {$ELSE}
+        SDLLibName = 'SDL';
+        SDL_TTFLibName = 'libSDL_ttf.so';
+        SDL_MixerLibName = 'libSDL_mixer.so';
+	SDL_ImageLibName = 'libSDL_image.so';
+	SDL_NetLibName = 'libSDL_net.so';
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
@@ -136,6 +146,9 @@ const
     SDL_JOYHATMOTION      = $602;
     SDL_JOYBUTTONDOWN     = $603;
     SDL_JOYBUTTONUP       = $604;
+    SDL_FINGERDOWN        = $700;
+    SDL_FINGERUP          = $701;
+    SDL_FINGERMOTION      = $702;
     //TODO: implement otheer event types
     SDL_USEREVENT         = $8000;
     SDL_LASTEVENT         = $FFFF;
@@ -559,6 +572,19 @@ type
 {$ENDIF}
         end;
 
+    SDL_TouchID = Int32;
+    SDL_FingerID = Int32;
+
+    TSDL_TouchFingerEvent = record
+        type_: UInt32;
+        windowId: UInt32;
+        touchId: SDL_TouchID;
+        fingerId: SDL_FingerID;
+        state, padding1, padding2, padding3: UInt8;
+        x,y: UInt16;
+        dx,dy: Int16;
+        pressure: UInt16;
+    end;
 //TODO: implement SDL_TouchButtonEvent, SDL_MultiGestureEvent, SDL_DollarGestureEvent
 
     TSDL_QuitEvent = record
@@ -595,6 +621,9 @@ type
             SDL_JOYHATMOTION: (jhat: TSDL_JoyHatEvent);
             SDL_JOYBUTTONDOWN,
             SDL_JOYBUTTONUP: (jbutton: TSDL_JoyButtonEvent);
+            SDL_FINGERMOTION,
+            SDL_FINGERUP,
+            SDL_FINGERDOWN:(tfinger: TSDL_TouchFingerEvent);
             SDL_QUITEV: (quit: TSDL_QuitEvent);
             SDL_USEREVENT: (user: TSDL_UserEvent);
             //TODO: implement other events
@@ -618,8 +647,10 @@ type
 {$ENDIF}
         end;
 
+
     TSDL_EventFilter = function( event : PSDL_Event ): Integer; cdecl;
 
+    
     PByteArray = ^TByteArray;
     TByteArray = array[0..65535] of Byte;
     PLongWordArray = ^TLongWordArray;
@@ -799,6 +830,7 @@ function  SDL_GetRelativeMouseState(x, y: PLongInt): Byte; cdecl; external SDLLi
 function  SDL_GetNumMice: LongInt; cdecl; external SDLLibName;
 function  SDL_PixelFormatEnumToMasks(format: TSDL_ArrayByteOrder; bpp: PLongInt; Rmask, Gmask, Bmask, Amask: PLongInt): boolean; cdecl; external SDLLibName;
 
+
 procedure SDL_WarpMouseInWindow(window: PSDL_Window; x, y: LongInt); cdecl; external SDLLibName;
 function  SDL_SetHint(name, value: PChar): boolean; cdecl; external SDLLibName;
 
@@ -821,6 +853,8 @@ procedure SDL_WM_SetIcon(icon: PSDL_Surface; mask : byte); cdecl; external SDLLi
 procedure SDL_WM_SetCaption(title: PChar; icon: PChar); cdecl; external SDLLibName;
 function  SDL_WM_ToggleFullScreen(surface: PSDL_Surface): LongInt; cdecl; external SDLLibName;
 
+function  SDL_CreateThread(fn: pointer; data: pointer): PSDL_Thread; cdecl; external SDLLibName;
+procedure SDL_WaitThread(thread: PSDL_Thread; status: PLongInt); cdecl; external SDLLibName;
 function  SDL_CreateMutex: PSDL_mutex; cdecl; external SDLLibName;
 procedure SDL_DestroyMutex(mutex: PSDL_mutex); cdecl; external SDLLibName;
 function  SDL_LockMutex(mutex: PSDL_mutex): LongInt; cdecl; external SDLLibName name 'SDL_mutexP';
