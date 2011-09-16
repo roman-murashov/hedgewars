@@ -93,7 +93,7 @@
 bool frontendEffects = true;
 QString playerHash;
 
-HWForm::HWForm(QWidget *parent)
+HWForm::HWForm(QWidget *parent, QString styleSheet)
   : QMainWindow(parent), pnetserver(0), pRegisterServer(0), editedTeam(0), hwnet(0)
 {
 #ifdef USE_XFIRE
@@ -104,6 +104,7 @@ HWForm::HWForm(QWidget *parent)
     frontendEffects = gameSettings->value("frontend/effects", true).toBool();
     playerHash = QString(QCryptographicHash::hash(gameSettings->value("net/nick","").toString().toLatin1(), QCryptographicHash::Md5).toHex());
 
+    this->setStyleSheet(styleSheet);
     ui.setupUi(this);
     setMinimumSize(760, 580);
     //setFocusPolicy(Qt::StrongFocus);
@@ -152,18 +153,23 @@ HWForm::HWForm(QWidget *parent)
     
     connect(ui.pageMain->BtnNet, SIGNAL(clicked()), pageSwitchMapper, SLOT(map()));
     pageSwitchMapper->setMapping(ui.pageMain->BtnNet, ID_PAGE_NETTYPE);
+
     connect(ui.pageMain->BtnInfo, SIGNAL(clicked()), pageSwitchMapper, SLOT(map()));
-    pageSwitchMapper->setMapping(ui.pageMain->BtnInfo, ID_PAGE_DATADOWNLOAD);
+    pageSwitchMapper->setMapping(ui.pageMain->BtnInfo, ID_PAGE_INFO);
+
+    connect(ui.pageMain->BtnDataDownload, SIGNAL(clicked()), pageSwitchMapper, SLOT(map()));
+    pageSwitchMapper->setMapping(ui.pageMain->BtnDataDownload, ID_PAGE_DATADOWNLOAD);
 
     connect(ui.pageMain->BtnExit, SIGNAL(pressed()), this, SLOT(btnExitPressed()));
     connect(ui.pageMain->BtnExit, SIGNAL(clicked()), this, SLOT(btnExitClicked()));
 
+    connect(ui.pageInfo->BtnBack, SIGNAL(clicked()), this, SLOT(GoBack()));
     connect(ui.pageDataDownload->BtnBack, SIGNAL(clicked()), this, SLOT(GoBack()));
 
     connect(ui.pageEditTeam->BtnTeamSave, SIGNAL(clicked()), this, SLOT(TeamSave()));
     connect(ui.pageEditTeam->BtnTeamDiscard, SIGNAL(clicked()), this, SLOT(TeamDiscard()));
 
-    connect(ui.pageEditTeam->signalMapper, SIGNAL(mapped(const int &)), this, SLOT(RandomName(const int &)));
+    connect(ui.pageEditTeam->signalMapper2, SIGNAL(mapped(const int &)), this, SLOT(RandomName(const int &)));
     connect(ui.pageEditTeam->randTeamButton, SIGNAL(clicked()), this, SLOT(RandomNames()));
 
     connect(ui.pageMultiplayer->BtnBack, SIGNAL(clicked()), this, SLOT(GoBack()));
@@ -621,8 +627,9 @@ void HWForm::IntermediateSetup()
     }
 
     QStringList tmnames;
-    QListIterator<HWTeam> it(curTeamSelWidget->getDontPlayingTeams());
-    while(it.hasNext()) tmnames += it.next().TeamName;
+
+    foreach(HWTeam team, curTeamSelWidget->getNotPlayingTeams())
+        tmnames += team.TeamName;
 
     //UpdateTeamsLists(&tmnames); // FIXME: still need more work if teamname is updated while configuring
     UpdateTeamsLists();
@@ -632,7 +639,7 @@ void HWForm::IntermediateSetup()
 
 void HWForm::NewTeam()
 {
-    editedTeam = new HWTeam("unnamed");
+    editedTeam = new HWTeam(QLineEdit::tr("unnamed"));
     editedTeam->SetToPage(this);
     GoToPage(ID_PAGE_SETUP_TEAM);
 }
@@ -724,7 +731,7 @@ void HWForm::PlayDemo()
         return;
     }
     CreateGame(0, 0, 0);
-    game->PlayDemo(curritem->data(Qt::UserRole).toString());
+    game->PlayDemo(curritem->data(Qt::UserRole).toString(), ui.pagePlayDemo->isSave());
 }
 
 void HWForm::PlayDemoQuick(const QString & demofilename)
@@ -733,7 +740,7 @@ void HWForm::PlayDemoQuick(const QString & demofilename)
     GoBack(); //needed to cleanly disconnect from netgame
     GoToPage(ID_PAGE_MAIN);
     CreateGame(0, 0, 0);
-    game->PlayDemo(demofilename);
+    game->PlayDemo(demofilename, false);
 }
 
 void HWForm::NetConnectServer(const QString & host, quint16 port)
