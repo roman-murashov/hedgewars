@@ -111,10 +111,18 @@ begin
     if flagMakeCapture then
     begin
         flagMakeCapture:= false;
+        {$IFNDEF IPHONEOS}
         s:= 'hw_' + FormatDateTime('YYYY-MM-DD_HH-mm-ss', Now()) + inttostr(GameTicks);
-        WriteLnToConsole('Saving ' + s + '...');
+
         playSound(sndShutter);
-        {$IFNDEF IPHONEOS}MakeScreenshot(s);{$ENDIF}
+        if not MakeScreenshot(s) then
+        begin
+            WriteLnToConsole('Screenshot failed.');
+            AddChatString(#5 + 'screen capture failed (lack of memory or write permissions)');
+        end
+        else
+            WriteLnToConsole('Screenshot saved: ' + s);
+        {$ENDIF}
     end;
 end;
 
@@ -180,9 +188,12 @@ begin
                             onFocusStateChanged()
                         end;
                 SDL_VIDEORESIZE: begin
-                    // using lower values causes widget overlap and video issues
-                    cNewScreenWidth:= max(event.resize.w, cMinScreenWidth);
-                    cNewScreenHeight:= max(event.resize.h, cMinScreenHeight);
+                    // using lower values than cMinScreenWidth or cMinScreenHeight causes widget overlap and off-screen widget parts
+                    // Change by sheepluva:
+                    // Let's only use even numbers for custom width/height since I ran into scaling issues with odd width values.
+                    // Maybe just fixes the symptom not the actual cause(?), I'm too tired to find out :P
+                    cNewScreenWidth:= max(2 * (event.resize.w div 2), cMinScreenWidth);
+                    cNewScreenHeight:= max(2 * (event.resize.h div 2), cMinScreenHeight);
                     cScreenResizeDelay:= RealTicks+500;
                     end;
 {$ENDIF}
@@ -200,7 +211,8 @@ begin
             cScreenHeight:= cNewScreenHeight;
 
             ParseCommand('fullscr '+intToStr(LongInt(cFullScreen)), true);
-            WriteLnToConsole('window resize');
+            WriteLnToConsole('window resize: ' + IntToStr(cScreenWidth) + ' x ' + IntToStr(cScreenHeight));
+            ScriptOnScreenResize();
             InitCameraBorders()
             end;
 
@@ -250,8 +262,8 @@ begin
     recordFileName:= gameArgs[10];
     cStereoMode:= smNone;
 {$ENDIF}
-    cMinScreenWidth:= min(cScreenWidth, 480);
-    cMinScreenHeight:= min(cScreenHeight, 320);
+    cMinScreenWidth:= min(cScreenWidth, cMinScreenWidth);
+    cMinScreenHeight:= min(cScreenHeight, cMinScreenHeight);
     cOrigScreenWidth:= cScreenWidth;
     cOrigScreenHeight:= cScreenHeight;
 

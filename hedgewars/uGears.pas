@@ -43,6 +43,8 @@ function  SpawnFakeCrateAt(x, y: LongInt; crate: TCrateType; explode: boolean; p
 function  GetAmmo: TAmmoType;
 function  GetUtility: TAmmoType;
 procedure ResurrectHedgehog(gear: PGear);
+procedure HideHog(HH: PHedgehog);
+procedure RestoreHog(HH: PHedgehog);
 procedure ProcessGears;
 procedure EndTurnCleanup;
 procedure ApplyDamage(Gear: PGear; AttackerHog: PHedgehog; Damage: Longword; Source: TDamageSource);
@@ -601,6 +603,7 @@ if (Gear^.Kind = gtPortal) then
 else if Gear^.Kind = gtHedgehog then
     if (CurAmmoGear <> nil) and (CurrentHedgehog^.Gear = Gear) then
         begin
+        AttackBar:= 0;
         Gear^.Message:= gmDestroy;
         CurAmmoGear^.Message:= gmDestroy;
         exit
@@ -618,6 +621,7 @@ else if Gear^.Kind = gtHedgehog then
         team:= Gear^.Hedgehog^.Team;
         if CurrentHedgehog^.Gear = Gear then
             begin
+            AttackBar:= 0;
             FreeActionsList; // to avoid ThinkThread on drawned gear
             if ((Ammoz[CurrentHedgehog^.CurAmmoType].Ammo.Propz and ammoprop_NoRoundEnd) <> 0) and (CurrentHedgehog^.MultiShootAttacks > 0) then OnUsedAmmo(CurrentHedgehog^);
             end;
@@ -991,7 +995,10 @@ if skipFlag then
 if ((GameTicks and $FFFF) = $FFFF) then
     begin
     if (not CurrentTeam^.ExtDriven) then
-        SendIPCTimeInc;
+        begin
+        SendIPC('#');
+        AddFileLog('hiTicks increment message sent')
+        end;
 
     if (not CurrentTeam^.ExtDriven) or CurrentTeam^.hasGone then
         inc(hiTicks) // we do not recieve a message for this
@@ -1650,6 +1657,7 @@ end;
 procedure ResurrectHedgehog(gear: PGear);
 var tempTeam : PTeam;
 begin
+    AttackBar:= 0;
     gear^.dX := _0;
     gear^.dY := _0;
     gear^.Damage := 0;
@@ -1747,7 +1755,6 @@ i:= Low(TAmmoType);
 if (t > 0) then
     begin
     t:= GetRandom(t);
-    AddFileLog(inttostr(t)+' --------------');
     while t >= 0 do
       begin
       inc(i);
