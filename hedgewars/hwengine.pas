@@ -31,12 +31,13 @@ program hwengine;
 
 uses SDLh, uMisc, uConsole, uGame, uConsts, uLand, uAmmos, uVisualGears, uGears, uStore, uWorld, uKeys, uSound,
      uScript, uTeams, uStats, uIO, uLocale, uChat, uAI, uAIMisc, uRandom, uLandTexture, uCollisions,
-     sysutils, uTypes, uVariables, uCommands, uUtils, uCaptions, uDebug, uCommandHandlers, uLandPainted;
+     sysutils, uTypes, uVariables, uCommands, uUtils, uCaptions, uDebug, uCommandHandlers, uLandPainted,uTouch {$IFDEF ANDROID}, GLUnit {$ENDIF};
 
 {$IFDEF HWLIBRARY}
 procedure initEverything(complete:boolean);
 procedure freeEverything(complete:boolean);
 procedure Game(gameArgs: PPChar); cdecl; export;
+procedure GenLandPreview(port: Longint); cdecl; export;
 
 implementation
 {$ELSE}
@@ -195,6 +196,9 @@ begin
                         cNewScreenHeight:= max(2 * (event.window.data2 div 2), cMinScreenHeight);
                         cScreenResizeDelay:= RealTicks+500;
                         end;
+                SDL_FINGERMOTION: onTouchMotion(event.tfinger.x, event.tfinger.y,event.tfinger.dx, event.tfinger.dy, event.tfinger.fingerId);
+                SDL_FINGERDOWN: onTouchDown(event.tfinger.x, event.tfinger.y, event.tfinger.fingerId);
+                SDL_FINGERUP: onTouchUp(event.tfinger.x, event.tfinger.y, event.tfinger.fingerId);
 {$ELSE}
                     KeyPressChat(event.key.keysym.unicode);
                 SDL_MOUSEBUTTONDOWN: if event.button.button = SDL_BUTTON_WHEELDOWN then wheelDown:= true;
@@ -262,9 +266,14 @@ var p: TPathType;
 begin
 {$IFDEF HWLIBRARY}
     cBits:= 32;
-    cFullScreen:= false;
     cTimerInterval:= 8;
+{$IFDEF ANDROID}
+    PathPrefix:= gameArgs[11];
+    cFullScreen:= true;
+{$ELSE}
     PathPrefix:= 'Data';
+    cFullScreen:= false;
+{$ENDIF}
     UserPathPrefix:= '.';
     cShowFPS:= {$IFDEF DEBUGFILE}true{$ELSE}false{$ENDIF};
     val(gameArgs[0], ipcPort);
@@ -288,7 +297,6 @@ begin
     cOrigScreenHeight:= cScreenHeight;
 
     initEverything(true);
-
     WriteLnToConsole('Hedgewars ' + cVersionString + ' engine (network protocol: ' + inttostr(cNetProtoVersion) + ')');
     AddFileLog('Prefix: "' + PathPrefix +'"');
     AddFileLog('UserPrefix: "' + UserPathPrefix +'"');
@@ -394,7 +402,11 @@ begin
 
     if complete then
     begin
-        uAI.initModule;
+{$IFDEF ANDROID}
+	GLUnit.init;
+{$ENDIF}
+        uTouch.initModule;
+	uAI.initModule;
         //uAIActions does not need initialization
         //uAIAmmoTests does not need initialization
         uAIMisc.initModule;
