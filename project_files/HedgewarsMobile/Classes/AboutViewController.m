@@ -20,7 +20,7 @@
 
 
 #import "AboutViewController.h"
-#import "CommodityFunctions.h"
+
 
 @implementation AboutViewController
 @synthesize tableView, segmentedControl, people;
@@ -50,12 +50,12 @@
 }
 
 -(IBAction) buttonPressed:(id) sender {
-    playSound(@"backSound");
+    [AudioManagerController playBackSound];
     [[self parentViewController] dismissModalViewControllerAnimated:YES];
 }
 
 -(IBAction) segmentedControlChanged:(id) sender {
-    playSound(@"clickSound");
+    [AudioManagerController playClickSound];
     [self.tableView setContentOffset:CGPointMake(0, 0) animated:NO];
     [self.tableView reloadData];
 }

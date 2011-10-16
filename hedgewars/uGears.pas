@@ -602,14 +602,16 @@ if (Gear^.Kind = gtPortal) then
             Gear^.IntersectGear^.IntersectGear:= nil;
     end
 else if Gear^.Kind = gtHedgehog then
-    if (CurAmmoGear <> nil) and (CurrentHedgehog^.Gear = Gear) then
+    (*
+    This behaviour dates back to revision 4, and I accidentally encountered it with TARDIS.  I don't think it must apply to any modern weapon, since if it was actually hit, the best the gear could do would be to destroy itself immediately, and you'd still end up with two graves.  I believe it should be removed
+     if (CurAmmoGear <> nil) and (CurrentHedgehog^.Gear = Gear) then
         begin
         AttackBar:= 0;
         Gear^.Message:= gmDestroy;
         CurAmmoGear^.Message:= gmDestroy;
         exit
         end
-    else
+    else*)
         begin
         if (hwRound(Gear^.Y) >= cWaterLine) then
             begin
@@ -1239,11 +1241,8 @@ if (GameFlags and gfArtillery) <> 0 then
     cArtillery:= true;
 
 if not hasBorder and ((Theme = 'Snow') or (Theme = 'Christmas')) then
-    begin
     for i:= 0 to Pred(vobCount*2) do
         AddGear(GetRandom(LAND_WIDTH+1024)-512, LAND_HEIGHT - GetRandom(LAND_HEIGHT div 2), gtFlake, 0, _0, _0, 0);
-    //disableLandBack:= true
-    end
 end;
 
 procedure doMakeExplosion(X, Y, Radius: LongInt; AttackingHog: PHedgehog; Mask: Longword; const Tint: LongWord);
@@ -1284,6 +1283,11 @@ while Gear <> nil do
         case Gear^.Kind of
             gtHedgehog,
                 gtMine,
+                gtBall,
+                gtMelonPiece,
+                gtGrenade,
+                gtClusterBomb,
+                gtCluster,
                 gtSMine,
                 gtCase,
                 gtTarget,
@@ -1488,11 +1492,11 @@ while i > 0 do
                     if TestCollisionXwithGear(Gear, hwSign(Gear^.dX)) then
                         begin
                         if not (TestCollisionXwithXYShift(Gear, _0, -3, hwSign(Gear^.dX))
-                            or TestCollisionYwithGear(Gear, -1)) then Gear^.Y:= Gear^.Y - _1;
+                            or (TestCollisionYwithGear(Gear, -1) <> 0)) then Gear^.Y:= Gear^.Y - _1;
                         if not (TestCollisionXwithXYShift(Gear, _0, -2, hwSign(Gear^.dX))
-                            or TestCollisionYwithGear(Gear, -1)) then Gear^.Y:= Gear^.Y - _1;
+                            or (TestCollisionYwithGear(Gear, -1) <> 0)) then Gear^.Y:= Gear^.Y - _1;
                         if not (TestCollisionXwithXYShift(Gear, _0, -1, hwSign(Gear^.dX))
-                            or TestCollisionYwithGear(Gear, -1)) then Gear^.Y:= Gear^.Y - _1;
+                            or (TestCollisionYwithGear(Gear, -1) <> 0)) then Gear^.Y:= Gear^.Y - _1;
                         end;
 
                     if (Ammo^.Kind <> gtFlame) or ((Ammo^.State and gsttmpFlag) = 0) then FollowGear:= Gear

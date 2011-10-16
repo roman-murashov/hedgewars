@@ -21,17 +21,20 @@
 
 #import "MainMenuViewController.h"
 #import "CreationChamber.h"
-#import "PascalImports.h"
 #import "GameConfigViewController.h"
-#import "SplitViewRootController.h"
+#import "SettingsContainerViewController.h"
 #import "AboutViewController.h"
 #import "SavedGamesViewController.h"
 #import "RestoreViewController.h"
+#import "MissionTrainingViewController.h"
+#import "GameInterfaceBridge.h"
 #import "Appirater.h"
 #import "ServerSetup.h"
 
+
 @implementation MainMenuViewController
-@synthesize gameConfigViewController, settingsViewController, aboutViewController, savedGamesViewController, restoreViewController;
+@synthesize gameConfigViewController, settingsViewController, aboutViewController, savedGamesViewController,
+            restoreViewController, missionsViewController;
 
 -(BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation) interfaceOrientation {
     return rotationManager(interfaceOrientation);
@@ -39,59 +42,45 @@
 
 // check if some configuration files are already set; if they are present it means that the current copy must be updated
 -(void) createNecessaryFiles {
-    NSString *resourcesDir = [[NSBundle mainBundle] resourcePath];
     DLog(@"Creating necessary files");
+    NSInteger index;
     
     // SAVES - just delete and overwrite
     if ([[NSFileManager defaultManager] fileExistsAtPath:SAVES_DIRECTORY()])
         [[NSFileManager defaultManager] removeItemAtPath:SAVES_DIRECTORY() error:NULL];
-    [[NSFileManager defaultManager] createDirectoryAtPath:SAVES_DIRECTORY() withIntermediateDirectories:NO attributes:nil error:NULL];
+    [[NSFileManager defaultManager] createDirectoryAtPath:SAVES_DIRECTORY()
+                              withIntermediateDirectories:NO
+                                               attributes:nil
+                                                    error:NULL];
     
     // SETTINGS - nsuserdefaults ftw
-    createSettings();
+    [CreationChamber createSettings];
 
     // TEAMS - update exisiting teams with new format
-    if ([[NSFileManager defaultManager] fileExistsAtPath:TEAMS_DIRECTORY()] == NO) {
-        [[NSFileManager defaultManager] createDirectoryAtPath:TEAMS_DIRECTORY()
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:NULL];
-        // we copy teams only the first time because it's unlikely that newer ones are going to be added
-        NSString *baseTeamsDir = [[NSString alloc] initWithFormat:@"%@/Settings/Teams/",resourcesDir];
-        for (NSString *str in [[NSFileManager defaultManager] contentsOfDirectoryAtPath:baseTeamsDir error:NULL]) {
-            NSString *sourceFile = [baseTeamsDir stringByAppendingString:str];
-            NSString *destinationFile = [TEAMS_DIRECTORY() stringByAppendingString:str];
-            [[NSFileManager defaultManager] removeItemAtPath:destinationFile error:NULL];
-            [[NSFileManager defaultManager] copyItemAtPath:sourceFile toPath:destinationFile error:NULL];
-        }
-        [baseTeamsDir release];
-    }
-    // merge not needed as format rarely changes
+    NSArray *teamNames = [[NSArray alloc] initWithObjects:@"Edit Me!",@"Ninjas",@"Pirates",@"Robots",nil];
+    index = 0;
+    for (NSString *name in teamNames)
+        [CreationChamber createTeamNamed:name ofType:index++ controlledByAI:[name isEqualToString:@"Robots"]];
+    [teamNames release];
 
     // SCHEMES - always overwrite and delete custom ones
     if ([[NSFileManager defaultManager] fileExistsAtPath:SCHEMES_DIRECTORY()] == YES)
         [[NSFileManager defaultManager] removeItemAtPath:SCHEMES_DIRECTORY() error:NULL];
-    createSchemeNamed(@"Default", 0);
-    createSchemeNamed(@"Pro Mode", 1);
-    createSchemeNamed(@"Shoppa", 2);
-    createSchemeNamed(@"Clean Slate", 3);
-    createSchemeNamed(@"Minefield", 4);
-    createSchemeNamed(@"Barrel Mayhem", 5);
-    createSchemeNamed(@"Tunnel Hogs", 6);
-    createSchemeNamed(@"Fort Mode", 7);
-    createSchemeNamed(@"Timeless", 8);
-    createSchemeNamed(@"Thinking with Portals", 9);
-    createSchemeNamed(@"King Mode", 10);
+    NSArray *schemeNames = [[NSArray alloc] initWithObjects:@"Default",@"Pro Mode",@"Shoppa",@"Clean Slate",
+                            @"Minefield",@"Barrel Mayhem",@"Tunnel Hogs",@"Fort Mode",@"Timeless",
+                            @"Thinking with Portals",@"King Mode",nil];
+    index = 0;
+    for (NSString *name in schemeNames)
+        [CreationChamber createSchemeNamed:name ofType:index++];
+    [schemeNames release];
 
-    // WEAPONS - always overwrite
-    createWeaponNamed(@"Default", 0);
-    createWeaponNamed(@"Crazy", 1);
-    createWeaponNamed(@"Pro Mode", 2);
-    createWeaponNamed(@"Shoppa", 3);
-    createWeaponNamed(@"Clean Slate", 4);
-    createWeaponNamed(@"Minefield", 5);
-    createWeaponNamed(@"Thinking with Portals", 6);
-    // merge not needed because weapons not present in the set are 0ed by GameSetup
+    // WEAPONS - always overwrite as merge is not needed (missing weaps are 0ed automatically)
+    NSArray *weaponNames = [[NSArray alloc] initWithObjects:@"Default",@"Crazy",@"Pro Mode",@"Shoppa",@"Clean Slate",
+                            @"Minefield",@"Thinking with Portals",nil];
+    index = 0;
+    for (NSString *name in weaponNames)
+        [CreationChamber createWeaponNamed:name ofType:index++];
+    [weaponNames release];
 }
 
 #pragma mark -
@@ -104,9 +93,6 @@
     // get the version number that we've been tracking
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     NSString *trackingVersion = [userDefaults stringForKey:@"HedgeVersion"];
-
-    if ([[userDefaults objectForKey:@"music"] boolValue])
-        [HedgewarsAppDelegate playBackgroundMusic];
 
     if (trackingVersion == nil || [trackingVersion isEqualToString:version] == NO) {
         // remove any reminder of previous games as saves are going to be wiped out
@@ -121,6 +107,7 @@
     // prompt for restoring any previous game
     NSString *saveString = [userDefaults objectForKey:@"savedGamePath"];
     if (saveString != nil && [saveString isEqualToString:@""] == NO) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(launchRestoredGame) name:@"launchRestoredGame" object:nil];
         if (self.restoreViewController == nil) {
             NSString *xibName = [@"RestoreViewController-" stringByAppendingString:(IS_IPAD() ? @"iPad" : @"iPhone")];
             RestoreViewController *restored = [[RestoreViewController alloc] initWithNibName:xibName bundle:nil];
@@ -129,7 +116,7 @@
             self.restoreViewController = restored;
             [restored release];
         }
-        [self performSelector:@selector(presentModalViewController:animated:) withObject:self.restoreViewController afterDelay:0.3];
+        [self performSelector:@selector(presentModalViewController:animated:) withObject:self.restoreViewController afterDelay:0.25];
     } else {
         // let's not prompt for rating when app crashed >_>
         [Appirater appLaunched];
@@ -148,6 +135,10 @@
     */
 }
 
+-(void) viewWillAppear:(BOOL)animated {
+    [AudioManagerController playBackgroundMusic];
+    [super viewWillAppear:animated];
+}
 
 #pragma mark -
 -(IBAction) switchViews:(id) sender {
@@ -156,28 +147,26 @@
     NSString *xib = nil;
     NSString *debugStr = nil;
 
-    playSound(@"clickSound");
+    [AudioManagerController playClickSound];
     switch (button.tag) {
         case 0:
             if (nil == self.gameConfigViewController) {
-                xib = IS_IPAD() ? nil : @"GameConfigViewController";
+                xib = IS_IPAD() ? @"GameConfigViewController-iPad" : @"GameConfigViewController-iPhone";
 
                 GameConfigViewController *gcvc = [[GameConfigViewController alloc] initWithNibName:xib bundle:nil];
                 gcvc.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
                 self.gameConfigViewController = gcvc;
                 [gcvc release];
             }
-
             [self presentModalViewController:self.gameConfigViewController animated:YES];
             break;
         case 2:
             if (nil == self.settingsViewController) {
-                SplitViewRootController *svrc = [[SplitViewRootController alloc] initWithNibName:nil bundle:nil];
+                SettingsContainerViewController *svrc = [[SettingsContainerViewController alloc] initWithNibName:nil bundle:nil];
                 svrc.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
                 self.settingsViewController = svrc;
                 [svrc release];
             }
-
             [self presentModalViewController:self.settingsViewController animated:YES];
             break;
         case 3:
@@ -220,8 +209,19 @@
                 self.savedGamesViewController = savedgames;
                 [savedgames release];
             }
-            
             [self presentModalViewController:self.savedGamesViewController animated:YES];
+            break;
+        case 5:
+            if (nil == self.missionsViewController) {
+                xib = IS_IPAD() ? @"MissionTrainingViewController-iPad" : @"MissionTrainingViewController-iPhone";
+                MissionTrainingViewController *missions = [[MissionTrainingViewController alloc] initWithNibName:xib bundle:nil];
+                missions.modalTransitionStyle = IS_IPAD() ? UIModalTransitionStyleCoverVertical : UIModalTransitionStyleCrossDissolve;
+                if ([missions respondsToSelector:@selector(setModalPresentationStyle:)])
+                    missions.modalPresentationStyle = UIModalPresentationPageSheet;
+                self.missionsViewController = missions;
+                [missions release];
+            }
+            [self presentModalViewController:self.missionsViewController animated:YES];
             break;
         default:
             alert = [[UIAlertView alloc] initWithTitle:@"Not Yet Implemented"
@@ -235,12 +235,22 @@
     }
 }
 
+#pragma mark -
+-(void) launchRestoredGame {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    GameInterfaceBridge *bridge = [[GameInterfaceBridge alloc] initWithController:self];
+    [bridge startSaveGame:[[NSUserDefaults standardUserDefaults] objectForKey:@"savedGamePath"]];
+    [bridge release];
+}
+
+#pragma mark -
 -(void) viewDidUnload {
     self.gameConfigViewController = nil;
     self.settingsViewController = nil;
     self.aboutViewController = nil;
     self.savedGamesViewController = nil;
     self.restoreViewController = nil;
+    self.missionsViewController = nil;
     MSG_DIDUNLOAD();
     [super viewDidUnload];
 }
@@ -256,6 +266,8 @@
         self.savedGamesViewController = nil;
     if (self.restoreViewController.view.superview == nil)
         self.restoreViewController = nil;
+    if (self.missionsViewController.view.superview == nil)
+        self.missionsViewController = nil;
     MSG_MEMCLEAN();
     [super didReceiveMemoryWarning];
 }
@@ -266,6 +278,7 @@
     releaseAndNil(aboutViewController);
     releaseAndNil(savedGamesViewController);
     releaseAndNil(restoreViewController);
+    releaseAndNil(missionsViewController);
     [super dealloc];
 }
 

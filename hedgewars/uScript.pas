@@ -957,8 +957,12 @@ begin
             end
         else lua_pushinteger(L, 0)
         end
-    else LuaError('Lua: Wrong number of parameters passed to GetAmmoCount!');
-    lc_getammocount:= 0
+    else 
+        begin
+        LuaError('Lua: Wrong number of parameters passed to GetAmmoCount!');
+        lua_pushnil(L)
+        end;
+    lc_getammocount:= 1
 end;
 
 function lc_sethealth(L : Plua_State) : LongInt; Cdecl;
@@ -1207,6 +1211,11 @@ begin
             lua_pushinteger(L, hwRound(gear^.X));
             lua_pushinteger(L, hwRound(gear^.Y))
             end
+        else
+            begin
+            lua_pushnil(L);
+            lua_pushnil(L)
+            end;
         end;
     lc_getgearposition:= 2;
 end;
@@ -1586,6 +1595,7 @@ if not ScriptLoaded then
     exit;
 
 // push game variables so they may be modified by the script
+ScriptSetInteger('BorderColor', cExplosionBorderColor);
 ScriptSetInteger('GameFlags', GameFlags);
 ScriptSetString('Seed', cSeed);
 ScriptSetInteger('TemplateFilter', cTemplateFilter);
@@ -1664,6 +1674,8 @@ var ret : LongInt;
 begin
 s:= UserPathz[ptData] + '/' + name;
 if not FileExists(s) then s:= Pathz[ptData] + '/' + name;
+if not FileExists(s) then exit;
+
 ret:= luaL_loadfile(luaState, Str2PChar(s));
 if ret <> 0 then
     begin
@@ -1783,7 +1795,8 @@ end;
 
 procedure ScriptSetAmmo(ammo : TAmmoType; count, propability, delay, reinforcement: Byte);
 begin
-if (ord(ammo) < 1) or (count > 9) or (count < 0) or (propability < 0) or (propability > 8) or (delay < 0) or (delay > 9) or (reinforcement < 0) or (reinforcement > 8) then
+//if (ord(ammo) < 1) or (count > 9) or (count < 0) or (propability < 0) or (propability > 8) or (delay < 0) or (delay > 9) or (reinforcement < 0) or (reinforcement > 8) then
+if (ord(ammo) < 1) or (count > 9) or (propability > 8) or (delay > 9) or (reinforcement > 8) then
     exit;
 ScriptAmmoLoadout[ord(ammo)]:= inttostr(count)[1];
 ScriptAmmoProbability[ord(ammo)]:= inttostr(propability)[1];
