@@ -14,6 +14,7 @@ import Actions
 import Utils
 import HandlerUtils
 import RoomsAndClients
+import EngineInteraction
 
 handleCmd_inRoom :: CmdHandler
 
@@ -58,7 +59,7 @@ handleCmd_inRoom ("ADD_TEAM" : tName : color : grave : fort : voicepack : flag :
                 [Warning "too many hedgehogs"]
             else if isJust $ findTeam rm then
                 [Warning "There's already a team with same name in the list"]
-            else if gameinprogress rm then
+            else if isJust $ gameInfo rm then
                 [Warning "round in progress"]
             else if isRestrictedTeams rm then
                 [Warning "restricted"]
@@ -166,19 +167,20 @@ handleCmd_inRoom ["TOGGLE_READY"] = do
         ]
 
 handleCmd_inRoom ["START_GAME"] = do
+    (ci, rnc) <- ask
     cl <- thisClient
     rm <- thisRoom
     chans <- roomClientsChans
+    
+    let allPlayersRegistered = all ((<) 0 . B.length . webPassword . client rnc . teamownerId) $ teams rm
 
-    if isMaster cl && playersIn rm == readyPlayers rm && not (gameinprogress rm) then
+    if isMaster cl && playersIn rm == readyPlayers rm && not (isJust $ gameInfo rm) then
         if enoughClans rm then
             return [
                 ModifyRoom
                     (\r -> r{
-                        gameinprogress = True,
-                        roundMsgs = empty,
-                        leftTeams = [],
-                        teamsAtStart = teams r}
+                        gameInfo = Just $ newGameInfo allPlayersRegistered (mapParams rm) (params rm)
+                        }
                     ),
                 AnswerClients chans ["RUN_GAME"]
                 ]
@@ -195,35 +197,35 @@ handleCmd_inRoom ["EM", msg] = do
     rm <- thisRoom
     chans <- roomOthersChans
 
-    if teamsInGame cl > 0 && gameinprogress rm && isLegal then
-        return $ AnswerClients chans ["EM", msg] : [ModifyRoom (\r -> r{roundMsgs = roundMsgs r |> msg}) | not isKeepAlive]
+    if teamsInGame cl > 0 && (isJust $ gameInfo rm) && isLegal then
+        return $ AnswerClients chans ["EM", msg] : [ModifyRoom (\r -> r{gameInfo = liftM (\g -> g{roundMsgs = roundMsgs g |> msg}) $ gameInfo r}) | not isKeepAlive]
         else
         return []
     where
         (isLegal, isKeepAlive) = checkNetCmd msg
 
 
-handleCmd_inRoom ["ROUNDFINISHED", _] = do
+handleCmd_inRoom ["ROUNDFINISHED", correctly] = do
     cl <- thisClient
     rm <- thisRoom
     chans <- roomClientsChans
 
-    if isMaster cl && gameinprogress rm then
-        return $ 
-            ModifyRoom
+    if isMaster cl && (isJust $ gameInfo rm) then
+        return $
+            SaveReplay
+            : ModifyRoom
                 (\r -> r{
-                    gameinprogress = False,
-                    readyPlayers = 0,
-                    roundMsgs = empty,
-                    leftTeams = [],
-                    teamsAtStart = []}
+                    gameInfo = Nothing,
+                    readyPlayers = 0
+                    }
                 )
             : UnreadyRoomClients
             : answerRemovedTeams chans rm
         else
         return []
     where
-        answerRemovedTeams chans = map (\t -> AnswerClients chans ["REMOVE_TEAM", t]) . leftTeams
+        answerRemovedTeams chans = map (\t -> AnswerClients chans ["REMOVE_TEAM", t]) . leftTeams . fromJust . gameInfo
+        isCorrect = correctly == "1"
 
 -- compatibility with clients with protocol < 38
 handleCmd_inRoom ["ROUNDFINISHED"] =

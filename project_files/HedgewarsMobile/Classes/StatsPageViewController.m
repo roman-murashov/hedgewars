@@ -20,7 +20,7 @@
 
 
 #import "StatsPageViewController.h"
-#import "CommodityFunctions.h"
+#import <QuartzCore/QuartzCore.h>
 
 @implementation StatsPageViewController
 @synthesize statsArray;
@@ -48,7 +48,7 @@
     } else
         self.view.backgroundColor = [UIColor blackColor];
 
-    self.tableView.separatorColor = UICOLOR_HW_YELLOW_BODER;
+    self.tableView.separatorColor = [UIColor darkYellowColor];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
 
     [super viewDidLoad];
@@ -57,11 +57,11 @@
 #pragma mark -
 #pragma mark Table view data source
 -(NSInteger) numberOfSectionsInTableView:(UITableView *)tableView {
-    return 4;
+    return 3;
 }
 
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    if (section == 0 || section == 3)
+    if (section == 0)
         return 1;
     else if (section == 1)
         return [[self.statsArray objectAtIndex:0] count];
@@ -84,7 +84,7 @@
         imgName = @"star";
         imgPath = [[NSBundle mainBundle] resourcePath];
         cell.textLabel.text = [self.statsArray objectAtIndex:1];
-        cell.textLabel.textColor = UICOLOR_HW_YELLOW_TEXT;
+        cell.textLabel.textColor = [UIColor lightYellowColor];
     } else if (section == 1) {  // teams ranking
         // color, # kills, teamname
         NSArray *info = [[[self.statsArray objectAtIndex:0] objectAtIndex:row] componentsSeparatedByString:@" "];
@@ -98,12 +98,7 @@
     } else if (section == 2) {  // general info
         imgName = @"iconDamage";
         cell.textLabel.text = [self.statsArray objectAtIndex:row + 2];
-        cell.textLabel.textColor = UICOLOR_HW_YELLOW_TEXT;
-    } else {                    // exit button
-        cell.textLabel.text = NSLocalizedString(@"Done",@"");
-        cell.textLabel.textColor = [UIColor whiteColor];
-        cell.accessoryView = nil;
-        cell.imageView.image = nil;
+        cell.textLabel.textColor = [UIColor lightYellowColor];
     }
 
     NSString *imgString = [[NSString alloc] initWithFormat:@"%@/%@.png",imgPath,imgName];
@@ -142,13 +137,42 @@
         return nil;
 }
 
+-(CGFloat) tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
+    return self.tableView.rowHeight + 30;
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
+    if (section == 2) {
+
+        UIView *footer = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.height * 70 / 100, self.tableView.rowHeight)];
+        footer.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+
+        UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(0, 17, self.view.frame.size.height * 70 / 100, self.tableView.rowHeight)];
+        button.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+        [button setTitle:NSLocalizedString(@"Done",@"") forState:UIControlStateNormal];
+        [button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [button setTitleColor:[UIColor grayColor] forState:UIControlStateHighlighted];
+
+        button.titleLabel.font = [UIFont boldSystemFontOfSize:[UIFont labelFontSize]];
+        button.backgroundColor = [UIColor blackColorTransparent];
+        [button.layer setBorderWidth:1];
+        [button.layer setBorderColor:[[UIColor darkYellowColor] CGColor]];
+        [button.layer setCornerRadius:9.0f];
+        [button.layer setMasksToBounds:YES];
+        [button addTarget:self action:@selector(dismissView) forControlEvents:UIControlEventTouchUpInside];
+        [footer addSubview:button];
+        [button release];
+
+        return [footer autorelease];
+    } else
+        return nil;
+}
+
 #pragma mark -
-#pragma mark Table view delegate
--(void) tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if ([indexPath section] == 3) {
-        playSound(@"backSound");
-        [self dismissModalViewControllerAnimated:YES];
-    }
+#pragma mark button delegate
+-(void) dismissView {
+    [AudioManagerController playClickSound];
+    [self dismissModalViewControllerAnimated:YES];
 }
 
 #pragma mark -
