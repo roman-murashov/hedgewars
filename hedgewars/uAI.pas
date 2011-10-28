@@ -30,13 +30,13 @@ procedure FreeActionsList;
 
 implementation
 uses uConsts, SDLh, uAIMisc, uAIAmmoTests, uAIActions,
-     uAmmos, SysUtils{$IFDEF UNIX}, cthreads{$ENDIF}, uTypes,
+     uAmmos, SysUtils{$IFDEF UNIX}{$IFNDEF ANDROID}, cthreads{$ENDIF}{$ENDIF}, uTypes,
      uVariables, uCommands, uUtils, uDebug;
 
 var BestActions: TActions;
     CanUseAmmo: array [TAmmoType] of boolean;
     StopThinking: boolean;
-    ThinkThread: TThreadID;
+    ThinkThread: PSDL_Thread = nil;
     hasThread: LongInt;
 
 procedure FreeActionsList;
@@ -74,8 +74,7 @@ for i:= 0 to Pred(Targets.Count) do
        with CurrentHedgehog^ do
             a:= CurAmmoType;
        aa:= a;
-       
-       ThreadSwitch();
+       SDL_delay(0);    //ThreadSwitch was only a hint
        
        repeat
         if (CanUseAmmo[a]) and
@@ -265,9 +264,11 @@ BackMe:= PGear(Me)^;
 if (PGear(Me)^.State and gstAttacked) = 0 then
    if Targets.Count > 0 then
       begin
+
       WalkMe:= BackMe;
       Walk(@WalkMe);
       if (StartTicks > GameTicks - 1500) and not StopThinking then SDL_Delay(1000);
+
       if BestActions.Score < -1023 then
          begin
          BestActions.Count:= 0;
@@ -285,7 +286,9 @@ else begin
       end;
 PGear(Me)^.State:= PGear(Me)^.State and not gstHHThinking;
 Think:= 0;
-InterlockedDecrement(hasThread)
+
+InterlockedDecrement(hasThread);
+
 end;
 
 procedure StartThink(Me: PGear);
@@ -316,7 +319,13 @@ FillBonuses((Me^.State and gstAttacked) <> 0);
 for a:= Low(TAmmoType) to High(TAmmoType) do
     CanUseAmmo[a]:= Assigned(AmmoTests[a].proc) and HHHasAmmo(Me^.Hedgehog^, a);
 AddFileLog('Enter Think Thread');
-BeginThread(@Think, Me, ThinkThread)
+{$IFDEF IPHONEOS}
+//TODO: sdl_thread works on device but crashes in simulator, most likely because of outdated toolchain
+BeginThread(@Think, Me, ThinkThread);
+{$ELSE}
+ThinkThread := SDL_CreateThread(@Think, Me);
+{$ENDIF}
+AddFileLog('Thread started');
 end;
 
 procedure ProcessBot;
@@ -347,6 +356,7 @@ end;
 procedure initModule;
 begin
     hasThread:= 0;
+    ThinkThread:= ThinkThread;
 end;
 
 procedure freeModule;
