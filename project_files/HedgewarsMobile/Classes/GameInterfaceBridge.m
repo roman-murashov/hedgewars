@@ -82,7 +82,6 @@
 
     NSString *horizontalSize = [[NSString alloc] initWithFormat:@"%d", (int)(width * screenScale)];
     NSString *verticalSize = [[NSString alloc] initWithFormat:@"%d", (int)(height * screenScale)];
-    NSString *rotation = [[NSString alloc] initWithString:@"0"];
 
     NSString *modelId = [HWUtils modelType];
     NSInteger tmpQuality;
@@ -113,12 +112,11 @@
     gameArgs[ 6] = [[[settings objectForKey:@"sound"] stringValue] UTF8String];                 //isSoundEnabled
     gameArgs[ 7] = [[[settings objectForKey:@"music"] stringValue] UTF8String];                 //isMusicEnabled
     gameArgs[ 8] = [[[settings objectForKey:@"alternate"] stringValue] UTF8String];             //cAltDamage
-    gameArgs[ 9] = [rotation UTF8String];                                                       //rotateQt
+    gameArgs[ 9] = [[[NSBundle mainBundle] resourcePath] UTF8String];                           //PathPrefix
     gameArgs[10] = (self.gameType == gtSave) ? [self.savePath UTF8String] : NULL;               //recordFileName
 
     [verticalSize release];
     [horizontalSize release];
-    [rotation release];
     [localeString release];
     [ipcString release];
 
