@@ -306,11 +306,6 @@ begin
                     inc(g)
                     end;
                 inc(t)
-                end;
-            for g:= g to cMaxSlotAmmoIndex do
-                DrawSprite(sprAMSlot, x + g * AMSlotSize, y, 1);
-            DrawSprite(sprAMBorderVertical, x + AMWidth - AMxOffset, y, 1);
-            inc(y, AMSlotSize);
             end;
 
     DrawSprite(sprAMCorners, x - BORDERSIZE, y, 2);
@@ -909,7 +904,7 @@ if (TargetPoint.X <> NoPointX) and (CurrentTeam <> nil) and (CurrentHedgehog <> 
 SetScale(cDefaultZoomLevel);
 
 // Turn time
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 offsetX:= cScreenHeight - 13;
 {$ELSE}
 offsetX:= 48;
@@ -938,6 +933,10 @@ if ((TurnTimeLeft <> 0) and (TurnTimeLeft < 1000000)) or (ReadyTimeLeft <> 0) th
 // Captions
 DrawCaptions;
 
+{$IFDEF ANDROID}
+// Draw buttons Related to the Touch interface
+DrawTexture(Round(-cScreenWidth*0.5 + cScreenHeight*0.02),Round((cScreenHeight*0.98)-(spritesData[sprFireButton].Height*0.4) ),spritesData[sprFireButton].Texture, 0.4);
+{$ENDIF}
 // Teams Healths
 if TeamsCount * 20 > Longword(cScreenHeight) div 7 then  // take up less screen on small displays
     begin
@@ -1011,7 +1010,7 @@ if smallScreenOffset <> 0 then
 if isInLag then DrawSprite(sprLag, 32 - (cScreenWidth shr 1), 32, (RealTicks shr 7) mod 12);
 
 // Wind bar
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     offsetX:= cScreenHeight - 13;
     offsetY:= (cScreenWidth shr 1) + 74;
 {$ELSE}
@@ -1063,7 +1062,7 @@ if not isFirstFrame and (missionTimer <> 0) or isPaused or fastUntilLag or (Game
     end;
 
 // fps
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 offsetX:= 8;
 {$ELSE}
 offsetX:= 10;
@@ -1206,7 +1205,7 @@ procedure MoveCamera;
 var EdgesDist, wdy, shs,z: LongInt;
     PrevSentPointTime: LongWord = 0;
 begin
-{$IFNDEF IPHONEOS}
+{$IFNDEF MOBILE}
 if (not (CurrentTeam^.ExtDriven and isCursorVisible and not bShowAmmoMenu)) and cHasFocus and (GameState <> gsConfirm) then
     uCursor.updatePosition();
 {$ENDIF}
@@ -1234,7 +1233,7 @@ if ((CursorPoint.X = prevPoint.X) and (CursorPoint.Y = prevpoint.Y)) then exit;
 
 if AMxShift < AMWidth then
 begin
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     if CursorPoint.X < cScreenWidth div 2 + AMxShift - AMWidth then CursorPoint.X:= cScreenWidth div 2 + AMxShift - AMWidth;
     if CursorPoint.X > cScreenWidth div 2 + AMxShift - AMxOffset then CursorPoint.X:= cScreenWidth div 2 + AMxShift - AMxOffset;
     if CursorPoint.Y < cScreenHeight - AMyOffset - SlotsNum * AMSlotSize then CursorPoint.Y:= cScreenHeight - AMyOffset - SlotsNum * AMSlotSize;
