@@ -322,6 +322,7 @@ BeginThread(@Think, Me, ThinkThread);
 {$ELSE}
 ThinkThread := SDL_CreateThread(@Think{$IFDEF SDL13}, nil{$ENDIF}, Me);
 {$ENDIF}
+{$ENDIF}
 AddFileLog('Thread started');
 end;
 
