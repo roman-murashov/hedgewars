@@ -82,29 +82,30 @@ const cStereo_Sky           = 0.0500;
       cStereo_Water_near    = 0.0025;
       cStereo_Outside       = -0.0400;
 
+
+// helper functions to create the goal/game mode string
+function AddGoal(s: ansistring; gf: longword; si: TGoalStrId; i: LongInt): ansistring;
+var t: ansistring;
+begin
+    if (GameFlags and gf) <> 0 then
+        begin
+        t:= inttostr(i);
+        s:= s + format(trgoal[si], t) + '|'
+        end;
+    AddGoal:= s;
+end;
+
+function AddGoal(s: ansistring; gf: longword; si: TGoalStrId): ansistring;
+begin
+    if (GameFlags and gf) <> 0 then
+        s:= s + trgoal[si] + '|';
+    AddGoal:= s;
+end;
+
 procedure InitWorld;
 var i, t: LongInt;
     cp: PClan;
     g: ansistring;
-
-    // helper functions to create the goal/game mode string
-    function AddGoal(s: ansistring; gf: longword; si: TGoalStrId; i: LongInt): ansistring;
-    var t: ansistring;
-    begin
-        if (GameFlags and gf) <> 0 then
-            begin
-            t:= inttostr(i);
-            s:= s + format(trgoal[si], t) + '|'
-            end;
-        AddGoal:= s;
-    end;
-
-    function AddGoal(s: ansistring; gf: longword; si: TGoalStrId): ansistring;
-    begin
-        if (GameFlags and gf) <> 0 then
-            s:= s + trgoal[si] + '|';
-        AddGoal:= s;
-    end;
 begin
 missionTimer:= 0;
 
@@ -922,7 +923,7 @@ if (TargetPoint.X <> NoPointX) and (CurrentTeam <> nil) and (CurrentHedgehog <> 
 SetScale(cDefaultZoomLevel);
 
 // Turn time
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 offsetX:= cScreenHeight - 13;
 {$ELSE}
 offsetX:= 48;
@@ -951,6 +952,10 @@ if ((TurnTimeLeft <> 0) and (TurnTimeLeft < 1000000)) or (ReadyTimeLeft <> 0) th
 // Captions
 DrawCaptions;
 
+{$IFDEF ANDROID}
+// Draw buttons Related to the Touch interface
+DrawTexture(Round(-cScreenWidth*0.5 + cScreenHeight*0.02),Round((cScreenHeight*0.98)-(spritesData[sprFireButton].Height*0.4) ),spritesData[sprFireButton].Texture, 0.4);
+{$ENDIF}
 // Teams Healths
 if TeamsCount * 20 > Longword(cScreenHeight) div 7 then  // take up less screen on small displays
     begin
@@ -1024,7 +1029,7 @@ if smallScreenOffset <> 0 then
 if isInLag then DrawSprite(sprLag, 32 - (cScreenWidth shr 1), 32, (RealTicks shr 7) mod 12);
 
 // Wind bar
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     offsetX:= cScreenHeight - 13;
     offsetY:= (cScreenWidth shr 1) + 74;
 {$ELSE}
@@ -1076,7 +1081,7 @@ if not isFirstFrame and (missionTimer <> 0) or isPaused or fastUntilLag or (Game
     end;
 
 // fps
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
 offsetX:= 8;
 {$ELSE}
 offsetX:= 10;
@@ -1215,12 +1220,12 @@ procedure MoveCamera;
 var EdgesDist, wdy, shs,z: LongInt;
     PrevSentPointTime: LongWord = 0;
 begin
-{$IFNDEF IPHONEOS}
-if (not (CurrentTeam^.ExtDriven and isCursorVisible and not bShowAmmoMenu)) and cHasFocus and (GameState <> gsConfirm) then
+{$IFNDEF MOBILE}
+if (not (CurrentTeam^.ExtDriven and isCursorVisible and (not bShowAmmoMenu))) and cHasFocus and (GameState <> gsConfirm) then
     uCursor.updatePosition();
 {$ENDIF}
 z:= round(200/zoom);
-if not PlacingHogs and (FollowGear <> nil) and not isCursorVisible and not bShowAmmoMenu and not fastUntilLag then
+if not PlacingHogs and (FollowGear <> nil) and (not isCursorVisible) and (not bShowAmmoMenu) and (not fastUntilLag) then
     if (not autoCameraOn) or ((abs(CursorPoint.X - prevPoint.X) + abs(CursorPoint.Y - prevpoint.Y)) > 4) then
         begin
         FollowGear:= nil;
@@ -1243,7 +1248,7 @@ if ((CursorPoint.X = prevPoint.X) and (CursorPoint.Y = prevpoint.Y)) then exit;
 
 if AMxShift < AMWidth then
 begin
-{$IFDEF IPHONEOS}
+{$IFDEF MOBILE}
     if CursorPoint.X < cScreenWidth div 2 + AMxShift - AMWidth then CursorPoint.X:= cScreenWidth div 2 + AMxShift - AMWidth;
     if CursorPoint.X > cScreenWidth div 2 + AMxShift - AMxOffset then CursorPoint.X:= cScreenWidth div 2 + AMxShift - AMxOffset;
     if CursorPoint.Y < cScreenHeight - AMyOffset - SlotsNum * AMSlotSize then CursorPoint.Y:= cScreenHeight - AMyOffset - SlotsNum * AMSlotSize;

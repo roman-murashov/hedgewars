@@ -23,6 +23,7 @@
 #include <QStack>
 #include <QTime>
 #include <QPointer>
+#include <QPropertyAnimation>
 
 #include "netserver.h"
 #include "game.h"
@@ -60,6 +61,8 @@ public:
     void updateXfire();
     void PlayDemoQuick(const QString & demofilename);
     void exit();
+    void setButtonDescription(QString desc);
+    void backDescription();
 
 private slots:
     void GoToSaves();
@@ -169,6 +172,11 @@ private:
     BGWidget * wBackground;
     QSignalMapper * pageSwitchMapper;
     QByteArray m_lastDemo;
+
+    QPropertyAnimation *animationNewSlide;
+    QPropertyAnimation *animationOldSlide;
+    QPropertyAnimation *animationNewOpacity;
+    QPropertyAnimation *animationOldOpacity;
 
 #ifdef __APPLE__
     InstallController * panel;

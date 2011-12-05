@@ -44,7 +44,7 @@ type
     // Different files are stored in different folders, this enumeration is used to tell which folder to use
     TPathType = (ptNone, ptData, ptGraphics, ptThemes, ptCurrTheme, ptTeams, ptMaps,
             ptMapCurrent, ptDemos, ptSounds, ptGraves, ptFonts, ptForts,
-            ptLocale, ptAmmoMenu, ptHedgehog, ptVoices, ptHats, ptFlags, ptMissionMaps, ptSuddenDeath);
+            ptLocale, ptAmmoMenu, ptHedgehog, ptVoices, ptHats, ptFlags, ptMissionMaps, ptSuddenDeath, ptButtons);
 
     // Available sprites for displaying stuff
     TSprite = (sprWater, sprCloud, sprBomb, sprBigDigit, sprFrame,
@@ -82,7 +82,8 @@ type
             sprSMineOff, sprSMineOn, sprHandSMine, sprHammer,
             sprHandResurrector, sprCross, sprAirDrill, sprNapalmBomb,
             sprBulletHit, sprSnowball, sprHandSnowball, sprSnow,
-            sprSDFlake, sprSDWater, sprSDCloud, sprSDSplash, sprSDDroplet, sprTardis
+            sprSDFlake, sprSDWater, sprSDCloud, sprSDSplash, sprSDDroplet, sprTardis,
+            sprFireButton
             );
 
     // Gears that interact with other Gears and/or Land
@@ -152,7 +153,7 @@ type
     // Different kind of crates that e.g. hedgehogs can pick up
     TCrateType = (HealthCrate, AmmoCrate, UtilityCrate);
 
-    THWFont = (fnt16, fntBig, fntSmall {$IFNDEF IPHONEOS}, CJKfnt16, CJKfntBig, CJKfntSmall{$ENDIF});
+    THWFont = (fnt16, fntBig, fntSmall {$IFNDEF MOBILE}, CJKfnt16, CJKfntBig, CJKfntSmall{$ENDIF});
 
     TCapGroup = (capgrpGameState, capgrpAmmoinfo, capgrpVolume,
             capgrpMessage, capgrpMessage2, capgrpAmmostate);
@@ -255,7 +256,7 @@ For example, say, a mode where the weaponset is reset each turn, or on sudden de
             PortalCounter: LongWord;  // Hopefully temporary, but avoids infinite portal loops in a guaranteed fashion.
             LastDamage: PHedgehog;
         end;
-    TPGearArray = Array of PGear;
+    TPGearArray = array of PGear;
 
     PVisualGear = ^TVisualGear;
     TVGearStepProcedure = procedure (Gear: PVisualGear; Steps: Longword);
@@ -323,7 +324,7 @@ For example, say, a mode where the weaponset is reset each turn, or on sudden de
     THHAmmo = array[0..cMaxSlotIndex, 0..cMaxSlotAmmoIndex] of TAmmo;
 
     THedgehog = record
-            Name: string[MAXNAMELEN];
+            Name: string[192];
             Gear: PGear;
             GearHidden: PGear;
             SpeechGear: PVisualGear;
@@ -344,12 +345,12 @@ For example, say, a mode where the weaponset is reset each turn, or on sudden de
             King: boolean;  // Flag for a bunch of hedgehog attributes
             Unplaced: boolean;  // Flag for hog placing mode
             Timer: Longword;
-            Effects: Array[THogEffect] of boolean;
+            Effects: array[THogEffect] of boolean;
             end;
 
     TTeam = record
             Clan: PClan;
-            TeamName: string[MAXNAMELEN];
+            TeamName: string[192];
             ExtDriven: boolean;
             Binds: TBinds;
             Hedgehogs: array[0..cMaxHHIndex] of THedgehog;

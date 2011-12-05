@@ -40,6 +40,9 @@
 #include <QShortcut>
 #include <QDesktopServices>
 #include <QInputDialog>
+#include <QPropertyAnimation>
+#include <QGraphicsEffect>
+#include <QParallelAnimationGroup>
 
 #include "hwform.h"
 #include "game.h"
@@ -79,6 +82,7 @@
 #include "bgwidget.h"
 #include "xfire.h"
 #include "drawmapwidget.h"
+#include "mouseoverfilter.h"
 
 #include "HWDataManager.h"
 
@@ -277,6 +281,23 @@ HWForm::HWForm(QWidget *parent, QString styleSheet)
        wBackground->lower();
        wBackground->init();
        wBackground->startAnimation();
+    }
+
+    //Install all eventFilters :
+
+    MouseOverFilter *filter = new MouseOverFilter();
+    filter->setUi(&ui);
+
+    QList<QWidget *> widgets;
+
+    for (int i=0; i < ui.Pages->count(); i++)
+    {
+        widgets = ui.Pages->widget(i)->findChildren<QWidget *>();
+
+        for (int i=0; i < widgets.size(); i++)
+        {
+            widgets.at(i)->installEventFilter(filter);
+        }
     }
 
     PagesStack.push(ID_PAGE_MAIN);
@@ -544,32 +565,113 @@ void HWForm::OnPageShown(quint8 id, quint8 lastid)
 
 void HWForm::GoToPage(int id)
 {
+    bool stopAnim = false;
+
     int lastid = ui.Pages->currentIndex();
     PagesStack.push(ui.Pages->currentIndex());
+
     OnPageShown(id, lastid);
     ui.Pages->setCurrentIndex(id);
+
+    if (id == ID_PAGE_DRAWMAP)
+        stopAnim = true;
+
+    if (frontendEffects && !stopAnim)
+    {
+        /**Start animation :**/
+        int coeff = 1;
+#ifndef Q_OS_MAC
+        coeff = 2;
+        QGraphicsOpacityEffect *effectNew = new QGraphicsOpacityEffect(ui.Pages->widget(id));
+        ui.Pages->widget(id)->setGraphicsEffect(effectNew);
+
+        QGraphicsOpacityEffect *effectLast = new QGraphicsOpacityEffect(ui.Pages->widget(lastid));
+        ui.Pages->widget(lastid)->setGraphicsEffect(effectLast);
+#endif
+
+        //New page animation
+        animationNewSlide = new QPropertyAnimation(ui.Pages->widget(id), "pos");
+        animationNewSlide->setDuration(500);
+        animationNewSlide->setStartValue(QPoint(width()/coeff, 0));
+        animationNewSlide->setEndValue(QPoint(0, 0));
+        animationNewSlide->setEasingCurve(QEasingCurve::OutExpo);
+
+#ifndef Q_OS_MAC
+        animationNewOpacity = new QPropertyAnimation(effectNew, "opacity");
+        animationNewOpacity->setDuration(500);
+        animationNewOpacity->setStartValue(0.01);
+        animationNewOpacity->setEndValue(1);
+        animationNewOpacity->setEasingCurve(QEasingCurve::OutExpo);
+#endif
+
+        //Last page animation
+        ui.Pages->widget(lastid)->setHidden(false);
+
+        animationOldSlide = new QPropertyAnimation(ui.Pages->widget(lastid), "pos");
+        animationOldSlide->setDuration(500);
+        animationOldSlide->setStartValue(QPoint(0, 0));
+        animationOldSlide->setEndValue(QPoint(-width()/coeff, 0));
+        animationOldSlide->setEasingCurve(QEasingCurve::OutExpo);
+
+#ifndef Q_OS_MAC
+        animationOldOpacity = new QPropertyAnimation(effectLast, "opacity");
+        animationOldOpacity->setDuration(500);
+        animationOldOpacity->setStartValue(1);
+        animationOldOpacity->setEndValue(0.01);
+        animationOldOpacity->setEasingCurve(QEasingCurve::OutExpo);
+#endif
+
+        QParallelAnimationGroup *group = new QParallelAnimationGroup;
+        group->addAnimation(animationOldSlide);
+        group->addAnimation(animationNewSlide);
+#ifndef Q_OS_MAC
+        group->addAnimation(animationOldOpacity);
+        group->addAnimation(animationNewOpacity);
+#endif
+        group->start();
+
+        connect(animationOldSlide, SIGNAL(finished()), ui.Pages->widget(lastid), SLOT(hide()));
+    }
 }
 
 void HWForm::GoBack()
 {
+    bool stopAnim = false;
     int curid = ui.Pages->currentIndex();
     if (curid == ID_PAGE_MAIN)
+    {
+        stopAnim = true;
         exit();
+    }
 
     int id = PagesStack.isEmpty() ? ID_PAGE_MAIN : PagesStack.pop();
     ui.Pages->setCurrentIndex(id);
     OnPageShown(id, curid);
 
     if (id == ID_PAGE_CONNECTING)
+    {
+        stopAnim = true;
         GoBack();
+    }
     if (id == ID_PAGE_NETSERVER)
+    {
+        stopAnim = true;
         GoBack();
+    }
     if ((!hwnet) && (id == ID_PAGE_ROOMSLIST))
+    {
+        stopAnim = true;
         GoBack();
+    }
+    if (curid == ID_PAGE_DRAWMAP)
+        stopAnim = true;
 
     if ((!hwnet) || (!hwnet->isInRoom()))
         if (id == ID_PAGE_NETGAME || id == ID_PAGE_NETGAME)
+        {
+            stopAnim = true;
             GoBack();
+        }
 
     if (curid == ID_PAGE_ROOMSLIST || curid == ID_PAGE_CONNECTING) NetDisconnect();
     if (curid == ID_PAGE_NETGAME && hwnet && hwnet->isInRoom()) hwnet->partRoom();
@@ -578,6 +680,66 @@ void HWForm::GoBack()
 
     if (curid == ID_PAGE_SCHEME)
         ammoSchemeModel->Save();
+
+    /**Start animation :**/
+
+    if (curid != 0 && frontendEffects && !stopAnim)
+    {
+        int coeff = 1;
+#ifndef Q_OS_MAC
+        coeff = 2;
+        QGraphicsOpacityEffect *effectNew = new QGraphicsOpacityEffect(ui.Pages->widget(id));
+        effectNew->setOpacity(1);
+        ui.Pages->widget(id)->setGraphicsEffect(effectNew);
+
+        QGraphicsOpacityEffect *effectLast = new QGraphicsOpacityEffect(ui.Pages->widget(curid));
+        ui.Pages->widget(curid)->setGraphicsEffect(effectLast);
+#endif
+
+        //Last page animation
+        animationOldSlide = new QPropertyAnimation(ui.Pages->widget(id), "pos");
+        animationOldSlide->setDuration(500);
+        animationOldSlide->setStartValue(QPoint(-width()/coeff, 0));
+        animationOldSlide->setEndValue(QPoint(0, 0));
+        animationOldSlide->setEasingCurve(QEasingCurve::OutExpo);
+
+#ifndef Q_OS_MAC
+        animationOldOpacity = new QPropertyAnimation(effectLast, "opacity");
+        animationOldOpacity->setDuration(500);
+        animationOldOpacity->setStartValue(1);
+        animationOldOpacity->setEndValue(0.01);
+        animationOldOpacity->setEasingCurve(QEasingCurve::OutExpo);
+#endif
+        //New page animation
+        ui.Pages->widget(curid)->setHidden(false);
+
+        animationNewSlide = new QPropertyAnimation(ui.Pages->widget(curid), "pos");
+        animationNewSlide->setDuration(500);
+        animationNewSlide->setStartValue(QPoint(0, 0));
+        animationNewSlide->setEndValue(QPoint(width()/coeff, 0));
+        animationNewSlide->setEasingCurve(QEasingCurve::OutExpo);
+
+#ifndef Q_OS_MAC
+        animationNewOpacity = new QPropertyAnimation(effectNew, "opacity");
+        animationNewOpacity->setDuration(500);
+        animationNewOpacity->setStartValue(0.01);
+        animationNewOpacity->setEndValue(1);
+        animationNewOpacity->setEasingCurve(QEasingCurve::OutExpo);
+#endif
+
+        QParallelAnimationGroup *group = new QParallelAnimationGroup;
+        group->addAnimation(animationOldSlide);
+        group->addAnimation(animationNewSlide);
+#ifndef Q_OS_MAC
+        group->addAnimation(animationOldOpacity);
+        group->addAnimation(animationNewOpacity);
+#endif
+        group->start();
+
+        connect(animationNewSlide, SIGNAL(finished()), ui.Pages->widget(curid), SLOT(hide()));
+    }
+
+
 }
 
 void HWForm::OpenSnapshotFolder()

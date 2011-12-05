@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  *)
 
-{$INCLUDE options.inc}
+{$INCLUDE "options.inc"}
 
 unit uVariables;
 interface
@@ -137,6 +137,8 @@ var
     bWaterRising    : boolean;
 
     //ShowCrosshair   : boolean;  This variable is inconvenient to set.  Easier to decide when rendering
+    CrosshairX      : LongInt;
+    CrosshairY      : LongInt;
     CursorMovementX : LongInt;
     CursorMovementY : LongInt;
     cDrownSpeed     : hwFloat;
@@ -214,7 +216,8 @@ const
         'Graphics/Hats',                 // ptHats
         'Graphics/Flags',                // ptFlags
         'Missions/Maps',                 // ptMissionMaps
-        'Graphics/SuddenDeath'           // ptSuddenDeath
+        'Graphics/SuddenDeath',           // ptSuddenDeath
+        'Graphics/Buttons'                // ptButton
     );
 
     cTagsMasks : array[0..15] of byte = (7, 0, 0, 0, 15, 6, 4, 5, 0, 0, 0, 0, 0, 14, 12, 13);
@@ -244,7 +247,7 @@ const
             Height: 10;
             style: TTF_STYLE_NORMAL;
             Name: 'DejaVuSans-Bold.ttf')
-            {$IFNDEF IPHONEOS}, // remove chinese fonts for now
+            {$IFNDEF MOBILE}, // remove chinese fonts for now
             (Handle: nil;
             Height: 12;
             style: TTF_STYLE_NORMAL;
@@ -261,7 +264,7 @@ const
             );
 
     SpritesData: array[TSprite] of record
-            FileName: String[16];
+            FileName: string[16];
             Path, AltPath: TPathType;
             Texture: PTexture;
             Surface: PSDL_Surface;
@@ -622,7 +625,9 @@ const
             (FileName:  'SDDroplet'; Path: ptCurrTheme; AltPath: ptSuddenDeath; Texture: nil; Surface: nil;
             Width:  16; Height: 16; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpHighest; getDimensions: false; getImageDimensions: true),// sprSDDroplet
             (FileName:  'TARDIS'; Path: ptGraphics; AltPath: ptNone; Texture: nil; Surface: nil;
-            Width:  48; Height: 79; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpHighest; getDimensions: false; getImageDimensions: true)// sprTardis
+            Width:  0; Height: 0; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpMedium; getDimensions: true; getImageDimensions: true),// sprTardis
+            (FileName: 'firebutton'; Path: ptButtons; AltPath: ptNone; Texture: nil; Surface: nil;
+            Width: 450; Height: 150; imageWidth: 0; imageHeight: 0; saveSurf: false; priority: tpHigh; getDimensions: false; getImageDimensions: true) // sprFireButton
             );
 
 
@@ -630,7 +635,7 @@ const
             Sprite: TSprite;
             FramesCount: Longword;
             Interval: Longword;
-            cmd: String[20];
+            cmd: string[20];
             Voice: TSound;
             VoiceDelay: LongWord;
             end = (
@@ -644,7 +649,7 @@ const
             );
 
     Soundz: array[TSound] of record
-            FileName: String[25];
+            FileName: string[25];
             Path    : TPathType;
             end = (
             (FileName:                         ''; Path: ptNone  ),// sndNone
@@ -759,8 +764,8 @@ const
             (FileName:            'parachute.ogg'; Path: ptSounds),// sndParachute
             (FileName:                 'bump.ogg'; Path: ptSounds),// sndBump
             (FileName:            'hogchant3.ogg'; Path: ptSounds),// sndResurrector
-            (FileName:                'plane.ogg'; Path: ptSounds), // sndPlane
-            (FileName:                'TARDIS.ogg'; Path: ptSounds) // sndTardis
+            (FileName:                'plane.ogg'; Path: ptSounds),// sndPlane
+            (FileName:               'TARDIS.ogg'; Path: ptSounds) // sndTardis
             );
 
     Ammoz: array [TAmmoType] of record

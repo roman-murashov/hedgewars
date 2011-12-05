@@ -45,16 +45,19 @@ function ScriptCall(fname : shortstring; par1, par2, par3: LongInt) : LongInt;
 function ScriptCall(fname : shortstring; par1, par2, par3, par4 : LongInt) : LongInt;
 function ScriptExists(fname : shortstring) : boolean;
 
+
+function ParseCommandOverride(key, value : shortstring) : shortstring;
+
 procedure initModule;
 procedure freeModule;
 
 implementation
 {$IFNDEF LUA_DISABLED}
-uses LuaPas in 'LuaPas.pas',
+uses LuaPas,
     uConsole,
     uConsts,
     uVisualGears,
-    uGears,
+    uGearsList,
     uFloat,
     uWorld,
     uAmmos,
@@ -1712,7 +1715,7 @@ end;
 
 procedure ScriptCall(fname : shortstring);
 begin
-if not ScriptLoaded or not ScriptExists(fname) then
+if not ScriptLoaded or (not ScriptExists(fname)) then
     exit;
 SetGlobals;
 lua_getglobal(luaState, Str2PChar(fname));
@@ -1722,6 +1725,25 @@ if lua_pcall(luaState, 0, 0, 0) <> 0 then
     lua_pop(luaState, 1)
     end;
 GetGlobals;
+end;
+
+function ParseCommandOverride(key, value : shortstring) : shortstring;
+begin
+ParseCommandOverride:= value;
+if not ScriptExists('ParseCommandOverride') then exit;
+lua_getglobal(luaState, Str2PChar('ParseCommandOverride'));
+lua_pushstring(luaState, Str2PChar(key));
+lua_pushstring(luaState, Str2PChar(value));
+if lua_pcall(luaState, 2, 1, 0) <> 0 then
+    begin
+    LuaError('Lua: Error while calling ParseCommandOverride: ' + lua_tostring(luaState, -1));
+    lua_pop(luaState, 1)
+    end
+else
+    begin
+    ParseCommandOverride:= lua_tostring(luaState, -1);
+    lua_pop(luaState, 1)
+    end;
 end;
 
 function ScriptCall(fname : shortstring; par1: LongInt) : LongInt;
@@ -1741,7 +1763,7 @@ end;
 
 function ScriptCall(fname : shortstring; par1, par2, par3, par4 : LongInt) : LongInt;
 begin
-if not ScriptLoaded or not ScriptExists(fname) then
+if not ScriptLoaded or (not ScriptExists(fname)) then
     exit;
 SetGlobals;
 lua_getglobal(luaState, Str2PChar(fname));
@@ -2075,6 +2097,15 @@ end;
 function ScriptExists(fname : shortstring) : boolean;
 begin
 ScriptExists:= false
+end;
+
+function ParseCommandOverride(key, value : shortstring) : shortstring;
+begin
+ParseCommandOverride:= value
+end;
+
+procedure ScriptOnScreenResize;
+begin
 end;
 
 procedure initModule;
