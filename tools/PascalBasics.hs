@@ -8,7 +8,7 @@ import Text.Parsec.Token
 import Text.Parsec.Language
 import Data.Char
 
-builtin = ["succ", "pred", "low", "high"]
+builtin = ["succ", "pred", "low", "high", "ord"]
     
 pascalLanguageDef
     = emptyDef
@@ -25,7 +25,7 @@ pascalLanguageDef
             , "type", "var", "const", "out", "array", "packed"
             , "procedure", "function", "with", "for", "to"
             , "downto", "div", "mod", "record", "set", "nil"
-            , "string", "shortstring", "cdecl", "external"
+            , "string", "cdecl", "external", "if", "then", "else"
             ] ++ builtin
     , reservedOpNames= [] 
     , caseSensitive  = False   

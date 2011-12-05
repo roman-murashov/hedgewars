@@ -38,6 +38,7 @@ procedure DrawTunnel(X, Y, dX, dY: hwFloat; ticks, HalfWidth: LongInt);
 procedure FillRoundInLand(X, Y, Radius: LongInt; Value: Longword);
 procedure ChangeRoundInLand(X, Y, Radius: LongInt; doSet: boolean);
 function  LandBackPixel(x, y: LongInt): LongWord;
+procedure DrawLine(X1, Y1, X2, Y2: LongInt; Color: Longword);
 
 function TryPlaceOnLand(cpX, cpY: LongInt; Obj: TSprite; Frame: LongInt; doPlace: boolean; indestructible: boolean): boolean;
 
@@ -298,7 +299,7 @@ if (t and LAND_HEIGHT_MASK) = 0 then
                begin
                by:= t div 2; bx:= i div 2;
                end;
-           if ((Land[t, i] and lfBasic) <> 0) and (((LandPixels[by,bx] and AMask) shr AShift) = 255) and not (disableLandBack) then
+           if ((Land[t, i] and lfBasic) <> 0) and (((LandPixels[by,bx] and AMask) shr AShift) = 255) and (not disableLandBack) then
                begin
                inc(cnt);
                LandPixels[by, bx]:= LandBackPixel(i, t)
@@ -676,7 +677,7 @@ case bpp of
      4: for y:= 0 to Pred(h) do
             begin
             for x:= 0 to Pred(w) do
-                if PLongword(@(p^[x * 4]))^ <> 0 then
+                if (PLongword(@(p^[x * 4]))^) <> 0 then
                    if ((cpY + y) <= Longint(topY)) or
                       ((cpY + y) >= LAND_HEIGHT) or
                       ((cpX + x) <= Longint(leftX)) or
@@ -705,7 +706,7 @@ case bpp of
      4: for y:= 0 to Pred(h) do
             begin
             for x:= 0 to Pred(w) do
-                if PLongword(@(p^[x * 4]))^ <> 0 then
+                if (PLongword(@(p^[x * 4]))^) <> 0 then
                    begin
                    if (cReducedQuality and rqBlurryLand) = 0 then
                        begin
@@ -781,7 +782,7 @@ if (((Land[Y, X] and lfDamaged) <> 0) and ((Land[Y, X] and lfIndestructible) = 0
 
     if c < 4 then // 0-3 neighbours
         begin
-        if ((Land[Y, X] and lfBasic) <> 0) and not disableLandBack then
+        if ((Land[Y, X] and lfBasic) <> 0) and (not disableLandBack) then
             LandPixels[yy, xx]:= LandBackPixel(X, Y)
         else
             LandPixels[yy, xx]:= 0;
@@ -804,7 +805,7 @@ if (Land[Y, X] = 0) and (Y > LongInt(topY) + 1) and
         begin
         if (cReducedQuality and rqBlurryLand) = 0 then
             begin
-            if ((LandPixels[y,x] and AMask) shr AShift) < 10 then LandPixels[y,x]:= (cExplosionBorderColor and not AMask) or (128 shl AShift)
+            if ((LandPixels[y,x] and AMask) shr AShift) < 10 then LandPixels[y,x]:= (cExplosionBorderColor and (not AMask)) or (128 shl AShift)
             else
                 LandPixels[y,x]:=
                                 (((((LandPixels[y,x] and RMask shr RShift) div 2)+((cExplosionBorderColor and RMask) shr RShift) div 2) and $FF) shl RShift) or
@@ -826,7 +827,7 @@ if (Land[Y, X] = 0) and (Y > LongInt(topY) + 1) and
         begin
         if (cReducedQuality and rqBlurryLand) = 0 then
             begin
-            if ((LandPixels[y,x] and AMask) shr AShift) < 10 then LandPixels[y,x]:= (cExplosionBorderColor and not AMask) or (64 shl AShift)
+            if ((LandPixels[y,x] and AMask) shr AShift) < 10 then LandPixels[y,x]:= (cExplosionBorderColor and (not AMask)) or (64 shl AShift)
             else
                 LandPixels[y,x]:=
                                 (((((LandPixels[y,x] and RMask shr RShift) * 3 div 4)+((cExplosionBorderColor and RMask) shr RShift) div 4) and $FF) shl RShift) or
@@ -961,5 +962,57 @@ begin
     end
 end;
 
+
+procedure DrawLine(X1, Y1, X2, Y2: LongInt; Color: Longword);
+var
+  eX, eY, dX, dY: LongInt;
+  i, sX, sY, x, y, d: LongInt;
+begin
+eX:= 0;
+eY:= 0;
+dX:= X2 - X1;
+dY:= Y2 - Y1;
+
+if (dX > 0) then sX:= 1
+else
+  if (dX < 0) then
+     begin
+     sX:= -1;
+     dX:= -dX
+     end else sX:= dX;
+
+if (dY > 0) then sY:= 1
+  else
+  if (dY < 0) then
+     begin
+     sY:= -1;
+     dY:= -dY
+     end else sY:= dY;
+
+if (dX > dY) then d:= dX
+             else d:= dY;
+
+x:= X1;
+y:= Y1;
+
+for i:= 0 to d do
+    begin
+    inc(eX, dX);
+    inc(eY, dY);
+    if (eX > d) then
+       begin
+       dec(eX, d);
+       inc(x, sX);
+       end;
+    if (eY > d) then
+       begin
+       dec(eY, d);
+       inc(y, sY);
+       end;
+
+    if ((x and LAND_WIDTH_MASK) = 0) and ((y and LAND_HEIGHT_MASK) = 0) then
+       Land[y, x]:= Color;
+    end
+end;
 
 end.

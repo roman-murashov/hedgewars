@@ -82,29 +82,30 @@ const cStereo_Sky           = 0.0500;
       cStereo_Water_near    = 0.0025;
       cStereo_Outside       = -0.0400;
 
+
+// helper functions to create the goal/game mode string
+function AddGoal(s: ansistring; gf: longword; si: TGoalStrId; i: LongInt): ansistring;
+var t: ansistring;
+begin
+    if (GameFlags and gf) <> 0 then
+        begin
+        t:= inttostr(i);
+        s:= s + format(trgoal[si], t) + '|'
+        end;
+    AddGoal:= s;
+end;
+
+function AddGoal(s: ansistring; gf: longword; si: TGoalStrId): ansistring;
+begin
+    if (GameFlags and gf) <> 0 then
+        s:= s + trgoal[si] + '|';
+    AddGoal:= s;
+end;
+
 procedure InitWorld;
 var i, t: LongInt;
     cp: PClan;
     g: ansistring;
-
-    // helper functions to create the goal/game mode string
-    function AddGoal(s: ansistring; gf: longword; si: TGoalStrId; i: LongInt): ansistring;
-    var t: ansistring;
-    begin
-        if (GameFlags and gf) <> 0 then
-            begin
-            t:= inttostr(i);
-            s:= s + format(trgoal[si], t) + '|'
-            end;
-        AddGoal:= s;
-    end;
-
-    function AddGoal(s: ansistring; gf: longword; si: TGoalStrId): ansistring;
-    begin
-        if (GameFlags and gf) <> 0 then
-            s:= s + trgoal[si] + '|';
-        AddGoal:= s;
-    end;
 begin
 missionTimer:= 0;
 
@@ -1220,11 +1221,11 @@ var EdgesDist, wdy, shs,z: LongInt;
     PrevSentPointTime: LongWord = 0;
 begin
 {$IFNDEF MOBILE}
-if (not (CurrentTeam^.ExtDriven and isCursorVisible and not bShowAmmoMenu)) and cHasFocus and (GameState <> gsConfirm) then
+if (not (CurrentTeam^.ExtDriven and isCursorVisible and (not bShowAmmoMenu))) and cHasFocus and (GameState <> gsConfirm) then
     uCursor.updatePosition();
 {$ENDIF}
 z:= round(200/zoom);
-if not PlacingHogs and (FollowGear <> nil) and not isCursorVisible and not bShowAmmoMenu and not fastUntilLag then
+if not PlacingHogs and (FollowGear <> nil) and (not isCursorVisible) and (not bShowAmmoMenu) and (not fastUntilLag) then
     if (not autoCameraOn) or ((abs(CursorPoint.X - prevPoint.X) + abs(CursorPoint.Y - prevpoint.Y)) > 4) then
         begin
         FollowGear:= nil;
