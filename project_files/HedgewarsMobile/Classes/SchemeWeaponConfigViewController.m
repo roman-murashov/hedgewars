@@ -91,7 +91,6 @@ static SchemeWeaponConfigViewController *controllerInstance;
         controller.tintColor = [UIColor lightGrayColor];
         controller.selectedSegmentIndex = 0;
         self.topControl = controller;
-        [controller addTarget:self.tableView action:@selector(reloadData) forControlEvents:UIControlEventValueChanged];
         [controller release];
     }
     return topControl;
@@ -124,12 +123,18 @@ static SchemeWeaponConfigViewController *controllerInstance;
     aTableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     aTableView.separatorColor = [UIColor whiteColor];
     aTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    aTableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.tableView = aTableView;
     [aTableView release];
     [self.view addSubview:self.tableView];
 
     [super viewDidLoad];
     controllerInstance = self;
+}
+
+// this is a workaround to keep the uisegmented control visible
+-(void) willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    [self.tableView reloadData];
 }
 
 #pragma mark -
@@ -209,11 +214,13 @@ static SchemeWeaponConfigViewController *controllerInstance;
 }
 
 -(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    UIView *theView = [[[UIView alloc] init] autorelease];
+    UIView *theView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 30)];
+    theView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     self.topControl.frame = CGRectMake(0, 0, self.view.frame.size.width * 80/100, 30);
     self.topControl.center = CGPointMake(self.view.frame.size.width/2, 24);
+    [self.topControl addTarget:self.tableView action:@selector(reloadData) forControlEvents:UIControlEventValueChanged];
     [theView addSubview:self.topControl];
-    return theView;
+    return [theView autorelease];
 }
 
 #pragma mark -
@@ -320,6 +327,9 @@ static SchemeWeaponConfigViewController *controllerInstance;
         theLabel.center = CGPointMake(controllerInstance.view.frame.size.width/2, controllerInstance.view.frame.size.height/2);
         theLabel.numberOfLines = 2;
         theLabel.tag = LABEL_TAG;
+        theLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth |
+                                    UIViewAutoresizingFlexibleTopMargin |
+                                    UIViewAutoresizingFlexibleBottomMargin;
 
         [controllerInstance.view addSubview:theLabel];
         [theLabel release];
