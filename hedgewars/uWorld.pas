@@ -77,7 +77,6 @@ var cWaveWidth, cWaveHeight: LongInt;
     amSel: TAmmoType = amNothing;
     missionTex: PTexture;
     missionTimer: LongInt;
-    stereoDepth: GLfloat;
     isFirstFrame: boolean;
     AMAnimType: LongInt;
 
@@ -814,8 +813,9 @@ end;
 
 procedure DrawWaves(Dir, dX, dY: LongInt; tnt: Byte);
 var VertexBuffer, TextureBuffer: array [0..3] of TVertex2f;
-    lw, waves, shift: GLfloat;
+    lw, waves: GLfloat;
     sprite: TSprite;
+    r: TSDL_Rect;
 begin
 if SuddenDeathDmg then
     sprite:= sprSDWater
@@ -825,7 +825,6 @@ else
 cWaveWidth:= SpritesData[sprite].Width;
 
 lw:= cScreenWidth / cScaleFactor;
-waves:= lw * 2 / cWaveWidth;
 
 if SuddenDeathDmg then
     Tint(LongInt(tnt) * SDWaterColorArray[2].r div 255 + 255 - tnt,
@@ -840,7 +839,7 @@ else
          255
     );
 
-glBindTexture(GL_TEXTURE_2D, SpritesData[sprite].Texture^.id);
+glBindTexture(GL_TEXTURE_2D, SpritesData[sprite].Texture^.atlas^.id);
 
 VertexBuffer[0].X:= -lw;
 VertexBuffer[0].Y:= cWaterLine + WorldDy + dY;
@@ -851,15 +850,12 @@ VertexBuffer[2].Y:= VertexBuffer[0].Y + SpritesData[sprite].Height;
 VertexBuffer[3].X:= -lw;
 VertexBuffer[3].Y:= VertexBuffer[2].Y;
 
-shift:= - lw / cWaveWidth;
-TextureBuffer[0].X:= shift + (( - WorldDx + LongInt(RealTicks shr 6) * Dir + dX) mod cWaveWidth) / (cWaveWidth - 1);
-TextureBuffer[0].Y:= 0;
-TextureBuffer[1].X:= TextureBuffer[0].X + waves;
-TextureBuffer[1].Y:= TextureBuffer[0].Y;
-TextureBuffer[2].X:= TextureBuffer[1].X;
-TextureBuffer[2].Y:= SpritesData[sprite].Texture^.ry;
-TextureBuffer[3].X:= TextureBuffer[0].X;
-TextureBuffer[3].Y:= TextureBuffer[2].Y;
+// this uses texture repeat mode, when using an atlas rect we need to split to several quads here!
+r.x := -Trunc(lw) + (( - WorldDx + LongInt(RealTicks shr 6) * Dir + dX) mod cWaveWidth);
+r.y:= 0;
+r.w:= Trunc(lw + lw);
+r.h:= SpritesData[sprite].Texture^.h;
+ComputeTexcoords(SpritesData[sprite].Texture, @r, @TextureBuffer);
 
 
 glVertexPointer(2, GL_FLOAT, 0, @VertexBuffer[0]);
@@ -1083,10 +1079,8 @@ begin
         exit
     else if rm = rmLeftEye then
         d:= -d;
-    stereoDepth:= stereoDepth + d;
-    glMatrixMode(GL_PROJECTION);
-    glTranslatef(d, 0, 0);
-    glMatrixMode(GL_MODELVIEW);
+    cStereoDepth:= cStereoDepth + d;
+    UpdateProjection;
 {$ENDIF}
 end;
  
@@ -1098,10 +1092,8 @@ begin
 {$ELSE}
     if rm = rmDefault then
         exit;
-    glMatrixMode(GL_PROJECTION);
-    glTranslatef(-stereoDepth, 0, 0);
-    glMatrixMode(GL_MODELVIEW);
-    stereoDepth:= 0;
+    cStereoDepth:= 0;
+    UpdateProjection;
 {$ENDIF}
 end;
  
@@ -1822,14 +1814,13 @@ begin
     missionTimer:= 0;
     missionTex:= nil;
     cOffsetY:= 0;
-    stereoDepth:= 0;
+    cStereoDepth:= 0;
     AMState:= AMHidden;
     isFirstFrame:= true;
 end;
 
 procedure freeModule;
 begin
-    stereoDepth:= stereoDepth; // avoid hint
     FreeTexture(fpsTexture);
     fpsTexture:= nil;
     FreeTexture(timeTexture);

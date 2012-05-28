@@ -225,8 +225,9 @@ var
         'Graphics/Hats',                 // ptHats
         'Graphics/Flags',                // ptFlags
         'Missions/Maps',                 // ptMissionMaps
-        'Graphics/SuddenDeath',           // ptSuddenDeath
-        'Graphics/Buttons'                // ptButton
+        'Graphics/SuddenDeath',          // ptSuddenDeath
+        'Graphics/Buttons',              // ptButton
+        'Shaders'                        // ptShaders
     );
 
     Fontz: array[THWFont] of THHFont = (
@@ -2425,6 +2426,7 @@ var
     SyncTexture,
     ConfirmTexture: PTexture;
     cScaleFactor: GLfloat;
+    cStereoDepth: GLfloat;
     SupportNPOTT: Boolean;
     Step: LongInt;
     squaresize : LongInt;
