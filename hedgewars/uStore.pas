@@ -43,6 +43,7 @@ procedure MakeCrossHairs;
 
 procedure WarpMouse(x, y: Word); inline;
 procedure SwapBuffers; inline;
+procedure UpdateProjection;
 
 implementation
 uses uMisc, uConsole, uMobile, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands,
@@ -56,6 +57,9 @@ var MaxTextureSize: LongInt;
     SDLGLcontext: PSDL_GLContext;
 {$ELSE}
     SDLPrimSurface: PSDL_Surface;
+{$ENDIF}
+{$IFDEF GL2}
+    Shader: GLuint;
 {$ENDIF}
 
 function WriteInRect(Surface: PSDL_Surface; X, Y: LongInt; Color: LongWord; Font: THWFont; s: ansistring): TSDL_Rect;
@@ -625,6 +629,106 @@ begin
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1); // try to prefer hardware rendering
 end;
 
+{$IFDEF GL2}
+function CompileShader(shaderFile: string; shaderType: GLenum): GLuint;
+var
+    shader: GLuint;
+    f: Textfile;
+    source, line: AnsiString;
+    sourceA: Pchar;
+    lengthA: GLint;
+    compileResult: GLint;
+    logLength: GLint;
+    log: PChar;
+begin
+    Assign(f, Pathz[ptShaders] + '/' + shaderFile);
+    filemode:= 0; // readonly
+    Reset(f);
+    if IOResult <> 0 then
+    begin
+        AddFileLog('Unable to load ' + shaderFile);
+        halt(-1);
+    end;
+
+    source:='';
+    while not eof(f) do
+    begin
+        ReadLn(f, line);
+        source:= source + line + #10;
+    end;
+    
+    CloseFile(f);
+
+    writeln('Compiling shader: ' + Pathz[ptShaders] + '/' + shaderFile);
+
+    sourceA:=PChar(source);
+    lengthA:=Length(source);
+
+    shader:=glCreateShader(shaderType);
+    glShaderSource(shader, 1, @sourceA, @lengthA);
+    glCompileShader(shader);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, @compileResult);
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, @logLength);
+
+    if logLength > 1 then
+    begin
+        GetMem(log, logLength);
+        glGetShaderInfoLog(shader, logLength, nil, log);
+        writeln('========== Compiler log  ==========');
+        writeln(log);
+        writeln('===================================');
+        FreeMem(log, logLength);
+    end;
+
+    if compileResult <> GL_TRUE then
+    begin
+        writeln('Shader compilation failed, halting');
+        halt(-1);
+    end;
+
+    CompileShader:= shader;
+end;
+
+function CompileProgram(shaderName: string): GLuint;
+var
+    program_: GLuint;
+    vs, fs: GLuint;
+    linkResult: GLint;
+    logLength: GLint;
+    log: PChar;
+begin
+    program_:= glCreateProgram();
+    vs:= CompileShader(shaderName + '.vs', GL_VERTEX_SHADER);
+    fs:= CompileShader(shaderName + '.fs', GL_FRAGMENT_SHADER);
+    glAttachShader(program_, vs);
+    glAttachShader(program_, fs);
+    glLinkProgram(program_);
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    glGetProgramiv(program_, GL_LINK_STATUS, @linkResult);
+    glGetProgramiv(program_, GL_INFO_LOG_LENGTH, @logLength);
+
+    if logLength > 1 then
+    begin
+        GetMem(log, logLength);
+        glGetProgramInfoLog(program_, logLength, nil, log);
+        writeln('========== Compiler log  ==========');
+        writeln(log);
+        writeln('===================================');
+        FreeMem(log, logLength);
+    end;
+
+    if linkResult <> GL_TRUE then
+    begin
+        writeln('Linking program failed, halting');
+        halt(-1);
+    end;
+
+    CompileProgram:= program_;
+end;
+{$ENDIF}
+
 procedure SetupOpenGL;
 //var vendor: shortstring = '';
 var buf: array[byte] of char;
@@ -682,6 +786,13 @@ begin
     AddFileLog('  \----- Extensions: ' + shortstring(pchar(glGetString(GL_EXTENSIONS))));
     //TODO: don't have the Extensions line trimmed but slipt it into multiple lines
 
+{$IFDEF GL2}
+    Load_GL_VERSION_2_0;
+    Shader:= CompileProgram('default');
+    glUseProgram(Shader);
+    glUniform1i(glGetUniformLocation(Shader, 'tex'), 0);
+{$ENDIF}
+
 {$IFNDEF S3D_DISABLED}
     if (cStereoMode = smHorizontal) or (cStereoMode = smVertical) or (cStereoMode = smAFR) then
     begin
@@ -729,9 +840,7 @@ begin
 
     glMatrixMode(GL_MODELVIEW);
     // prepare default translation/scaling
-    glLoadIdentity();
-    glScalef(2.0 / cScreenWidth, -2.0 / cScreenHeight, 1.0);
-    glTranslatef(0, -cScreenHeight / 2, 0);
+    SetScale(2.0);
 
     // enable alpha blending
     glEnable(GL_BLEND);
@@ -746,23 +855,28 @@ begin
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 end;
 
+procedure UpdateProjection;
+var mat: array[0..15] of GLfloat;
+    s: GLfloat;
+begin
+    s:=cScaleFactor;
+    glMatrixMode(GL_PROJECTION);
+    mat[ 0]:= s/cScreenWidth; mat[ 1]:=  0.0;             mat[ 2]:=0.0; mat[ 3]:=  0.0;
+    mat[ 4]:= 0.0;            mat[ 5]:= -s/cScreenHeight; mat[ 6]:=0.0; mat[ 7]:=  0.0;
+    mat[ 8]:= 0.0;            mat[ 9]:=  0.0;             mat[10]:=1.0; mat[11]:=  0.0;
+    mat[12]:= cStereoDepth;   mat[13]:=  s/2;             mat[14]:=0.0; mat[15]:=  1.0;
+    glLoadMatrixf(@mat);
+    glMatrixMode(GL_MODELVIEW);
+end;
+
 procedure SetScale(f: GLfloat);
 begin
-// leave immediately if scale factor did not change
-    if f = cScaleFactor then
-        exit;
-
-    if f = cDefaultZoomLevel then
-        glPopMatrix         // "return" to default scaling
-    else                    // other scaling
-        begin
-        glPushMatrix;       // save default scaling
-        glLoadIdentity;
-        glScalef(f / cScreenWidth, -f / cScreenHeight, 1.0);
-        glTranslatef(0, -cScreenHeight / 2, 0);
-        end;
-
-    cScaleFactor:= f;
+    // This lazy update conflicts with R7103 at the moment, missing the initial SetScale(2.0)
+    //if cScaleFactor <> f then
+    //begin
+        cScaleFactor:=f;
+        UpdateProjection;
+    //end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1033,11 +1147,7 @@ begin
         // chFullScr is called when there is a rotation event and needs the SetScale and SetupOpenGL to set up the new resolution
         // this 6 gl functions are the relevant ones and are hacked together here for optimisation
         glMatrixMode(GL_MODELVIEW);
-        glPopMatrix;
-        glLoadIdentity();
-        glScalef(2.0 / cScreenWidth, -2.0 / cScreenHeight, 1.0);
-        glTranslatef(0, -cScreenHeight / 2, 0);
-        glViewport(0, 0, cScreenWidth, cScreenHeight);
+        SetScale(2.0);
         exit;
 {$ELSE}
         SetScale(cDefaultZoomLevel);
@@ -1151,6 +1261,9 @@ end;
 
 procedure freeModule;
 begin
+{$IFDEF GL2}
+    glDeleteProgram(Shader);
+{$ENDIF}
     StoreRelease(false);
     TTF_Quit();
 {$IFDEF SDL13}
