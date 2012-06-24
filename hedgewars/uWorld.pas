@@ -60,7 +60,8 @@ uses
     uCaptions,
     uCursor,
     uCommands,
-    uMobile
+    uMobile,
+    uVideoRec
     ;
 
 var cWaveWidth, cWaveHeight: LongInt;
@@ -80,6 +81,7 @@ var cWaveWidth, cWaveHeight: LongInt;
     stereoDepth: GLfloat;
     isFirstFrame: boolean;
     AMAnimType: LongInt;
+    recTexture: PTexture;
 
 const cStereo_Sky           = 0.0500;
       cStereo_Horizon       = 0.0250;
@@ -377,6 +379,8 @@ begin
     timeTexture:= nil;
     FreeTexture(missionTex);
     missionTex:= nil;
+    FreeTexture(recTexture);
+    recTexture:= nil;
 end;
 
 function GetAmmoMenuTexture(Ammo: PHHAmmo): PTexture;
@@ -954,7 +958,7 @@ begin
     //glPushMatrix;
     //glScalef(1.0, 1.0, 1.0);
 
-    if not isPaused then
+    if (not isPaused) and (GameType <> gmtRecord) then
         MoveCamera;
 
     if cStereoMode = smNone then
@@ -985,7 +989,7 @@ begin
         DrawWorldStereo(0, rmRightEye);
 
         // detatch drawing from fbs
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, defaultFrame);
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
         SetScale(cDefaultZoomLevel);
 
@@ -1566,6 +1570,33 @@ if ScreenFade <> sfNone then
         end
     end;
 
+{$IFDEF USE_VIDEO_RECORDING}
+// during video prerecording draw red blinking circle and text 'rec'
+if flagPrerecording then
+    begin
+    if recTexture = nil then
+        begin
+        s:= 'rec';
+        tmpSurface:= TTF_RenderUTF8_Blended(Fontz[fntBig].Handle, Str2PChar(s), cWhiteColorChannels);
+        tmpSurface:= doSurfaceConversion(tmpSurface);
+        FreeTexture(recTexture);
+        recTexture:= Surface2Tex(tmpSurface, false);
+        SDL_FreeSurface(tmpSurface)
+        end;
+    DrawTexture( -(cScreenWidth shr 1) + 50, 20, recTexture);
+
+    // draw red circle
+    glDisable(GL_TEXTURE_2D); 
+    Tint($FF, $00, $00, Byte(Round(127*(1 + sin(SDL_GetTicks()*0.007)))));
+    glBegin(GL_POLYGON);
+    for i:= 0 to 20 do
+        glVertex2f(-(cScreenWidth shr 1) + 30 + sin(i*2*Pi/20)*10, 35 + cos(i*2*Pi/20)*10);
+    glEnd();
+    Tint($FF, $FF, $FF, $FF);
+    glEnable(GL_TEXTURE_2D);
+    end;
+{$ENDIF}
+
 SetScale(zoom);
 
 // Cursor
@@ -1748,8 +1779,12 @@ begin
 if (not cHasFocus) and (GameState <> gsConfirm) then
     ParseCommand('quit', true);
 
-if not cHasFocus then DampenAudio()
-else UndampenAudio();
+// do not change volume during prerecording as it will affect sound in video file
+if not flagPrerecording then
+    begin
+    if not cHasFocus then DampenAudio()
+    else UndampenAudio();
+    end;
 end;
 
 procedure SetUtilityWidgetState(ammoType: TAmmoType);
@@ -1806,6 +1841,7 @@ end;
 procedure initModule;
 begin
     fpsTexture:= nil;
+    recTexture:= nil;
     FollowGear:= nil;
     WindBarWidth:= 0;
     bShowAmmoMenu:= false;
@@ -1836,7 +1872,9 @@ begin
     FreeTexture(timeTexture);
     timeTexture:= nil;
     FreeTexture(missionTex);
-    missionTex:= nil
+    missionTex:= nil;
+    FreeTexture(recTexture);
+    recTexture:= nil;
 end;
 
 end.

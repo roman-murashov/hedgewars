@@ -32,6 +32,7 @@ program hwengine;
 uses SDLh, uMisc, uConsole, uGame, uConsts, uLand, uAmmos, uVisualGears, uGears, uStore, uWorld, uInputHandler, uSound,
      uScript, uTeams, uStats, uIO, uLocale, uChat, uAI, uAIMisc, uRandom, uLandTexture, uCollisions,
      SysUtils, uTypes, uVariables, uCommands, uUtils, uCaptions, uDebug, uCommandHandlers, uLandPainted
+     {$IFDEF USE_VIDEO_RECORDING}, uVideoRec {$ENDIF}
      {$IFDEF SDL13}, uTouch{$ENDIF}{$IFDEF ANDROID}, GLUnit{$ENDIF};
 
 {$IFDEF HWLIBRARY}
@@ -100,6 +101,11 @@ begin
             end;
 
     SwapBuffers;
+
+{$IFDEF USE_VIDEO_RECORDING}
+    if flagPrerecording then
+        SaveCameraPosition;
+{$ENDIF}
 
     if flagMakeCapture then
         begin
@@ -261,6 +267,33 @@ begin
     end;
 end;
 
+{$IFDEF USE_VIDEO_RECORDING}
+procedure RecorderMainLoop;
+var CurrTime, PrevTime: LongInt;
+begin
+    if not BeginVideoRecording() then
+        exit;
+    DoTimer(0); // gsLandGen -> gsStart
+    DoTimer(0); // gsStart -> gsGame
+
+    CurrTime:= LoadNextCameraPosition();
+    fastScrolling:= true;
+    DoTimer(CurrTime);
+    fastScrolling:= false;
+    while true do
+    begin
+        EncodeFrame();
+        PrevTime:= CurrTime;
+        CurrTime:= LoadNextCameraPosition();
+        if CurrTime = -1 then
+            break;
+        DoTimer(CurrTime - PrevTime);
+        IPCCheckSock();
+    end;
+    StopVideoRecording();
+end;
+{$ENDIF}
+
 ///////////////
 procedure Game{$IFDEF HWLIBRARY}(gameArgs: PPChar); cdecl; export{$ENDIF};
 var p: TPathType;
@@ -327,11 +360,16 @@ begin
     SDLTry(TTF_Init() <> -1, true);
     WriteLnToConsole(msgOK);
 
-    // show main window
-    if cFullScreen then
-        ParseCommand('fullscr 1', true)
+    if GameType = gmtRecord then
+        InitOffscreenOpenGL()
     else
-        ParseCommand('fullscr 0', true);
+        begin            
+        // show main window
+        if cFullScreen then
+            ParseCommand('fullscr 1', true)
+        else
+            ParseCommand('fullscr 0', true);
+        end;
 
     ControllerInit(); // has to happen before InitKbdKeyTable to map keys
     InitKbdKeyTable();
@@ -368,12 +406,22 @@ begin
 
     InitTeams();
     AssignStores();
+
+    if GameType = gmtRecord then
+        SetSound(false);
+
     InitSound();
 
     isDeveloperMode:= false;
     TryDo(InitStepsFlags = cifAllInited, 'Some parameters not set (flags = ' + inttostr(InitStepsFlags) + ')', true);
     ParseCommand('rotmask', true);
-    MainLoop();
+    
+{$IFDEF USE_VIDEO_RECORDING}
+    if GameType = gmtRecord then
+        RecorderMainLoop()
+    else
+{$ENDIF}
+        MainLoop();
 
     // clean up all the memory allocated
     freeEverything(true);
@@ -456,6 +504,7 @@ begin
         //uAIAmmoTests does not need to be freed
         //uAIActions does not need to be freed
         uStore.freeModule;
+        uVideoRec.freeModule;
     end;
 
     uIO.freeModule;
@@ -529,11 +578,14 @@ begin
     else
         if (ParamCount = 3) and ((ParamStr(3) = '--stats-only') or (ParamStr(3) = 'landpreview')) then
             internalSetGameTypeLandPreviewFromParameters()
+        else if ParamCount = cDefaultParamNum then
+            internalStartGameWithParameters()
+{$IFDEF USE_VIDEO_RECORDING}
+        else if ParamCount = cVideorecParamNum then
+            internalStartVideoRecordingWithParameters()
+{$ENDIF}
         else
-            if (ParamCount = cDefaultParamNum) then
-                internalStartGameWithParameters()
-            else
-                playReplayFileWithParameters();
+            playReplayFileWithParameters();
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
