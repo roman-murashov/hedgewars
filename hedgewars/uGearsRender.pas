@@ -37,7 +37,7 @@ var RopePoints: record
                 end;
 
 implementation
-uses uRender, uUtils, uVariables, uAmmos, Math, uVisualGears;
+uses uRender, uStore, uUtils, uVariables, uAmmos, Math, uVisualGears;
 
 procedure DrawRopeLinesRQ(Gear: PGear);
 begin
@@ -54,19 +54,17 @@ if (RopePoints.Count > 0) or (Gear^.Elasticity.QWordValue > 0) then
     glDisable(GL_TEXTURE_2D);
     //glEnable(GL_LINE_SMOOTH);
 
-    glPushMatrix;
-
-    glTranslatef(WorldDx, WorldDy, 0);
+    ResetRotation;
+    SetOffset(WorldDx, WorldDy);
+    UpdateModelview;
 
     glLineWidth(4.0);
 
     Tint($C0, $C0, $C0, $FF);
 
-    glVertexPointer(2, GL_FLOAT, 0, @RopePoints.rounded[0]);
+    SetVertexPointer(@RopePoints.rounded[0]);
     glDrawArrays(GL_LINE_STRIP, 0, RopePoints.Count + 2);
     Tint($FF, $FF, $FF, $FF);
-
-    glPopMatrix;
 
     glEnable(GL_TEXTURE_2D);
     //glDisable(GL_LINE_SMOOTH)

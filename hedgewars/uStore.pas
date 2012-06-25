@@ -43,10 +43,23 @@ procedure MakeCrossHairs;
 
 procedure WarpMouse(x, y: Word); inline;
 procedure SwapBuffers; inline;
+procedure UpdateProjection;
+
+{$IFDEF GL2}
+procedure UpdateModelviewProjection;
+{$ENDIF}
+
+procedure Tint(r, g, b, a: Byte); inline;
+procedure Tint(c: Longword); inline;
+procedure SetTexCoordPointer(p: Pointer);
+procedure SetVertexPointer(p: Pointer);
+procedure SetColorPointer(p: Pointer);
+procedure BeginWater;
+procedure EndWater;
 
 implementation
 uses uMisc, uConsole, uMobile, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands,
-     uDebug{$IFDEF USE_CONTEXT_RESTORE}, uWorld{$ENDIF};
+     uDebug{$IFDEF USE_CONTEXT_RESTORE}, uWorld{$ENDIF}, uMatrix;
 
 //type TGPUVendor = (gvUnknown, gvNVIDIA, gvATI, gvIntel, gvApple);
 
@@ -57,6 +70,27 @@ var MaxTextureSize: LongInt;
 {$ELSE}
     SDLPrimSurface: PSDL_Surface;
 {$ENDIF}
+{$IFDEF GL2}
+    shaderMain: GLuint;
+    shaderWater: GLuint;
+
+    // attributes
+const
+    aVertex: GLint   = 0;
+    aTexCoord: GLint = 1;
+    aColor: GLint    = 2;
+
+var
+    uCurrentMVPLocation: GLint;
+
+    uMainMVPLocation: GLint;
+    uMainTintLocation: GLint;
+
+    uWaterMVPLocation: GLint;
+
+{$ENDIF}
+    LastTint: LongWord = 0;
+
 
 function WriteInRect(Surface: PSDL_Surface; X, Y: LongInt; Color: LongWord; Font: THWFont; s: ansistring): TSDL_Rect;
 var w, h: LongInt;
@@ -625,6 +659,112 @@ begin
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1); // try to prefer hardware rendering
 end;
 
+{$IFDEF GL2}
+function CompileShader(shaderFile: string; shaderType: GLenum): GLuint;
+var
+    shader: GLuint;
+    f: Textfile;
+    source, line: AnsiString;
+    sourceA: Pchar;
+    lengthA: GLint;
+    compileResult: GLint;
+    logLength: GLint;
+    log: PChar;
+begin
+    Assign(f, Pathz[ptShaders] + '/' + shaderFile);
+    filemode:= 0; // readonly
+    Reset(f);
+    if IOResult <> 0 then
+    begin
+        AddFileLog('Unable to load ' + shaderFile);
+        halt(-1);
+    end;
+
+    source:='';
+    while not eof(f) do
+    begin
+        ReadLn(f, line);
+        source:= source + line + #10;
+    end;
+    
+    CloseFile(f);
+
+    WriteLnToConsole('Compiling shader: ' + Pathz[ptShaders] + '/' + shaderFile);
+
+    sourceA:=PChar(source);
+    lengthA:=Length(source);
+
+    shader:=glCreateShader(shaderType);
+    glShaderSource(shader, 1, @sourceA, @lengthA);
+    glCompileShader(shader);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, @compileResult);
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, @logLength);
+
+    if logLength > 1 then
+    begin
+        GetMem(log, logLength);
+        glGetShaderInfoLog(shader, logLength, nil, log);
+        WriteLnToConsole('========== Compiler log  ==========');
+        WriteLnToConsole(log);
+        WriteLnToConsole('===================================');
+        FreeMem(log, logLength);
+    end;
+
+    if compileResult <> GL_TRUE then
+    begin
+        WriteLnToConsole('Shader compilation failed, halting');
+        halt(-1);
+    end;
+
+    CompileShader:= shader;
+end;
+
+function CompileProgram(shaderName: string): GLuint;
+var
+    program_: GLuint;
+    vs, fs: GLuint;
+    linkResult: GLint;
+    logLength: GLint;
+    log: PChar;
+begin
+    program_:= glCreateProgram();
+    vs:= CompileShader(shaderName + '.vs', GL_VERTEX_SHADER);
+    fs:= CompileShader(shaderName + '.fs', GL_FRAGMENT_SHADER);
+    glAttachShader(program_, vs);
+    glAttachShader(program_, fs);
+
+    glBindAttribLocation(program_, aVertex, 'vertex');
+    glBindAttribLocation(program_, aTexCoord, 'texcoord');
+    glBindAttribLocation(program_, aColor, 'color');
+
+    glLinkProgram(program_);
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    glGetProgramiv(program_, GL_LINK_STATUS, @linkResult);
+    glGetProgramiv(program_, GL_INFO_LOG_LENGTH, @logLength);
+
+    if logLength > 1 then
+    begin
+        GetMem(log, logLength);
+        glGetProgramInfoLog(program_, logLength, nil, log);
+        WriteLnToConsole('========== Compiler log  ==========');
+        WriteLnToConsole(log);
+        WriteLnToConsole('===================================');
+        FreeMem(log, logLength);
+    end;
+
+    if linkResult <> GL_TRUE then
+    begin
+        WriteLnToConsole('Linking program failed, halting');
+        halt(-1);
+    end;
+
+    CompileProgram:= program_;
+end;
+
+{$ENDIF}
+
 procedure SetupOpenGL;
 //var vendor: shortstring = '';
 var buf: array[byte] of char;
@@ -682,6 +822,26 @@ begin
     AddFileLog('  \----- Extensions: ' + shortstring(pchar(glGetString(GL_EXTENSIONS))));
     //TODO: don't have the Extensions line trimmed but slipt it into multiple lines
 
+{$IFDEF GL2}
+    Load_GL_VERSION_2_0;
+
+    shaderWater:= CompileProgram('water');
+    glUseProgram(shaderWater);
+    glUniform1i(glGetUniformLocation(shaderWater, 'tex0'), 0);
+    uWaterMVPLocation:= glGetUniformLocation(shaderWater, 'mvp');
+
+    shaderMain:= CompileProgram('default');
+    glUseProgram(shaderMain);
+    glUniform1i(glGetUniformLocation(shaderMain, 'tex0'), 0);
+    uMainMVPLocation:= glGetUniformLocation(shaderMain, 'mvp');
+    uMainTintLocation:= glGetUniformLocation(shaderMain, 'tint');
+
+    uCurrentMVPLocation:= uMainMVPLocation;
+
+    Tint(255, 255, 255, 255);
+    UpdateModelviewProjection;
+{$ENDIF}
+
 {$IFNDEF S3D_DISABLED}
     if (cStereoMode = smHorizontal) or (cStereoMode = smVertical) or (cStereoMode = smAFR) then
     begin
@@ -729,9 +889,7 @@ begin
 
     glMatrixMode(GL_MODELVIEW);
     // prepare default translation/scaling
-    glLoadIdentity();
-    glScalef(2.0 / cScreenWidth, -2.0 / cScreenHeight, 1.0);
-    glTranslatef(0, -cScreenHeight / 2, 0);
+    SetScale(2.0);
 
     // enable alpha blending
     glEnable(GL_BLEND);
@@ -742,27 +900,144 @@ begin
     glDisable(GL_DITHER);
     // enable common states by default as they save a lot
     glEnable(GL_TEXTURE_2D);
+
+{$IFDEF GL2}
+    glEnableVertexAttribArray(aVertex);
+    glEnableVertexAttribArray(aTexCoord);
+{$ELSE}
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+{$ENDIF}
+end;
+
+
+procedure Tint(r, g, b, a: Byte); inline;
+var
+    nc, tw: Longword;
+const
+    scale = 1.0/255.0;
+begin
+    nc:= (a shl 24) or (b shl 16) or (g shl 8) or r;
+
+    if nc = lastTint then
+        exit;
+
+    if GrayScale then
+        begin
+        tw:= round(r * RGB_LUMINANCE_RED + g * RGB_LUMINANCE_GREEN + b * RGB_LUMINANCE_BLUE);
+        if tw > 255 then
+            tw:= 255;
+        r:= tw;
+        g:= tw;
+        b:= tw
+        end;
+
+    {$IFDEF GL2}
+    glUniform4f(uMainTintLocation, r*scale, g*scale, b*scale, a*scale);
+    glColor4ub(r, g, b, a);
+    {$ELSE}
+    glColor4ub(r, g, b, a);
+    {$ENDIF}
+    lastTint:= nc;
+end;
+
+procedure Tint(c: Longword); inline;
+begin
+    Tint(((c shr 24) and $FF), ((c shr 16) and $FF), (c shr 8) and $FF, (c and $FF))
+end;
+
+procedure SetTexCoordPointer(p: Pointer);
+begin
+    {$IFDEF GL2}
+    glVertexAttribPointer(aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, p);
+    {$ELSE}
+    glTexCoordPointer(2, GL_FLOAT, 0, p);
+    {$ENDIF}
+end;
+
+procedure SetVertexPointer(p: Pointer);
+begin
+    {$IFDEF GL2}
+    glVertexAttribPointer(aVertex, 2, GL_FLOAT, GL_FALSE, 0, p);
+    {$ELSE}
+    glVertexPointer(2, GL_FLOAT, 0, p);
+    {$ENDIF}
+end;
+
+procedure SetColorPointer(p: Pointer);
+begin
+    {$IFDEF GL2}
+    glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, p);
+    {$ELSE}
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, p);
+    {$ENDIF}
+end;
+
+{$IFDEF GL2}
+procedure UpdateModelviewProjection;
+var
+    mvp: TMatrix4x4f;
+begin
+    MatrixMultiply(mvp, mProjection, mModelview);
+    glUniformMatrix4fv(uCurrentMVPLocation, 1, GL_FALSE, @mvp[0, 0]);
+end;
+{$ENDIF GL2}
+
+procedure UpdateProjection;
+var
+    s: GLfloat;
+begin
+    s:=cScaleFactor;
+    mProjection[0,0]:= s/cScreenWidth; mProjection[0,1]:=  0.0;             mProjection[0,2]:=0.0; mProjection[0,3]:=  0.0;
+    mProjection[1,0]:= 0.0;            mProjection[1,1]:= -s/cScreenHeight; mProjection[1,2]:=0.0; mProjection[1,3]:=  0.0;
+    mProjection[2,0]:= 0.0;            mProjection[2,1]:=  0.0;             mProjection[2,2]:=1.0; mProjection[2,3]:=  0.0;
+    mProjection[3,0]:= cStereoDepth;   mProjection[3,1]:=  s/2;             mProjection[3,2]:=0.0; mProjection[3,3]:=  1.0;
+
+    {$IFDEF GL2}
+    UpdateModelviewProjection;
+    {$ELSE}
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(@mProjection[0, 0]);
+    glMatrixMode(GL_MODELVIEW);
+    {$ENDIF}    
 end;
 
 procedure SetScale(f: GLfloat);
 begin
-// leave immediately if scale factor did not change
-    if f = cScaleFactor then
-        exit;
+    // This lazy update conflicts with R7103 at the moment, missing the initial SetScale(2.0)
+    //if cScaleFactor <> f then
+    //begin
+        cScaleFactor:=f;
+        UpdateProjection;
+    //end;
+end;
 
-    if f = cDefaultZoomLevel then
-        glPopMatrix         // "return" to default scaling
-    else                    // other scaling
-        begin
-        glPushMatrix;       // save default scaling
-        glLoadIdentity;
-        glScalef(f / cScreenWidth, -f / cScreenHeight, 1.0);
-        glTranslatef(0, -cScreenHeight / 2, 0);
-        end;
+procedure BeginWater;
+begin
+    {$IFDEF GL2}
+    glUseProgram(shaderWater);
+    uCurrentMVPLocation:=uWaterMVPLocation;
+    UpdateModelviewProjection;
+    glDisableVertexAttribArray(aTexCoord);
+    glEnableVertexAttribArray(aColor);
+    {$ELSE}
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    {$ENDIF}
+end;
 
-    cScaleFactor:= f;
+procedure EndWater;
+begin
+    {$IFDEF GL2}
+    glUseProgram(shaderMain);
+    uCurrentMVPLocation:=uMainMVPLocation;
+    UpdateModelviewProjection;
+    glDisableVertexAttribArray(aColor);
+    glEnableVertexAttribArray(aTexCoord);
+    {$ELSE}
+    glDisableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    {$ENDIF}
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1033,11 +1308,7 @@ begin
         // chFullScr is called when there is a rotation event and needs the SetScale and SetupOpenGL to set up the new resolution
         // this 6 gl functions are the relevant ones and are hacked together here for optimisation
         glMatrixMode(GL_MODELVIEW);
-        glPopMatrix;
-        glLoadIdentity();
-        glScalef(2.0 / cScreenWidth, -2.0 / cScreenHeight, 1.0);
-        glTranslatef(0, -cScreenHeight / 2, 0);
-        glViewport(0, 0, cScreenWidth, cScreenHeight);
+        SetScale(2.0);
         exit;
 {$ELSE}
         SetScale(cDefaultZoomLevel);
@@ -1151,6 +1422,10 @@ end;
 
 procedure freeModule;
 begin
+{$IFDEF GL2}
+    glDeleteProgram(shaderMain);
+    glDeleteProgram(shaderWater);
+{$ENDIF}
     StoreRelease(false);
     TTF_Quit();
 {$IFDEF SDL13}
