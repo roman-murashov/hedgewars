@@ -44,7 +44,8 @@ type
     // Different files are stored in different folders, this enumeration is used to tell which folder to use
     TPathType = (ptNone, ptData, ptGraphics, ptThemes, ptCurrTheme, ptTeams, ptMaps,
             ptMapCurrent, ptDemos, ptSounds, ptGraves, ptFonts, ptForts,
-            ptLocale, ptAmmoMenu, ptHedgehog, ptVoices, ptHats, ptFlags, ptMissionMaps, ptSuddenDeath, ptButtons);
+            ptLocale, ptAmmoMenu, ptHedgehog, ptVoices, ptHats, ptFlags, ptMissionMaps, ptSuddenDeath, ptButtons,
+            ptShaders);
 
     // Available sprites for displaying stuff
     TSprite = (sprWater, sprCloud, sprBomb, sprBigDigit, sprFrame,
@@ -199,13 +200,30 @@ For example, say, a mode where the weaponset is reset each turn, or on sudden de
             X, Y: GLint;
             end;
 
+    TMatrix4x4f = array[0..3, 0..3] of GLfloat;
+
+    PAtlas = ^TAtlas;
     PTexture = ^TTexture;
+
+    TAtlas = record
+                id: GLuint;
+                w, h: LongInt;
+                priority: GLfloat;
+            end;
+
+    PVertexRect = ^TVertexRect;
+    TVertexRect = array[0..3] of TVertex2f;
+    
     TTexture = record
-            id: GLuint;
+            atlas: PAtlas;
             w, h, scale: LongInt;
-            rx, ry: GLfloat;
-            priority: GLfloat;
-            vb, tb: array [0..3] of TVertex2f;
+
+            x, y: LongInt; // Offset in the texture atlas
+            isRotated: boolean; // if true sprite is flipped in the atlas taking w pixels along the y and h pixels along the x axis
+
+            // Cached values for texel coordinates and vertex coordinates            
+            vb, tb: TVertexRect;
+
             PrevTexture, NextTexture: PTexture;
             end;
 
