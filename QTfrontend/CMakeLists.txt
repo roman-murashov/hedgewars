@@ -156,6 +156,9 @@ if(APPLE OR CROSSAPPLE)
     endif()
 endif()
 
+IF (WIN32)
+    link_directories(${CMAKE_SOURCE_DIR}/misc/winutils/lib)
+ENDIF()
 
 add_executable(hedgewars WIN32
     ${hwfr_src}
@@ -167,6 +170,9 @@ add_executable(hedgewars WIN32
 
 set(HW_LINK_LIBS
     quazip
+    avformat
+    avcodec
+    avutil
     ${QT_LIBRARIES}
     ${SDL_LIBRARY}
     ${SDLMIXER_LIBRARY}
