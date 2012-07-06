@@ -53,20 +53,20 @@ void HWGame::onClientDisconnect()
 {
     switch (gameType)
     {
-        case gtSave:
-            if (gameState == gsInterrupted || gameState == gsHalted)
-                emit HaveRecord(false, demo);
-            else if (gameState == gsFinished)
-                emit HaveRecord(true, demo);
-            break;
         case gtDemo:
+            // for video recording we need demo anyway 
+            emit HaveRecord(rtNeither, demo);
             break;
         case gtNet:
-            emit HaveRecord(true, demo);
+            emit HaveRecord(rtDemo, demo);
             break;
         default:
-            if (gameState == gsInterrupted || gameState == gsHalted) emit HaveRecord(false, demo);
-            else if (gameState == gsFinished) emit HaveRecord(true, demo);
+            if (gameState == gsInterrupted || gameState == gsHalted)
+                emit HaveRecord(rtSave, demo);
+            else if (gameState == gsFinished)
+                emit HaveRecord(rtDemo, demo);
+            else
+                emit HaveRecord(rtNeither, demo);
     }
     SetGameState(gsStopped);
 }
@@ -335,6 +335,8 @@ QStringList HWGame::getArguments()
     arguments << QString::number(config->translateQuality());
     arguments << QString::number(config->stereoMode());
     arguments << tr("en.txt");
+    arguments << QString::number(config->rec_Framerate()); // framerate num
+    arguments << "1";  // framerate den
 
     return arguments;
 }

@@ -603,7 +603,7 @@ case Gear^.Pos of
                     if (not (HH^.Hedgehog^.Team^.ExtDriven 
                     or (HH^.Hedgehog^.BotLevel > 0)))
                     or (HH^.Hedgehog^.Team^.Clan^.ClanIndex = LocalClan)
-                    or (GameType = gmtDemo)  then
+                    or (GameType in [gmtDemo, gmtRecord])  then
                         begin
                         if Gear^.Power <> 0 then
                             s:= trammo[Ammoz[a].NameId] + ' (+' + IntToStr(Gear^.Power) + ')'
