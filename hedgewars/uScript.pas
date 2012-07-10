@@ -750,8 +750,7 @@ begin
             DrawRoundRect(@rr, clan^.Color, clan^.Color, texsurf, false);
 
             FreeTexture(team^.HealthTex);
-            team^.HealthTex:= Surface2Tex(texsurf, false);
-            SDL_FreeSurface(texsurf);
+            team^.HealthTex:= Surface2Atlas(texsurf, false);
             MakeCrossHairs
             end
         end;
