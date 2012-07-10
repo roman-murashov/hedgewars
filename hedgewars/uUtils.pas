@@ -61,6 +61,7 @@ function  endian(independent: LongWord): LongWord; inline;
 function  CheckCJKFont(s: ansistring; font: THWFont): THWFont;
 
 procedure AddFileLog(s: shortstring);
+procedure AddFileLogRaw(s: pchar); cdecl;
 
 function  CheckNoTeamOrHH: boolean; inline;
 
@@ -81,6 +82,9 @@ uses {$IFNDEF PAS2C}typinfo, {$ENDIF}Math, uConsts, uVariables, SysUtils;
 
 {$IFDEF DEBUGFILE}
 var f: textfile;
+{$IFDEF USE_VIDEO_RECORDING}
+    logMutex: TRTLCriticalSection; // mutex for debug file
+{$ENDIF}
 {$ENDIF}
 var CharArray: array[byte] of Char;
 
@@ -303,11 +307,31 @@ procedure AddFileLog(s: shortstring);
 begin
 s:= s;
 {$IFDEF DEBUGFILE}
+{$IFDEF USE_VIDEO_RECORDING}
+EnterCriticalSection(logMutex);
+{$ENDIF}
 writeln(f, inttostr(GameTicks)  + ': ' + s);
-flush(f)
+flush(f);
+{$IFDEF USE_VIDEO_RECORDING}
+LeaveCriticalSection(logMutex);
+{$ENDIF}
 {$ENDIF}
 end;
 
+procedure AddFileLogRaw(s: pchar); cdecl;
+begin
+s:= s;
+{$IFDEF DEBUGFILE}
+{$IFDEF USE_VIDEO_RECORDING}
+EnterCriticalSection(logMutex);
+{$ENDIF}
+write(f, s);
+flush(f);
+{$IFDEF USE_VIDEO_RECORDING}
+LeaveCriticalSection(logMutex);
+{$ENDIF}
+{$ENDIF}
+end;
 
 function CheckCJKFont(s: ansistring; font: THWFont): THWFont;
 var l, i : LongInt;
@@ -400,6 +424,9 @@ begin
         logfileBase:= 'game'
     else
         logfileBase:= 'preview';
+{$IFDEF USE_VIDEO_RECORDING}
+    InitCriticalSection(logMutex);
+{$ENDIF}
 {$I-}
 {$IFDEF MOBILE}
     {$IFDEF IPHONEOS} Assign(f,'../Documents/hw-' + logfileBase + '.log'); {$ENDIF}
@@ -436,6 +463,9 @@ recordFileName:= '';
     writeln(f, 'halt at ' + inttostr(GameTicks) + ' ticks. TurnTimeLeft = ' + inttostr(TurnTimeLeft));
     flush(f);
     close(f);
+{$IFDEF USE_VIDEO_RECORDING}
+    DoneCriticalSection(logMutex);
+{$ENDIF}
 {$ENDIF}
 end;
 
