@@ -1,14 +1,25 @@
 package org.hedgewars.hedgeroid;
 
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 
-import org.hedgewars.hedgeroid.EngineProtocol.EngineProtocolNetwork;
-import org.hedgewars.hedgeroid.EngineProtocol.GameConfig;
+import org.hedgewars.hedgeroid.Datastructures.GameConfig;
 import org.hedgewars.hedgeroid.EngineProtocol.PascalExports;
+import org.hedgewars.hedgeroid.frontlib.Flib;
+import org.hedgewars.hedgeroid.frontlib.Frontlib.GameSetupPtr;
+import org.hedgewars.hedgeroid.frontlib.Frontlib.GameconnPtr;
+import org.hedgewars.hedgeroid.frontlib.Frontlib.IntCallback;
+import org.hedgewars.hedgeroid.netplay.Netplay;
+import org.hedgewars.hedgeroid.util.FileUtils;
+import org.hedgewars.hedgeroid.util.TickHandler;
+
+import com.sun.jna.Pointer;
 
 import android.app.Activity;
 import android.content.Context;
@@ -23,7 +34,9 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -37,13 +50,20 @@ import android.view.View;
     SDL Activity
  */
 public class SDLActivity extends Activity {
-
+	/**
+	 * Set startConfig to the desired config when starting this activity. This avoids having to parcel all
+	 * the config objects into the Intent. Not particularly elegant, but it's actually a recommended
+	 * way to do this (http://developer.android.com/guide/faq/framework.html#3)
+	 */
+	public static volatile GameConfig startConfig;
+	public static volatile boolean startNetgame;
+	
 	// Main components
 	public static SDLActivity mSingleton;
 	private static SDLSurface mSurface;
 
 	// This is what SDL runs in. It invokes SDL_main(), eventually
-	private static Thread mSDLThread;
+	private static Thread mSDLThread; // Guarded by SDLActivity.class
 
 	// Audio
 	private static Thread mAudioThread;
@@ -74,11 +94,8 @@ public class SDLActivity extends Activity {
 		mSingleton = this;
 
 		// Set up the surface
-		GameConfig config = getIntent().getParcelableExtra("config");
-
-		mSurface = new SDLSurface(getApplication(), config);
+		mSurface = new SDLSurface(getApplication(), startConfig, startNetgame);
 		setContentView(mSurface);
-		SurfaceHolder holder = mSurface.getHolder();
 	}
 
 	// Events
@@ -108,15 +125,15 @@ public class SDLActivity extends Activity {
 		SDLActivity.nativeQuit();
 
 		// Now wait for the SDL thread to quit
-		if (mSDLThread != null) {
-			try {
-				mSDLThread.join();
-			} catch(Exception e) {
-				Log.v("SDL", "Problem stopping thread: " + e);
+		synchronized(SDLActivity.class) {
+			if (mSDLThread != null) {
+				try {
+					mSDLThread.join();
+				} catch(Exception e) {
+					Log.w("SDL", "Problem stopping thread: " + e);
+				}
+				mSDLThread = null;
 			}
-			mSDLThread = null;
-
-			//Log.v("SDL", "Finished waiting for SDL thread");
 		}
 	}
 
@@ -140,8 +157,14 @@ public class SDLActivity extends Activity {
 		commandHandler.sendMessage(msg);
 	}
 
+	public static void synchronizedNativeInit(String...args) {
+		synchronized(PascalExports.engineMutex) {
+			nativeInit(args);
+		}
+	}
+	
 	// C functions we call
-	public static native void nativeInit(String...args);
+	private static native void nativeInit(String...args);
 	public static native void nativeQuit();
 	public static native void nativePause();
 	public static native void nativeResume();
@@ -174,14 +197,32 @@ public class SDLActivity extends Activity {
 		return mSingleton;
 	}
 
-	public static void startApp(int width, int height, GameConfig config) {
-		// Start up the C app thread
-		if (mSDLThread == null) {
-			mSDLThread = new Thread(new SDLMain(width, height, config), "SDLThread");
-			mSDLThread.start();
-		}
-		else {
-			SDLActivity.nativeResume();
+	public static void startApp(final int width, final int height, GameConfig config, boolean netgame) {
+		synchronized(SDLActivity.class) {
+			// Start up the C app thread TODO this is silly code
+			if (mSDLThread == null) {
+				final AtomicBoolean gameconnStartDone = new AtomicBoolean(false);
+				GameConnection.Listener listener = new GameConnection.Listener() {
+					public void gameConnectionReady(int port) {
+						mSDLThread = new Thread(new SDLMain(width, height, port, "Medo"));
+						mSDLThread.start();
+						gameconnStartDone.set(true);
+					}
+					
+					public void gameConnectionDisconnected(int reason) {
+						Log.e("startApp", "disconnected: "+reason);
+						gameconnStartDone.set(true);
+					}
+				};
+				if(netgame) {
+					Netplay netplay = Netplay.getAppInstance(mSingleton.getApplicationContext());
+					GameConnection.forNetgame(config, netplay, listener);
+				} else {
+					GameConnection.forLocalGame(config, listener);
+				}
+			} else {
+				SDLActivity.nativeResume();
+			}
 		}
 	}
 
@@ -414,36 +455,33 @@ public class SDLActivity extends Activity {
  */
 class SDLMain implements Runnable {
 
-	private int surfaceWidth, surfaceHeight;
-	private GameConfig config;
-
-	public SDLMain(int width, int height, GameConfig _config) {
-		config = _config;
+	private final int surfaceWidth, surfaceHeight;
+	private final int port;
+	private final String playerName;
+	HandlerThread thread = new HandlerThread("IPC thread");
+	
+	public SDLMain(int width, int height, int port, String playerName) {
 		surfaceWidth = width;
 		surfaceHeight = height;
+		this.port = port;
+		this.playerName = playerName;
 	}
 
 	public void run() {
 		//Set up the IPC socket server to communicate with the engine
-		EngineProtocolNetwork ipc = new EngineProtocolNetwork(config);
-
-		String path = Utils.getDataPath(SDLActivity.mSingleton);//This represents the data directory
+		String path = FileUtils.getDataPath(SDLActivity.mSingleton);//This represents the data directory
 		path = path.substring(0, path.length()-1);//remove the trailing '/'
 
-
+		Log.d("SDLMain", "Starting engine");
 		// Runs SDL_main() with added parameters
-		SDLActivity.nativeInit(new String[] { String.valueOf(ipc.port),
-				String.valueOf(surfaceWidth), String.valueOf(surfaceHeight),
-				"0", "en.txt", "xeli", "1", "1", "1", path, ""  });
-
 		try {
-			ipc.quitIPC();
-			ipc.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			SDLActivity.synchronizedNativeInit(new String[] { String.valueOf(port),
+					String.valueOf(surfaceWidth), String.valueOf(surfaceHeight),
+					"0", "en.txt", Base64.encodeToString(playerName.getBytes("UTF-8"), 0), "1", "1", "1", path, ""  });
+		} catch (UnsupportedEncodingException e) {
+			throw new AssertionError(e); // never happens
 		}
-		Log.v("SDL", "SDL thread terminated");
-		//Log.v("SDL", "SDL thread terminated");
+		Log.d("SDLMain", "Engine stopped");
 	}
 }
 
@@ -458,12 +496,13 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 View.OnKeyListener, View.OnTouchListener, SensorEventListener  {
 
 	private GameConfig config;
-
+	private boolean netgame;
+	
 	// Sensors
 	private static SensorManager mSensorManager;
 
 	// Startup    
-	public SDLSurface(Context context, GameConfig _config) {
+	public SDLSurface(Context context, GameConfig _config, boolean netgame) {
 		super(context);
 		getHolder().addCallback(this); 
 
@@ -475,6 +514,7 @@ View.OnKeyListener, View.OnTouchListener, SensorEventListener  {
 
 		mSensorManager = (SensorManager)context.getSystemService("sensor");
 		config = _config;
+		this.netgame = netgame;
 	}
 
 	// Called when we have a valid drawing surface
@@ -544,7 +584,7 @@ View.OnKeyListener, View.OnTouchListener, SensorEventListener  {
 		SDLActivity.onNativeResize(width, height, sdlFormat);
 		Log.v("SDL", "Window size:" + width + "x"+height);
 
-		SDLActivity.startApp(width, height, config);
+		SDLActivity.startApp(width, height, config, netgame);
 	}
 
 	// unused
@@ -580,34 +620,29 @@ View.OnKeyListener, View.OnTouchListener, SensorEventListener  {
 
 	// Touch events
 	public boolean onTouch(View v, MotionEvent event) {
-		{
-			final int touchDevId = event.getDeviceId();
-			final int pointerCount = event.getPointerCount();
-			// touchId, pointerId, action, x, y, pressure
-			int actionPointerIndex = event.getActionIndex();
-			int pointerFingerId = event.getPointerId(actionPointerIndex);
-			int action = event.getActionMasked();
+		final int action = event.getAction() & MotionEvent.ACTION_MASK;
+		final int actionPointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_ID_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;		
 
-			float x = event.getX(actionPointerIndex);
-			float y = event.getY(actionPointerIndex);
-			float p = event.getPressure(actionPointerIndex);
-
-			if (action == MotionEvent.ACTION_MOVE && pointerCount > 1) {
-				// TODO send motion to every pointer if its position has
-				// changed since prev event.
-				for (int i = 0; i < pointerCount; i++) {
-					pointerFingerId = event.getPointerId(i);
-					x = event.getX(i);
-					y = event.getY(i);
-					p = event.getPressure(i);
-					SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
-				}
-			} else {
-				SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
+		if (action == MotionEvent.ACTION_MOVE) {
+			// TODO send motion to every pointer if its position has
+			// changed since prev event.
+			for (int i = 0; i < event.getPointerCount(); i++) {
+				sendNativeTouch(event, action, i);
 			}
+		} else {
+			sendNativeTouch(event, action, actionPointerIndex);
 		}
 		return true;
 	} 
+	
+	private static void sendNativeTouch(MotionEvent event, int action, int pointerIndex) {
+		int touchDevId = event.getDeviceId();
+		int pointerFingerId = event.getPointerId(pointerIndex);
+		float x = event.getX(pointerIndex);
+		float y = event.getY(pointerIndex);
+		float pressure = event.getPressure(pointerIndex);
+		SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, pressure);
+	}
 
 	// Sensor events
 	public void enableSensor(int sensortype, boolean enabled) {
@@ -633,6 +668,5 @@ View.OnKeyListener, View.OnTouchListener, SensorEventListener  {
 					event.values[2] / SensorManager.GRAVITY_EARTH);
 		}
 	}
-
 }
 
