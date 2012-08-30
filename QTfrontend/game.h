@@ -61,7 +61,7 @@ class HWGame : public TCPBase
         void StartQuick();
         void StartNet();
         void StartTraining(const QString & file);
-        void StartCampaign(const QString & file);
+        void StartCampaign(const QString & camp, const QString & campScript, const QString & campTeam);
         void abort();
         GameState gameState;
         bool netSuspend;
@@ -79,6 +79,7 @@ class HWGame : public TCPBase
         void GameStats(char type, const QString & info);
         void HaveRecord(RecordType type, const QByteArray & record);
         void ErrorMessage(const QString &);
+        void CampStateChanged(int);
 
     public slots:
         void FromNet(const QByteArray & msg);
@@ -110,6 +111,8 @@ class HWGame : public TCPBase
         void SendCampaignConfig();
         void ParseMessage(const QByteArray & msg);
         void SetGameState(GameState state);
+        void sendCampaignVar(QByteArray varToSend);
+        void writeCampaignVar(QByteArray varVal);
 };
 
 #endif

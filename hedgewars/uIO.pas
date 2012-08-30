@@ -128,6 +128,10 @@ case s[1] of
                'S': GameType:= gmtSave;
                'V': GameType:= gmtRecord;
                else OutError(errmsgIncorrectUse + ' IPC "T" :' + s[2], true) end;
+     'V': begin
+              if s[2] = '.' then
+                  ParseCommand('campvar ' + copy(s, 3, length(s) - 2), true);
+          end
      else
      loTicks:= SDLNet_Read16(@s[byte(s[0]) - 1]);
      AddCmd(loTicks, s);
