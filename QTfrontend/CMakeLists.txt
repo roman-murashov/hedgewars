@@ -138,7 +138,6 @@ set(hwfr_hdrs
     achievements.h
     binds.h
     ui_hwform.h
-    KB.h
     hwconsts.h
     sdlkeys.h
     campaign.h
