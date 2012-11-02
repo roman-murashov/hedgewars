@@ -62,6 +62,7 @@ data Action =
     | ModifyRoom (RoomInfo -> RoomInfo)
     | ModifyServerInfo (ServerInfo -> ServerInfo)
     | AddRoom B.ByteString B.ByteString
+    | SendUpdateOnThisRoom
     | CheckRegistered
     | ClearAccountsCache
     | ProcessAccountInfo AccountInfo
@@ -211,7 +212,7 @@ processAction (MoveToRoom ri) = do
     rnc <- gets roomsClients
 
     io $ do
-        modifyClient rnc (\cl -> cl{teamsInGame = 0, isReady = False, isMaster = False}) ci
+        modifyClient rnc (\cl -> cl{teamsInGame = 0, isReady = False, isMaster = False, isInGame = False}) ci
         modifyRoom rnc (\r -> r{playersIn = playersIn r + 1}) ri
         moveClientToRoom rnc ri ci
 
@@ -254,7 +255,7 @@ processAction ChangeMaster = do
     proto <- client's clientProto
     ri <- clientRoomA
     rnc <- gets roomsClients
-    newMasterId <- liftM (head . filter (/= ci)) . io $ roomClientsIndicesM rnc ri
+    newMasterId <- liftM (last . filter (/= ci)) . io $ roomClientsIndicesM rnc ri
     newMaster <- io $ client'sM rnc id newMasterId
     oldRoomName <- io $ room'sM rnc name ri
     oldMaster <- client's nick
@@ -319,6 +320,17 @@ processAction RemoveRoom = do
     io $ removeRoom rnc ri
 
 
+processAction SendUpdateOnThisRoom = do
+    Just clId <- gets clientIndex
+    proto <- client's clientProto
+    rnc <- gets roomsClients
+    ri <- io $ clientRoomM rnc clId
+    rm <- io $ room'sM rnc id ri
+    n <- io $ client'sM rnc nick (masterID rm)
+    chans <- liftM (map sendChan) $! sameProtoClientsS proto
+    processAction $ AnswerClients chans ("ROOM" : "UPD" : name rm : roomInfo n rm)
+
+
 processAction UnreadyRoomClients = do
     ri <- clientRoomA
     roomPlayers <- roomClientsS ri
@@ -348,6 +360,7 @@ processAction FinishGame = do
                 }
             )
         : UnreadyRoomClients
+        : SendUpdateOnThisRoom
         : answerRemovedTeams
 
 
