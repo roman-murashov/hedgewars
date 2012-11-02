@@ -190,10 +190,8 @@ HWForm::HWForm(QWidget *parent, QString styleSheet)
     connect(ui.pageMain->BtnSetup, SIGNAL(clicked()), pageSwitchMapper, SLOT(map()));
     pageSwitchMapper->setMapping(ui.pageMain->BtnSetup, ID_PAGE_SETUP);
 
-#if 0
     connect(ui.pageMain->BtnFeedback, SIGNAL(clicked()), pageSwitchMapper, SLOT(map()));
     pageSwitchMapper->setMapping(ui.pageMain->BtnFeedback, ID_PAGE_FEEDBACK);
-#endif
 
     connect(ui.pageMain->BtnNet, SIGNAL(clicked()), pageSwitchMapper, SLOT(map()));
     pageSwitchMapper->setMapping(ui.pageMain->BtnNet, ID_PAGE_NETTYPE);
@@ -693,16 +691,12 @@ void HWForm::GoToPage(int id)
         animationOldOpacity->setEasingCurve(QEasingCurve::OutExpo);
 #endif
 
-        QParallelAnimationGroup *group = new QParallelAnimationGroup;
-        group->addAnimation(animationOldSlide);
-        group->addAnimation(animationNewSlide);
-#ifdef false
-        group->addAnimation(animationOldOpacity);
-        group->addAnimation(animationNewOpacity);
-#endif
-
+        // let's hide the old slide after its animation has finished
         connect(animationOldSlide, SIGNAL(finished()), ui.Pages->widget(lastid), SLOT(hide()));
-        group->start();
+
+        // start animations
+        animationOldSlide->start(QAbstractAnimation::DeleteWhenStopped);
+        animationNewSlide->start(QAbstractAnimation::DeleteWhenStopped);
 
     	/* this is for the situation when the animation below is interrupted by a new animation.  For some reason, finished is not being fired */ 	
     	for(int i=0;i<MAX_PAGE;i++) if (i!=id && i!=lastid) ui.Pages->widget(i)->hide();
@@ -807,16 +801,12 @@ void HWForm::GoBack()
         animationNewOpacity->setEasingCurve(QEasingCurve::OutExpo);
 #endif
 
-        QParallelAnimationGroup *group = new QParallelAnimationGroup;
-        group->addAnimation(animationOldSlide);
-        group->addAnimation(animationNewSlide);
-#ifdef false
-        group->addAnimation(animationOldOpacity);
-        group->addAnimation(animationNewOpacity);
-#endif
-
+        // let's hide the old slide after its animation has finished
         connect(animationNewSlide, SIGNAL(finished()), ui.Pages->widget(curid), SLOT(hide()));
-        group->start();
+
+        // start animations
+        animationOldSlide->start(QAbstractAnimation::DeleteWhenStopped);
+        animationNewSlide->start(QAbstractAnimation::DeleteWhenStopped);
     }
 #endif
 
@@ -1820,7 +1810,7 @@ void HWForm::finishedSlot(QNetworkReply* reply)
         ShowErrorMessage(QMessageBox::tr("Error during authentication at google.com"));
     else
     {
-        ShowErrorMessage(QMessageBox::tr("Error reporting the issue, please try again later (or visit hedgewars.googlecode.come directly)"));
+        ShowErrorMessage(QMessageBox::tr("Error reporting the issue, please try again later (or visit hedgewars.googlecode.com directly)"));
         authToken = "";
     }
 
