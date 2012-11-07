@@ -271,7 +271,7 @@ begin
         CurrTime:= SDL_GetTicks();
         if PrevTime + longword(cTimerInterval) <= CurrTime then
         begin
-            isTerminated:= DoTimer(CurrTime - PrevTime);
+            isTerminated := isTerminated or DoTimer(CurrTime - PrevTime);
             PrevTime:= CurrTime
         end
         else SDL_Delay(1);
@@ -386,7 +386,7 @@ begin
     if cLocaleFName <> 'en.txt' then
         begin
         // Try two letter locale first before trying specific locale overrides
-        if (Length(cLocale) > 2) and (Copy(cLocale,1,2) <> 'en') then
+        if (Length(cLocale) > 3) and (Copy(cLocale,1,2) <> 'en') then
             begin
             LoadLocale(UserPathz[ptLocale] + '/' + Copy(cLocale,1,2)+'.txt');
             LoadLocale(Pathz[ptLocale] + '/' + Copy(cLocale,1,2)+'.txt')
