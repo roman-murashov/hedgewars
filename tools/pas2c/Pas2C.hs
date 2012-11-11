@@ -94,11 +94,10 @@ renderStringConsts = liftM (vcat . map (\(a, b) -> text "static const string255"
 docToLower :: Doc -> Doc
 docToLower = text . map toLower . render
 
-pas2C :: String -> IO ()
-pas2C fn = do
-    setCurrentDirectory "../hedgewars/"
+pas2C :: String -> String -> String -> String -> IO ()
+pas2C fn inputPath outputPath alternateInputPath = do
     s <- flip execStateT initState $ f fn
-    renderCFiles s
+    renderCFiles s outputPath
     where
     printLn = liftIO . hPutStrLn stdout
     print = liftIO . hPutStr stdout
@@ -110,7 +109,7 @@ pas2C fn = do
             print ("Preprocessing '" ++ fileName ++ ".pas'... ")
             fc' <- liftIO
                 $ tryJust (guard . isDoesNotExistError)
-                $ preprocess (fileName ++ ".pas")
+                $ preprocess inputPath alternateInputPath (fileName ++ ".pas")
             case fc' of
                 (Left a) -> do
                     modify (Map.insert fileName (System []))
@@ -120,7 +119,7 @@ pas2C fn = do
                     let ptree = parse pascalUnit fileName fc
                     case ptree of
                          (Left a) -> do
-                            liftIO $ writeFile "preprocess.out" fc
+                            liftIO $ writeFile (outputPath ++ "preprocess.out") fc
                             printLn $ show a ++ "\nsee preprocess.out for preprocessed source"
                             fail "stop"
                          (Right a) -> do
@@ -129,13 +128,13 @@ pas2C fn = do
                             mapM_ f (usesFiles a)
 
 
-renderCFiles :: Map.Map String PascalUnit -> IO ()
-renderCFiles units = do
+renderCFiles :: Map.Map String PascalUnit -> String -> IO ()
+renderCFiles units outputPath = do
     let u = Map.toList units
     let nss = Map.map (toNamespace nss) units
     --hPutStrLn stderr $ "Units: " ++ (show . Map.keys . Map.filter (not . Map.null) $ nss)
     --writeFile "pas2c.log" $ unlines . map (\t -> show (fst t) ++ "\n" ++ (unlines . map ((:) '\t' . show) . snd $ t)) . Map.toList $ nss
-    mapM_ (toCFiles nss) u
+    mapM_ (toCFiles outputPath nss) u
     where
     toNamespace :: Map.Map String Records -> PascalUnit -> Records
     toNamespace nss (System tvs) =
@@ -179,19 +178,19 @@ withRecordNamespace prefix recs = withState' f
         records = Map.fromList $ map (\(Record a b d) -> (map toLower a, [Record (prefix ++ a) b d])) recs
         un [a] b = a : b
 
-toCFiles :: Map.Map String Records -> (String, PascalUnit) -> IO ()
-toCFiles _ (_, System _) = return ()
-toCFiles _ (_, Redo _) = return ()
-toCFiles ns p@(fn, pu) = do
+toCFiles :: String -> Map.Map String Records -> (String, PascalUnit) -> IO ()
+toCFiles _ _ (_, System _) = return ()
+toCFiles _ _ (_, Redo _) = return ()
+toCFiles outputPath ns p@(fn, pu) = do
     hPutStrLn stdout $ "Rendering '" ++ fn ++ "'..."
     toCFiles' p
     where
-    toCFiles' (fn, p@(Program {})) = writeFile (fn ++ ".c") $ "#include \"fpcrtl.h\"\n" ++ (render2C initialState . pascal2C) p
+    toCFiles' (fn, p@(Program {})) = writeFile (outputPath ++ fn ++ ".c") $ "#include \"fpcrtl.h\"\n" ++ (render2C initialState . pascal2C) p
     toCFiles' (fn, (Unit unitId@(Identifier i _) interface implementation _ _)) = do
         let (a, s) = runState (id2C IOInsert (setBaseType BTUnit unitId) >> interface2C interface True) initialState{currentUnit = map toLower i ++ "_"}
             (a', s') = runState (id2C IOInsert (setBaseType BTUnit unitId) >> interface2C interface False) initialState{currentUnit = map toLower i ++ "_"}
-        writeFile (fn ++ ".h") $ "#pragma once\n\n#include \"pas2c.h\"\n\n" ++ (render (a $+$ text ""))
-        writeFile (fn ++ ".c") $ "#include \"fpcrtl.h\"\n\n#include \"" ++ fn ++ ".h\"\n" ++ render (a' $+$ text "") ++ (render2C s . implementation2C) implementation
+        writeFile (outputPath ++ fn ++ ".h") $ "#pragma once\n\n#include \"pas2c.h\"\n\n" ++ (render (a $+$ text ""))
+        writeFile (outputPath ++ fn ++ ".c") $ "#include \"fpcrtl.h\"\n\n#include \"" ++ fn ++ ".h\"\n" ++ render (a' $+$ text "") ++ (render2C s . implementation2C) implementation
     initialState = emptyState ns
 
     render2C :: RenderState -> State RenderState Doc -> String
