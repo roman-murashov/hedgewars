@@ -148,6 +148,7 @@ var t: LongInt;
     texsurf, flagsurf, iconsurf: PSDL_Surface;
     foundBot: boolean;
 begin
+    if cOnlyStats then exit;
 r.x:= 0;
 r.y:= 0;
 drY:= - 4;
@@ -575,7 +576,7 @@ begin
     if ((imageFlags and ifIgnoreCaps) = 0) and ((tmpsurf^.w > MaxTextureSize) or (tmpsurf^.h > MaxTextureSize)) then
     begin
         SDL_FreeSurface(tmpsurf);
-        OutError(msgFailedSize, (imageFlags and ifCritical) <> 0);
+        OutError(msgFailedSize, ((not cOnlyStats) and ((imageFlags and ifCritical) <> 0)));
         // dummy surface to replace non-critical textures that failed to load due to their size
         LoadImage:= SDL_CreateRGBSurface(SDL_SWSURFACE, 2, 2, 32, RMask, GMask, BMask, AMask);
         exit;
@@ -867,6 +868,7 @@ procedure AddProgress;
 var r: TSDL_Rect;
     texsurf: PSDL_Surface;
 begin
+    if cOnlyStats then exit;
     if Step = 0 then
     begin
         WriteToConsole(msgLoading + 'progress sprite: ');
@@ -1121,10 +1123,14 @@ var flags: Longword = 0;
     {$IFNDEF DARWIN}ico: PSDL_Surface;{$ENDIF}
     {$IFDEF SDL13}x, y: LongInt;{$ENDIF}
 begin
+    if cOnlyStats then
+        begin
+        MaxTextureSize:= 1024;
+        exit
+        end;
     if Length(s) = 0 then
-        cFullScreen:= (not cFullScreen)
-    else
-        cFullScreen:= s = '1';
+         cFullScreen:= (not cFullScreen)
+    else cFullScreen:= s = '1';
 
     AddFileLog('Preparing to change video parameters...');
 {$IFDEF SDL13}

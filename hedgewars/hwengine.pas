@@ -91,15 +91,15 @@ begin
             end;
         gsConfirm, gsGame:
             begin
-            DrawWorld(Lag);
+            if not cOnlyStats then DrawWorld(Lag);
             DoGameTick(Lag);
-            ProcessVisualGears(Lag);
+            if not cOnlyStats then ProcessVisualGears(Lag);
             end;
         gsChat:
             begin
-            DrawWorld(Lag);
+            if not cOnlyStats then DrawWorld(Lag);
             DoGameTick(Lag);
-            ProcessVisualGears(Lag);
+            if not cOnlyStats then ProcessVisualGears(Lag);
             end;
         gsExit:
             begin
@@ -109,7 +109,7 @@ begin
             exit(false);
             end;
 
-    SwapBuffers;
+    if not cOnlyStats then SwapBuffers;
 
 {$IFDEF USE_VIDEO_RECORDING}
     if flagPrerecording then
@@ -345,7 +345,7 @@ begin
         AddFileLog(inttostr(i) + ': ' + ParamStr(i));
 
     WriteToConsole('Init SDL... ');
-    SDLTry(SDL_Init(SDL_INIT_VIDEO or SDL_INIT_NOPARACHUTE) >= 0, true);
+    if not cOnlyStats then SDLTry(SDL_Init(SDL_INIT_VIDEO or SDL_INIT_NOPARACHUTE) >= 0, true);
     WriteLnToConsole(msgOK);
 
     SDL_EnableUNICODE(1);
