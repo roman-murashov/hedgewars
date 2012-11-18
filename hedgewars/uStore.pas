@@ -56,9 +56,11 @@ procedure WarpMouse(x, y: Word); inline;
 procedure SwapBuffers; {$IFDEF USE_VIDEO_RECORDING}cdecl{$ELSE}inline{$ENDIF};
 
 implementation
-uses uMisc, uConsole, uMobile, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands,
-     uDebug{$IFDEF USE_CONTEXT_RESTORE}, uWorld{$ENDIF}
-     {$IF NOT DEFINED(SDL13) AND DEFINED(USE_VIDEO_RECORDING)}, glut {$ENDIF};
+uses uMisc, uConsole, uMobile, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands
+    , uPhysFSLayer
+    , uDebug
+    {$IFDEF USE_CONTEXT_RESTORE}, uWorld{$ENDIF}
+    {$IF NOT DEFINED(SDL13) AND DEFINED(USE_VIDEO_RECORDING)}, glut {$ENDIF};
 
 //type TGPUVendor = (gvUnknown, gvNVIDIA, gvATI, gvIntel, gvApple);
 
@@ -146,6 +148,7 @@ var t: LongInt;
     texsurf, flagsurf, iconsurf: PSDL_Surface;
     foundBot: boolean;
 begin
+    if cOnlyStats then exit;
 r.x:= 0;
 r.y:= 0;
 drY:= - 4;
@@ -308,11 +311,9 @@ if not reload then
     for fi:= Low(THWFont) to High(THWFont) do
         with Fontz[fi] do
             begin
-            s:= UserPathz[ptFonts] + '/' + Name;
-            if not FileExists(s) then
-                s:= Pathz[ptFonts] + '/' + Name;
+            s:= cPathz[ptFonts] + '/' + Name;
             WriteToConsole(msgLoading + s + ' (' + inttostr(Height) + 'pt)... ');
-            Handle:= TTF_OpenFont(Str2PChar(s), Height);
+            Handle:= TTF_OpenFontRW(rwopsOpenRead(s), true, Height);
             SDLTry(Handle <> nil, true);
             TTF_SetFontStyle(Handle, style);
             WriteLnToConsole(msgOK)
@@ -564,7 +565,7 @@ begin
     WriteToConsole(msgLoading + filename + '.png [flags: ' + inttostr(imageFlags) + '] ');
 
     s:= filename + '.png';
-    tmpsurf:= IMG_Load(Str2PChar(s));
+    tmpsurf:= IMG_Load_RW(rwopsOpenRead(s), true);
 
     if tmpsurf = nil then
     begin
@@ -575,7 +576,7 @@ begin
     if ((imageFlags and ifIgnoreCaps) = 0) and ((tmpsurf^.w > MaxTextureSize) or (tmpsurf^.h > MaxTextureSize)) then
     begin
         SDL_FreeSurface(tmpsurf);
-        OutError(msgFailedSize, (imageFlags and ifCritical) <> 0);
+        OutError(msgFailedSize, ((not cOnlyStats) and ((imageFlags and ifCritical) <> 0)));
         // dummy surface to replace non-critical textures that failed to load due to their size
         LoadImage:= SDL_CreateRGBSurface(SDL_SWSURFACE, 2, 2, 32, RMask, GMask, BMask, AMask);
         exit;
@@ -596,13 +597,7 @@ function LoadDataImage(const path: TPathType; const filename: shortstring; image
 var tmpsurf: PSDL_Surface;
 begin
     // check for file in user dir (never critical)
-    tmpsurf:= LoadImage(UserPathz[path] + '/' + filename, imageFlags and (not ifCritical));
-
-    // if unsuccessful check data dir
-    if (tmpsurf = nil) then
-        tmpsurf:= LoadImage(Pathz[path] + '/' + filename, imageFlags);
-
-    LoadDataImage:= tmpsurf;
+    tmpsurf:= LoadImage(cPathz[path] + '/' + filename, imageFlags);
 end;
 
 
@@ -873,6 +868,7 @@ procedure AddProgress;
 var r: TSDL_Rect;
     texsurf: PSDL_Surface;
 begin
+    if cOnlyStats then exit;
     if Step = 0 then
     begin
         WriteToConsole(msgLoading + 'progress sprite: ');
@@ -1127,10 +1123,14 @@ var flags: Longword = 0;
     {$IFNDEF DARWIN}ico: PSDL_Surface;{$ENDIF}
     {$IFDEF SDL13}x, y: LongInt;{$ENDIF}
 begin
+    if cOnlyStats then
+        begin
+        MaxTextureSize:= 1024;
+        exit
+        end;
     if Length(s) = 0 then
-        cFullScreen:= (not cFullScreen)
-    else
-        cFullScreen:= s = '1';
+         cFullScreen:= (not cFullScreen)
+    else cFullScreen:= s = '1';
 
     AddFileLog('Preparing to change video parameters...');
 {$IFDEF SDL13}
