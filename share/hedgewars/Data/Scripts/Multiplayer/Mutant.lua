@@ -52,8 +52,8 @@ ___ .-. .-. ___  ___ | |_    .---. ___ .-. | |_
 
 --]]
 
-loadfile(GetDataPath() .. "Scripts/Locale.lua")()
-loadfile(GetDataPath() .. "Scripts/Tracker.lua")()
+HedgewarsScriptLoad("/Scripts/Locale.lua")
+HedgewarsScriptLoad("/Scripts/Tracker.lua")
 
 --[[
     MUTANT SCRIPT
@@ -209,6 +209,7 @@ function onNewTurn()
     checkScore()
     giveWeapons(CurrentHedgehog)
     drawCircles()
+    setAIHints()
     kill_reward= numhhs*10
 
     if CurrentHedgehog == mutant then
@@ -237,7 +238,7 @@ function countBodies()
             AddCaption(loc("LUDICROUS KILL"))
             PlaySound(sndNutter)
         elseif killsCounter == 7 then
-            AddCaption(loc("HOLY SHIT!"))
+            AddCaption(loc("HOLY SHYTE!"))
             PlaySound(sndLaugh)
         elseif killsCounter > 8 then
             AddCaption(loc("INSANITY"))
@@ -397,6 +398,16 @@ function backToNormal(gear)
     setGearValue(mutant,"SelfDestruct",false)
     mt_hurt=false
     mutant=nil
+end
+
+function setAIHints()
+    for i = 0, #hhs do
+        if mutant == nil or hhs[i] == mutant or CurrentHedgehog == mutant then
+            SetGearAIHints(hhs[i], aihUsual)
+        else
+            SetGearAIHints(hhs[i], aihDoesntMatter)
+        end
+    end
 end
 
 function removeFeeder(gear)

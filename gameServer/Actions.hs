@@ -255,7 +255,7 @@ processAction ChangeMaster = do
     proto <- client's clientProto
     ri <- clientRoomA
     rnc <- gets roomsClients
-    newMasterId <- liftM (head . filter (/= ci)) . io $ roomClientsIndicesM rnc ri
+    newMasterId <- liftM (last . filter (/= ci)) . io $ roomClientsIndicesM rnc ri
     newMaster <- io $ client'sM rnc id newMasterId
     oldRoomName <- io $ room'sM rnc name ri
     oldMaster <- client's nick
@@ -276,7 +276,7 @@ processAction ChangeMaster = do
 
     newRoom' <- io $ room'sM rnc id ri
     chans <- liftM (map sendChan) $! sameProtoClientsS proto
-    processAction $ AnswerClients chans ("ROOM" : "UPD" : oldRoomName : roomInfo newRoomName newRoom')
+    processAction $ AnswerClients chans ("ROOM" : "UPD" : oldRoomName : roomInfo (nick newMaster) newRoom')
 
 
 processAction (AddRoom roomName roomPassword) = do
@@ -299,7 +299,7 @@ processAction (AddRoom roomName roomPassword) = do
     chans <- liftM (map sendChan) $! sameProtoClientsS proto
 
     mapM_ processAction [
-        AnswerClients chans ("ROOM" : "ADD" : roomInfo n rm)
+      AnswerClients chans ("ROOM" : "ADD" : roomInfo n rm{playersIn = 1})
         ]
 
 
@@ -326,8 +326,9 @@ processAction SendUpdateOnThisRoom = do
     rnc <- gets roomsClients
     ri <- io $ clientRoomM rnc clId
     rm <- io $ room'sM rnc id ri
+    n <- io $ client'sM rnc nick (masterID rm)
     chans <- liftM (map sendChan) $! sameProtoClientsS proto
-    processAction $ AnswerClients chans ("ROOM" : "UPD" : name rm : roomInfo (name rm) rm)
+    processAction $ AnswerClients chans ("ROOM" : "UPD" : name rm : roomInfo n rm)
 
 
 processAction UnreadyRoomClients = do
@@ -394,6 +395,7 @@ processAction (RemoveTeam teamName) = do
             teams = Prelude.filter (\t -> teamName /= teamname t) $ teams r
             , gameInfo = liftM (\g -> g{leftTeams = teamName : leftTeams g}) $ gameInfo r
             })
+        : SendUpdateOnThisRoom
         : AnswerClients chans ["REMOVE_TEAM", teamName]
         : [SendTeamRemovalMessage teamName | inGame]
 

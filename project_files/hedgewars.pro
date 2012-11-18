@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = hedgewars
 DEPENDPATH += ../QTfrontend/
-INCLUDEPATH += ../QTfrontend/
+INCLUDEPATH += ../QTfrontend
 INCLUDEPATH += ../QTfrontend/model
 INCLUDEPATH += ../QTfrontend/ui
 INCLUDEPATH += ../QTfrontend/ui/widget
@@ -9,7 +9,8 @@ INCLUDEPATH += ../QTfrontend/ui/page
 INCLUDEPATH += ../QTfrontend/ui/dialog
 INCLUDEPATH += ../QTfrontend/net
 INCLUDEPATH += ../QTfrontend/util
-INCLUDEPATH += ../misc/quazip/
+INCLUDEPATH += ../misc/physfs/src
+INCLUDEPATH += ../misc/physfs/extras
 
 DESTDIR = ../bin
 
@@ -105,7 +106,9 @@ HEADERS += ../QTfrontend/model/ThemeModel.h \
     ../QTfrontend/ui/dialog/upload_video.h \
     ../QTfrontend/campaign.h \
     ../QTfrontend/model/playerslistmodel.h \
-    ../QTfrontend/util/LibavInteraction.h
+    ../QTfrontend/util/LibavInteraction.h \
+    ../QTfrontend/util/FileEngine.h
+
 
 SOURCES += ../QTfrontend/model/ammoSchemeModel.cpp \
     ../QTfrontend/model/MapModel.cpp \
@@ -194,26 +197,32 @@ SOURCES += ../QTfrontend/model/ammoSchemeModel.cpp \
     ../QTfrontend/ui/dialog/upload_video.cpp \
     ../QTfrontend/campaign.cpp \
     ../QTfrontend/model/playerslistmodel.cpp \
-    ../QTfrontend/util/LibavInteraction.cpp
+    ../QTfrontend/util/LibavInteraction.cpp \
+    ../QTfrontend/util/FileEngine.cpp
 
 
 TRANSLATIONS += ../share/hedgewars/Data/Locale/hedgewars_ar.ts \
     ../share/hedgewars/Data/Locale/hedgewars_bg.ts \
     ../share/hedgewars/Data/Locale/hedgewars_cs.ts \
+    ../share/hedgewars/Data/Locale/hedgewars_da.ts \
     ../share/hedgewars/Data/Locale/hedgewars_de.ts \ 
+    ../share/hedgewars/Data/Locale/hedgewars_el.ts \
     ../share/hedgewars/Data/Locale/hedgewars_en.ts \ 
     ../share/hedgewars/Data/Locale/hedgewars_es.ts \
     ../share/hedgewars/Data/Locale/hedgewars_fi.ts \
     ../share/hedgewars/Data/Locale/hedgewars_fr.ts \ 
+    ../share/hedgewars/Data/Locale/hedgewars_gl.ts \
     ../share/hedgewars/Data/Locale/hedgewars_hu.ts \ 
     ../share/hedgewars/Data/Locale/hedgewars_it.ts \ 
     ../share/hedgewars/Data/Locale/hedgewars_ja.ts \ 
     ../share/hedgewars/Data/Locale/hedgewars_ko.ts \ 
     ../share/hedgewars/Data/Locale/hedgewars_lt.ts \
+    ../share/hedgewars/Data/Locale/hedgewars_ms.ts \
     ../share/hedgewars/Data/Locale/hedgewars_nl.ts \ 
     ../share/hedgewars/Data/Locale/hedgewars_pl.ts \ 
     ../share/hedgewars/Data/Locale/hedgewars_pt_BR.ts \
     ../share/hedgewars/Data/Locale/hedgewars_pt_PT.ts \
+    ../share/hedgewars/Data/Locale/hedgewars_ro.ts \
     ../share/hedgewars/Data/Locale/hedgewars_ru.ts \
     ../share/hedgewars/Data/Locale/hedgewars_sk.ts \
     ../share/hedgewars/Data/Locale/hedgewars_sv.ts \
@@ -224,7 +233,7 @@ TRANSLATIONS += ../share/hedgewars/Data/Locale/hedgewars_ar.ts \
 
 RESOURCES += ../QTfrontend/hedgewars.qrc
 
-LIBS += -L../bin -lquazip
+LIBS += -L../bin -lphysfs -lphysfsrwops
 
 macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6

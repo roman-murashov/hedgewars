@@ -472,6 +472,7 @@ if ((GameTicks and $FFFF) = $FFFF) then
 AddRandomness(CheckSum);
 ScriptCall('onGameTick');
 if GameTicks mod 20 = 0 then ScriptCall('onGameTick20');
+
 inc(GameTicks)
 end;
 
@@ -642,7 +643,7 @@ if (GameFlags and gfLaserSight) <> 0 then
 
 if (GameFlags and gfArtillery) <> 0 then
     cArtillery:= true;
-for i:= GetRandom(10)+30 downto 0 do
+for i:= (LAND_WIDTH*LAND_HEIGHT) div 524288+2 downto 0 do
     begin
     rx:= GetRandom(rightX-leftX)+leftX;
     ry:= GetRandom(LAND_HEIGHT-topY)+topY;
@@ -656,7 +657,7 @@ snowLeft:= -(snowRight-LAND_WIDTH);
 
 if (not hasBorder) and ((Theme = 'Snow') or (Theme = 'Christmas')) then
     for i:= vobCount * Longword(max(LAND_WIDTH,4096)) div 2048 downto 1 do
-        AddGear(LongInt(GetRandom(snowRight - snowLeft)) + snowLeft, LongInt(LAND_HEIGHT + GetRandom(750)) - 1300, gtFlake, 0, _0, _0, 0);
+        AddGear(LongInt(GetRandom(snowRight - snowLeft)) + snowLeft, LAND_HEIGHT + LongInt(GetRandom(750)) - 1300, gtFlake, 0, _0, _0, 0);
 end;
 
 

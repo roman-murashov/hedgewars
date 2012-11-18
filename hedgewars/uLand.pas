@@ -31,12 +31,12 @@ procedure GenPreview(out Preview: TPreview);
 implementation
 uses uConsole, uStore, uRandom, uLandObjects, uIO, uLandTexture, SysUtils,
      uVariables, uUtils, uCommands, adler32, uDebug, uLandPainted, uTextures,
-     uLandGenMaze, uLandOutline;
+     uLandGenMaze, uLandOutline, uPhysFSLayer;
 
 var digest: shortstring;
 
 procedure ResizeLand(width, height: LongWord);
-var potW, potH: LongWord;
+var potW, potH: LongInt;
 begin 
 potW:= toPowerOf2(width);
 potH:= toPowerOf2(height);
@@ -54,6 +54,9 @@ if (potW <> LAND_WIDTH) or (potH <> LAND_HEIGHT) then
 
     SetLength(Land, LAND_HEIGHT, LAND_WIDTH);
     SetLength(LandDirty, (LAND_HEIGHT div 32), (LAND_WIDTH div 32));
+    // 0.5 is already approaching on unplayable
+    if (width div 4096 >= 2) or (height div 2048 >= 2) then cMaxZoomLevel:= 0.5;
+    cMinMaxZoomLevelDelta:= cMaxZoomLevel - cMinZoomLevel
     end;
 end;
 
@@ -124,7 +127,7 @@ begin
     SDL_FreeSurface(tmpsurf);
 end;
 
-procedure SetPoints(var Template: TEdgeTemplate; var pa: TPixAr);
+procedure SetPoints(var Template: TEdgeTemplate; var pa: TPixAr; fps: PPointArray);
 var i: LongInt;
 begin
 with Template do
@@ -145,7 +148,7 @@ with Template do
                if pa.ar[i].x <> NTPX then
                    pa.ar[i].x:= LAND_WIDTH - 1 - pa.ar[i].x;
             for i:= 0 to pred(FillPointsCount) do
-                FillPoints^[i].x:= LAND_WIDTH - 1 - FillPoints^[i].x;
+                fps^[i].x:= LAND_WIDTH - 1 - fps^[i].x;
             end;
 
 (*  Experiment in making this option more useful
@@ -178,9 +181,9 @@ with Template do
             end;
         for i:= 0 to pred(FillPointsCount) do
             begin
-            dec(FillPoints^[i].y, 100);
-            if FillPoints^[i].y < 0 then
-                FillPoints^[i].y:= 0;
+            dec(fps^[i].y, 100);
+            if fps^[i].y < 0 then
+                fps^[i].y:= 0;
             end;
         end;
 
@@ -189,7 +192,7 @@ with Template do
         for i:= 0 to pred(BasePointsCount) do
             pa.ar[i].y:= LAND_HEIGHT - 1 - pa.ar[i].y;
         for i:= 0 to pred(FillPointsCount) do
-            FillPoints^[i].y:= LAND_HEIGHT - 1 - FillPoints^[i].y;
+            fps^[i].y:= LAND_HEIGHT - 1 - fps^[i].y;
         end;
     end
 end;
@@ -199,13 +202,15 @@ procedure GenBlank(var Template: TEdgeTemplate);
 var pa: TPixAr;
     i: Longword;
     y, x: Longword;
+    fps: TPointArray;
 begin
+    fps:=Template.FillPoints^;
     ResizeLand(Template.TemplateWidth, Template.TemplateHeight);
     for y:= 0 to LAND_HEIGHT - 1 do
         for x:= 0 to LAND_WIDTH - 1 do
             Land[y, x]:= lfBasic;
     {$HINTS OFF}
-    SetPoints(Template, pa);
+    SetPoints(Template, pa, @fps);
     {$HINTS ON}
     for i:= 1 to Template.BezierizeCount do
         begin
@@ -222,7 +227,7 @@ begin
 
     with Template do
         for i:= 0 to pred(FillPointsCount) do
-            with FillPoints^[i] do
+            with fps[i] do
                 FillLand(x, y);
 
     DrawEdge(pa, lfBasic);
@@ -322,14 +327,6 @@ procedure GenLandSurface;
 var tmpsurf: PSDL_Surface;
     x,y: Longword;
 begin
-    WriteLnToConsole('Generating land...');
-    case cMapGen of
-        0: GenBlank(EdgeTemplates[SelectTemplate]);
-        1: begin ResizeLand(4096,2048); GenMaze; end;
-        2: GenDrawnMap;
-    else
-        OutError('Unknown mapgen', true);
-    end;
     AddProgress();
 
     tmpsurf:= SDL_CreateRGBSurface(SDL_SWSURFACE, LAND_WIDTH, LAND_HEIGHT, 32, RMask, GMask, BMask, 0);
@@ -425,22 +422,58 @@ BlitImageAndGenerateCollisionInfo(rightX - 150 - tmpsurf^.w, LAND_HEIGHT - tmpsu
 SDL_FreeSurface(tmpsurf);
 end;
 
+procedure LoadMapConfig;
+var f: PFSFile;
+    s: shortstring;
+begin
+s:= cPathz[ptMapCurrent] + '/map.cfg';
+
+WriteLnToConsole('Fetching map HH limit');
+
+f:= pfsOpenRead(s);
+if f <> nil then
+    begin
+    pfsReadLn(f, s);
+    if not pfsEof(f) then
+        begin
+        pfsReadLn(f, s);
+        val(s, MaxHedgehogs)
+        end;
+
+    pfsClose(f)
+    end;
+
+if (MaxHedgehogs = 0) then
+    MaxHedgehogs:= 18;
+end;
+
 // Loads Land[] from an image, allowing overriding standard collision
-procedure LoadMask(mapName: shortstring);
+procedure LoadMask;
 var tmpsurf: PSDL_Surface;
     p: PLongwordArray;
     x, y, cpX, cpY: Longword;
+    mapName: shortstring;
 begin
 tmpsurf:= LoadDataImage(ptMapCurrent, 'mask', ifAlpha or ifTransparent or ifIgnoreCaps);
 if tmpsurf = nil then
     begin
-    mapName:= ExtractFileName(Pathz[ptMapCurrent]);
+    mapName:= ExtractFileName(cPathz[ptMapCurrent]);
     tmpsurf:= LoadDataImage(ptMissionMaps, mapName + '/mask', ifAlpha or ifTransparent or ifIgnoreCaps);
     end;
 
 
-if (tmpsurf <> nil) and (tmpsurf^.w <= LAND_WIDTH) and (tmpsurf^.h <= LAND_HEIGHT) and (tmpsurf^.format^.BytesPerPixel = 4) then
+if (tmpsurf <> nil) and (tmpsurf^.format^.BytesPerPixel = 4) then
     begin
+    if LAND_WIDTH = 0 then
+        begin
+        LoadMapConfig;
+        ResizeLand(tmpsurf^.w, tmpsurf^.h);
+        playHeight:= tmpsurf^.h;
+        playWidth:= tmpsurf^.w;
+        leftX:= (LAND_WIDTH - playWidth) div 2;
+        rightX:= (playWidth + ((LAND_WIDTH - playWidth) div 2)) - 1;
+        topY:= LAND_HEIGHT - playHeight;
+        end;
     disableLandBack:= true;
 
     cpX:= (LAND_WIDTH - tmpsurf^.w) div 2;
@@ -491,7 +524,6 @@ end;
 procedure LoadMap;
 var tmpsurf: PSDL_Surface;
     s: shortstring;
-    f: textfile;
     mapName: shortstring = '';
 begin
 WriteLnToConsole('Loading land from file...');
@@ -499,35 +531,14 @@ AddProgress;
 tmpsurf:= LoadDataImage(ptMapCurrent, 'map', ifAlpha or ifTransparent or ifIgnoreCaps);
 if tmpsurf = nil then
     begin
-    mapName:= ExtractFileName(Pathz[ptMapCurrent]);
+    mapName:= ExtractFileName(cPathz[ptMapCurrent]);
     tmpsurf:= LoadDataImage(ptMissionMaps, mapName + '/map', ifAlpha or ifCritical or ifTransparent or ifIgnoreCaps);
     end;
 // (bare) Sanity check. Considering possible LongInt comparisons as well as just how much system memoery it would take
 TryDo((tmpsurf^.w < $40000000) and (tmpsurf^.h < $40000000) and (tmpsurf^.w * tmpsurf^.h < 6*1024*1024*1024), 'Map dimensions too big!', true);
 
 ResizeLand(tmpsurf^.w, tmpsurf^.h);
-
-// unC0Rr - should this be passed from the GUI? I am not sure which layer does what
-s:= UserPathz[ptMapCurrent] + '/map.cfg';
-if not FileExists(s) then
-    s:= Pathz[ptMapCurrent] + '/map.cfg';
-WriteLnToConsole('Fetching map HH limit');
-{$I-}
-Assign(f, s);
-filemode:= 0; // readonly
-Reset(f);
-if IOResult <> 0 then
-    begin
-    s:= Pathz[ptMissionMaps] + '/' + mapName + '/map.cfg';
-    Assign(f, s);
-    Reset(f);
-    end;
-Readln(f);
-if not eof(f) then
-    Readln(f, MaxHedgehogs);
-{$I+}
-if (MaxHedgehogs = 0) then
-    MaxHedgehogs:= 18;
+LoadMapConfig;
 
 playHeight:= tmpsurf^.h;
 playWidth:= tmpsurf^.w;
@@ -544,7 +555,7 @@ BlitImageAndGenerateCollisionInfo(
     tmpsurf);
 SDL_FreeSurface(tmpsurf);
 
-LoadMask(mapname);
+LoadMask;
 end;
 
 procedure DrawBottomBorder; // broken out from other borders for doing a floor-only map, or possibly updating bottom during SD
@@ -568,8 +579,11 @@ end;
 
 procedure GenMap;
 var x, y, w, c: Longword;
+    map, mask: shortstring;
+    maskOnly: boolean;
 begin
     hasBorder:= false;
+    maskOnly:= false;
 
     LoadThemeConfig;
 
@@ -578,10 +592,30 @@ begin
     //    FillChar(Land,SizeOf(TCollisionArray),0);*)
 
     if (GameFlags and gfForts) = 0 then
-        if Pathz[ptMapCurrent] <> '' then
-            LoadMap
+        if cPathz[ptMapCurrent] <> '' then
+            begin
+            map:= cPathz[ptMapCurrent] + '/map.png';
+            mask:= cPathz[ptMapCurrent] + '/mask.png';
+            if (not(FileExists(map)) and FileExists(mask)) then
+                begin
+                maskOnly:= true;
+                LoadMask;
+                GenLandSurface
+                end
+            else LoadMap;
+            end
         else
+            begin
+            WriteLnToConsole('Generating land...');
+            case cMapGen of
+                0: GenBlank(EdgeTemplates[SelectTemplate]);
+                1: begin ResizeLand(4096,2048); GenMaze; end;
+                2: GenDrawnMap;
+            else
+                OutError('Unknown mapgen', true);
+            end;
             GenLandSurface
+            end
     else
         MakeFortsMap;
 
@@ -657,7 +691,7 @@ if (GameFlags and gfBottomBorder) <> 0 then
 if (GameFlags and gfDisableGirders) <> 0 then
     hasGirders:= false;
 
-if ((GameFlags and gfForts) = 0) and (Pathz[ptMapCurrent] = '') then
+if (GameFlags and gfForts = 0) and (maskOnly or (cPathz[ptMapCurrent] = '')) then
     AddObjects
     
 else

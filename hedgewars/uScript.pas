@@ -81,7 +81,9 @@ uses LuaPas,
     uLandGraphics,
     SDLh,
     SysUtils, 
-    uIO;
+    uIO,
+    uPhysFSLayer
+    ;
 
 var luaState : Plua_State;
     ScriptAmmoLoadout : shortstring;
@@ -1592,7 +1594,7 @@ begin
         lua_pushnil(L);
         end
     else
-        lua_pushstring(L, str2pchar(Pathz[ptData]));
+        lua_pushstring(L, str2pchar(cPathz[ptData]));
     lc_getdatapath:= 1
 end;
 
@@ -1604,7 +1606,7 @@ begin
         lua_pushnil(L);
         end
     else
-        lua_pushstring(L, str2pchar(UserPathz[ptData]));
+        lua_pushstring(L, str2pchar(cPathz[ptData]));
     lc_getuserdatapath:= 1
 end;
 
@@ -1727,36 +1729,29 @@ begin
     else
         begin
         gear:= GearByUID(lua_tointeger(L, 1));
-        hiddenHedgehogs[hiddenHedgehogsNumber]:=gear^.hedgehog;
-        inc(hiddenHedgehogsNumber);
-        HideHog(gear^.hedgehog);
+        HideHog(gear^.hedgehog)
         end;
     lc_hidehog := 0;
 end;
 
 function lc_restorehog(L: Plua_State): LongInt; Cdecl;
 var hog: PHedgehog;
-    i, j: LongInt;
+    i, h: LongInt;
+    uid: LongWord;
 begin
     if lua_gettop(L) <> 1 then
         LuaError('Lua: Wrong number of parameters passed to RestoreHog!')
     else
         begin
-          i := 0;
-          while (i < hiddenHedgehogsNumber) do
-            begin
-            if hiddenHedgehogs[i]^.gearHidden^.uid = LongWord(lua_tointeger(L, 1)) then
-              begin
-                hog := hiddenHedgehogs[i];
-                RestoreHog(hog);
-                dec(hiddenHedgehogsNumber);
-                for j := i to hiddenHedgehogsNumber - 1 do
-                  hiddenHedgehogs[j] := hiddenHedgehogs[j + 1];
-                lc_restorehog := 0;
-                exit;
-              end;
-            inc(i);
-            end;
+        uid:= LongWord(lua_tointeger(L, 1));
+        if TeamsCount > 0 then
+            for i:= 0 to Pred(TeamsCount) do
+                for h:= 0 to cMaxHHIndex do
+                    if (TeamsArray[i]^.Hedgehogs[h].GearHidden <> nil) and (TeamsArray[i]^.Hedgehogs[h].GearHidden^.uid = uid) then
+                        begin
+                        RestoreHog(@TeamsArray[i]^.Hedgehogs[h]);
+                        exit(0)
+                        end
         end;
     lc_restorehog := 0;
 end;
@@ -1782,6 +1777,34 @@ begin
         lua_pushboolean(L, rtn);
         end;
     lc_testrectforobstacle:= 1
+end;
+
+
+function lc_setaihintsongear(L : Plua_State) : LongInt; Cdecl;
+var gear: PGear;
+begin
+    if lua_gettop(L) <> 2 then
+        LuaError('Lua: Wrong number of parameters passed to SetAIHintOnGear!')
+    else
+        begin
+        gear:= GearByUID(lua_tointeger(L, 1));
+        if gear <> nil then
+            gear^.aihints:= lua_tointeger(L, 2);
+        end;
+    lc_setaihintsongear:= 0
+end;
+
+
+function lc_hedgewarsscriptload(L : Plua_State) : LongInt; Cdecl;
+begin
+    if lua_gettop(L) <> 1 then
+        begin
+        LuaError('Lua: Wrong number of parameters passed to HedgewarsScriptLoad!');
+        lua_pushnil(L)
+        end
+    else
+        ScriptLoad(lua_tostring(L, 1));
+    lc_hedgewarsscriptload:= 0;
 end;
 ///////////////////
 
@@ -1955,18 +1978,30 @@ ScriptSetInteger('ScreenWidth', cScreenWidth);
 ScriptCall('onScreenResize');
 end;
 
+// custom script loader via physfs, passed to lua_load
+const BUFSIZE = 1024;
+var physfsReaderBuffer: pointer; external;
+function physfsReader(L: Plua_State; f: PFSFile; sz: Psize_t) : PChar; cdecl; external;
+
 
 procedure ScriptLoad(name : shortstring);
 var ret : LongInt;
       s : shortstring;
+      f : PFSFile;
+    buf : array[0..Pred(BUFSIZE)] of byte;
 begin
-s:= UserPathz[ptData] + '/' + name;
-if not FileExists(s) then
-    s:= Pathz[ptData] + '/' + name;
-if not FileExists(s) then
+s:= cPathz[ptData] + name;
+if not pfsExists(s) then
     exit;
 
-ret:= luaL_loadfile(luaState, Str2PChar(s));
+f:= pfsOpenRead(s);
+if f = nil then 
+    exit;
+
+physfsReaderBuffer:= @buf;
+ret:= lua_load(luaState, @physfsReader, f, Str2PChar(s));
+pfsClose(f);
+
 if ret <> 0 then
     begin
     LuaError('Lua: Failed to load ' + name + '(error ' + IntToStr(ret) + ')');
@@ -2287,6 +2322,9 @@ ScriptSetInteger('gstLoser'          ,$00080000);
 ScriptSetInteger('gstHHGone'         ,$00100000);
 ScriptSetInteger('gstInvisible'      ,$00200000);
 
+ScriptSetInteger('aihUsualProcessing' ,$00000000);
+ScriptSetInteger('aihDoesntMatter'    ,$00000001);
+
 // register functions
 lua_register(luaState, _P'HideHog', @lc_hidehog);
 lua_register(luaState, _P'RestoreHog', @lc_restorehog);
@@ -2379,6 +2417,9 @@ lua_register(luaState, _P'SetHogHat', @lc_sethoghat);
 lua_register(luaState, _P'PlaceGirder', @lc_placegirder);
 lua_register(luaState, _P'GetCurAmmoType', @lc_getcurammotype);
 lua_register(luaState, _P'TestRectForObstacle', @lc_testrectforobstacle);
+
+lua_register(luaState, _P'SetGearAIHints', @lc_setaihintsongear);
+lua_register(luaState, _P'HedgewarsScriptLoad', @lc_hedgewarsscriptload);
 
 
 ScriptClearStack; // just to be sure stack is empty

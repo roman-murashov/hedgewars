@@ -292,12 +292,20 @@ else
     TagTurnTimeLeft:= 0;
     NextClan:= false;
     end;
+
 if (TurnTimeLeft > 0) and (CurrentHedgehog^.BotLevel = 0) then
     begin
     if CurrentTeam^.ExtDriven then
-        AddVoice(sndIllGetYou, CurrentTeam^.voicepack)
+        begin
+        if GetRandom(2) = 0 then
+             AddVoice(sndIllGetYou, CurrentTeam^.voicepack)
+        else AddVoice(sndJustYouWait, CurrentTeam^.voicepack)
+        end
     else
+        begin
+        GetRandom(2); // needed to avoid extdriven desync
         AddVoice(sndYesSir, CurrentTeam^.voicepack);
+        end;
     if cHedgehogTurnTime < 1000000 then
         ReadyTimeLeft:= cReadyDelay;
     AddCaption(Format(shortstring(trmsg[sidReady]), CurrentTeam^.TeamName), cWhiteColor, capgrpGameState)
@@ -305,7 +313,11 @@ if (TurnTimeLeft > 0) and (CurrentHedgehog^.BotLevel = 0) then
 else
     begin
     if TurnTimeLeft > 0 then
-        AddVoice(sndIllGetYou, CurrentTeam^.voicepack);
+        begin
+        if GetRandom(2) = 0 then
+             AddVoice(sndIllGetYou, CurrentTeam^.voicepack)
+        else AddVoice(sndJustYouWait, CurrentTeam^.voicepack)
+        end;
     ReadyTimeLeft:= 0
     end;
 
@@ -438,16 +450,18 @@ var i: LongInt;
 begin
 with team^ do
     begin
-    NewTeamHealthBarWidth:= 0;
+    TeamHealth:= 0;
+    for i:= 0 to cMaxHHIndex do
+        if Hedgehogs[i].Gear <> nil then
+            inc(TeamHealth, Hedgehogs[i].Gear^.Health)
+        else if Hedgehogs[i].GearHidden <> nil then
+            inc(TeamHealth, Hedgehogs[i].GearHidden^.Health);
 
     if not hasGone then
-        for i:= 0 to cMaxHHIndex do
-            if Hedgehogs[i].Gear <> nil then
-                inc(NewTeamHealthBarWidth, Hedgehogs[i].Gear^.Health)
-            else if Hedgehogs[i].GearHidden <> nil then
-                inc(NewTeamHealthBarWidth, Hedgehogs[i].GearHidden^.Health);
+        NewTeamHealthBarWidth:= TeamHealth
+        else
+        NewTeamHealthBarWidth:= 0;
 
-    TeamHealth:= NewTeamHealthBarWidth;
     if NewTeamHealthBarWidth > MaxTeamHealth then
         begin
         MaxTeamHealth:= NewTeamHealthBarWidth;

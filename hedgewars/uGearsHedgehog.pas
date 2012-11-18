@@ -103,6 +103,13 @@ with HHGear^.Hedgehog^ do
             LoadHedgehogHat(HHGear^.Hedgehog^, 'Reserved/chef')
         else if prevAmmo = amKnife then
             LoadHedgehogHat(HHGear^.Hedgehog^, Hat);
+        end;
+    // Try again in the next slot
+    if CurAmmoType = prevAmmo then 
+        begin
+        if slot >= cMaxSlotIndex then slot:= 0 else inc(slot);
+        HHGear^.MsgParam:= slot;
+        ChangeAmmo(HHGear)
         end
     end
 end;
@@ -641,9 +648,10 @@ case Gear^.Pos of
                         gi := GearsList;
                         while gi <> nil do
                             begin
-                            if gi^.Kind = gtGenericFaller then
+                            if (gi^.Kind = gtGenericFaller) and (gi^.State and gstInvisible <> 0) then
                                 begin
                                 gi^.Active:= true;
+                                gi^.State:= gi^.State or gstTmpFlag;
                                 gi^.X:= int2hwFloat(GetRandom(rightX-leftX)+leftX);
                                 gi^.Y:= int2hwFloat(GetRandom(LAND_HEIGHT-topY)+topY);
                                 gi^.dX:= _90-(GetRandomf*_360);
@@ -971,7 +979,7 @@ if (Gear^.State and gstMoving) <> 0 then
 if (not isZero(Gear^.dY)) and (Gear^.FlightTime > 0) and ((GameFlags and gfLowGravity) = 0) then
     begin
     inc(Gear^.FlightTime);
-    if (Gear^.FlightTime > 1500) and ((hwRound(Gear^.X) < leftX-250) or (hwRound(Gear^.X) > rightX+250))  then
+    if (Gear^.FlightTime > 1500) and ((hwRound(Gear^.X) < LongInt(leftX)-250) or (hwRound(Gear^.X) > LongInt(rightX)+250))  then
         begin
         Gear^.FlightTime:= 0;
         AddCaption(GetEventString(eidHomerun), cWhiteColor, capgrpMessage);
@@ -1060,8 +1068,7 @@ else
             end;
 
 if (CurAmmoGear = nil)
-or ((Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_AltAttack) <> 0) 
-or ((Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_NoRoundEnd) <> 0) then
+or ((Ammoz[CurAmmoGear^.AmmoType].Ammo.Propz and ammoprop_AltAttack) <> 0)  then
     begin
     if ((HHGear^.Message and gmSlot) <> 0) then
         if ChangeAmmo(HHGear) then ApplyAmmoChanges(Hedgehog^);

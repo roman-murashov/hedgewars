@@ -32,7 +32,7 @@ else ()
 endif()
 
 if(NOT ANDROID_NDK_TOOLCHAINDIR)
-    set(toolchainbase "${ANDROID_NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt")
+    set(toolchainbase "${ANDROID_NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt")
     find_path(ANDROID_NDK_TOOLCHAINDIR arm-linux-androideabi
                 "${toolchainbase}/linux-x86"
                 "${toolchainbase}/windows")
@@ -74,7 +74,7 @@ endif()
 set(SDL_DIR /home/richard/Downloads/android-project)
 
 
-set(ANDROID_SDK_API_LVL 14)
+set(ANDROID_SDK_API_LVL 16)
 set(ANDROID_NDK_API_LVL 5)
 
 MESSAGE(STATUS "Creating Makefile.android...")
