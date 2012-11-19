@@ -1,7 +1,15 @@
 unit uPhysFSLayer;
+{$IFDEF ANDROID}
+    {$linklib physfs}
+    {$linklib physfsrwops}
+{$ELSE}
+    {$LINKLIB ../bin/libphysfs.a}
+    {$LINKLIB ../bin/libphysfsrwops.a}
+{$ENDIF}
 
-{$LINKLIB ../bin/libphysfs.a}
-{$LINKLIB ../bin/libphysfsrwops.a}
+{$IFDEF DARWIN}
+    {$LINKFRAMEWORK IOKit}
+{$ENDIF}
 
 interface
 uses SDLh;
