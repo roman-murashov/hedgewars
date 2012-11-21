@@ -37,7 +37,7 @@
 QString training, campaign, campaignScript, campaignTeam; // TODO: Cleaner solution?
 
 HWGame::HWGame(GameUIConfig * config, GameCFGWidget * gamecfg, QString ammo, TeamSelWidget* pTeamSelWidget) :
-    TCPBase(true, 0),
+    TCPBase(0),
     ammostr(ammo),
     m_pTeamSelWidget(pTeamSelWidget)
 {
@@ -52,7 +52,7 @@ HWGame::~HWGame()
 }
 
 void HWGame::onClientDisconnect()
-{
+{/*
     switch (gameType)
     {
         case gtDemo:
@@ -69,7 +69,7 @@ void HWGame::onClientDisconnect()
                 emit HaveRecord(rtDemo, demo);
             else
                 emit HaveRecord(rtNeither, demo);
-    }
+    }*/
     SetGameState(gsStopped);
 }
 
@@ -106,7 +106,7 @@ void HWGame::commonConfig()
             ;
         }
     }
-    RawSendIPC(buf);
+    //RawSendIPC(buf);
 }
 
 void HWGame::SendConfig()
@@ -150,7 +150,7 @@ void HWGame::SendQuickConfig()
     HWProto::addStringToBuffer(teamscfg, QString("eammreinf %1").arg(cDefaultAmmoStore->mid(3 * cAmmoNumber, cAmmoNumber)));
     HWProto::addStringToBuffer(teamscfg, QString("eammstore"));
     HWProto::addStringToBuffer(teamscfg, QString("eammstore"));
-    RawSendIPC(teamscfg);
+    //RawSendIPC(teamscfg);
 }
 
 void HWGame::SendTrainingConfig()
@@ -160,7 +160,7 @@ void HWGame::SendTrainingConfig()
     HWProto::addStringToBuffer(traincfg, "eseed " + QUuid::createUuid().toString());
     HWProto::addStringToBuffer(traincfg, "escript " + training);
 
-    RawSendIPC(traincfg);
+   //RawSendIPC(traincfg);
 }
 
 void HWGame::SendCampaignConfig()
@@ -171,7 +171,7 @@ void HWGame::SendCampaignConfig()
 
     HWProto::addStringToBuffer(campaigncfg, "escript " + campaignScript);
 
-    RawSendIPC(campaigncfg);
+   // RawSendIPC(campaigncfg);
 }
 
 void HWGame::SendNetConfig()
@@ -185,7 +185,7 @@ void HWGame::ParseMessage(const QByteArray & msg)
     {
         case '?':
         {
-            SendIPC("!");
+            //SendIPC("!");
             break;
         }
         case 'C':
@@ -256,7 +256,7 @@ void HWGame::ParseMessage(const QByteArray & msg)
             emit SendChat(msgbody);
             QByteArray buf;
             HWProto::addStringToBuffer(buf, "s" + HWProto::formatChatMsg(config->netNick(), msgbody) + "\x20\x20");
-            demo.append(buf);
+            //demo.append(buf);
             break;
         }
         case 'b':
@@ -280,25 +280,25 @@ void HWGame::ParseMessage(const QByteArray & msg)
             {
                 emit SendNet(msg);
             }
-            demo.append(msg);
+            //demo.append(msg);
         }
     }
 }
 
 void HWGame::FromNet(const QByteArray & msg)
 {
-    RawSendIPC(msg);
+    //RawSendIPC(msg);
 }
 
 void HWGame::FromNetChat(const QString & msg)
 {
     QByteArray buf;
     HWProto::addStringToBuffer(buf, 's' + msg + "\x20\x20");
-    RawSendIPC(buf);
+    //RawSendIPC(buf);
 }
 
 void HWGame::onClientRead()
-{
+{/*
     quint8 msglen;
     quint32 bufsize;
     while (!readbuffer.isEmpty() && ((bufsize = readbuffer.size()) > 0) &&
@@ -307,7 +307,7 @@ void HWGame::onClientRead()
         QByteArray msg = readbuffer.left(msglen + 1);
         readbuffer.remove(0, msglen + 1);
         ParseMessage(msg);
-    }
+    }*/
 }
 
 QStringList HWGame::getArguments()
@@ -318,7 +318,7 @@ QStringList HWGame::getArguments()
     arguments << QString::number(resolution.width());
     arguments << QString::number(resolution.height());
     arguments << QString::number(config->bitDepth()); // bpp
-    arguments << QString("%1").arg(ipc_port);
+    //arguments << QString("%1").arg(ipc_port);
     arguments << (config->vid_Fullscreen() ? "1" : "0");
     arguments << (config->isSoundEnabled() ? "1" : "0");
     arguments << (config->isMusicEnabled() ? "1" : "0");
@@ -346,35 +346,35 @@ void HWGame::PlayDemo(const QString & demofilename, bool isSave)
     }
 
     // read demo
-    toSendBuf = demofile.readAll();
+    //toSendBuf = demofile.readAll();
 
     // run engine
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
 void HWGame::StartNet()
 {
     gameType = gtNet;
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
 void HWGame::StartLocal()
 {
     gameType = gtLocal;
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
 void HWGame::StartQuick()
 {
     gameType = gtQLocal;
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
@@ -382,8 +382,8 @@ void HWGame::StartTraining(const QString & file)
 {
     gameType = gtTraining;
     training = "Missions/Training/" + file + ".lua";
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
@@ -393,8 +393,8 @@ void HWGame::StartCampaign(const QString & camp, const QString & campScript, con
     campaign = camp;
     campaignScript = "Missions/Campaign/" + camp + "/" + campScript;
     campaignTeam = campTeam;
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
@@ -412,7 +412,7 @@ void HWGame::abort()
 {
     QByteArray buf;
     HWProto::addStringToBuffer(buf, QString("efinish"));
-    RawSendIPC(buf);
+    //RawSendIPC(buf);
 }
 
 void HWGame::sendCampaignVar(const QByteArray &varToSend)
@@ -423,7 +423,7 @@ void HWGame::sendCampaignVar(const QByteArray &varToSend)
     QString varValue = teamfile.value("Campaign " + campaign + "/" + varToFind, "").toString();
     QByteArray command;
     HWProto::addStringToBuffer(command, "V." + varValue);
-    RawSendIPC(command);
+    //RawSendIPC(command);
 }
 
 void HWGame::writeCampaignVar(const QByteArray & varVal)
@@ -440,3 +440,7 @@ void HWGame::writeCampaignVar(const QByteArray & varVal)
     teamfile.setValue("Campaign " + campaign + "/" + varToWrite, varValue);
 }
 
+void HWGame::onEngineStart()
+{
+
+}

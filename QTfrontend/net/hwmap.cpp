@@ -19,14 +19,21 @@
 
 #include "hwconsts.h"
 #include "hwmap.h"
+#include "frontlibpoller.h"
 
 HWMap::HWMap(QObject * parent) :
-    TCPBase(false, parent)
+    TCPBase(parent)
 {
+    m_conn = NULL;
+    m_map = NULL;
 }
 
 HWMap::~HWMap()
 {
+    if(m_conn)
+        flib_mapconn_destroy(m_conn);
+    if(m_map)
+        flib_map_destroy(m_map);
 }
 
 bool HWMap::couldBeRemoved()
@@ -34,18 +41,43 @@ bool HWMap::couldBeRemoved()
     return !m_hasStarted;
 }
 
-void HWMap::getImage(const QString & seed, int filter, MapGenerator mapgen, int maze_size, const QByteArray & drawMapData)
+void HWMap::getImage(const QString & seed, int filter, int mapgen, int maze_size, const QByteArray & drawMapData)
 {
-    m_seed = seed;
-    templateFilter = filter;
-    m_mapgen = mapgen;
-    m_maze_size = maze_size;
-    if(mapgen == MAPGEN_DRAWN) m_drawMapData = drawMapData;
-    Start(true);
+    switch(mapgen)
+    {
+        case MAPGEN_REGULAR: m_map =
+                flib_map_create_regular(
+                    seed.toUtf8().constData()
+                    , "" // theme? here?
+                    , filter);
+                break;
+        case MAPGEN_MAZE: m_map =
+                flib_map_create_maze(
+                    seed.toUtf8().constData()
+                    , ""
+                    , maze_size);
+                break;
+        case MAPGEN_DRAWN: m_map =
+                flib_map_create_drawn(
+                    seed.toUtf8().constData()
+                    , ""
+                    , (const uint8_t*)drawMapData.constData()
+                    , drawMapData.size()
+                    );
+                break;
+        default:
+            Q_ASSERT_X(false, "HWMap::getImage", "Unknown generator");
+    }
+
+    start(true);
 }
 
 QStringList HWMap::getArguments()
 {
+    Q_ASSERT(m_conn);
+
+    int ipc_port = flib_mapconn_getport(m_conn);
+
     QStringList arguments;
     arguments << cfgdir->absolutePath();
     arguments << QString("%1").arg(ipc_port);
@@ -53,45 +85,33 @@ QStringList HWMap::getArguments()
     return arguments;
 }
 
-void HWMap::onClientDisconnect()
+void HWMap::onSuccess(void *context, const uint8_t *bitmap, int numHedgehogs)
 {
-    if (readbuffer.size() == 128 * 32 + 1)
-    {
-        quint8 *buf = (quint8*) readbuffer.constData();
-        QImage im(buf, 256, 128, QImage::Format_Mono);
-        im.setNumColors(2);
-        emit HHLimitReceived(buf[128 * 32]);
-        emit ImageReceived(im);
-    }
+    qDebug("HWMap::onSuccess");
+    HWMap * hwMap = (HWMap *)context;
+
+    QImage im(bitmap, MAPIMAGE_WIDTH, MAPIMAGE_HEIGHT, QImage::Format_Mono);
+    im.setNumColors(2);
+    emit hwMap->HHLimitReceived(numHedgehogs);
+    emit hwMap->ImageReceived(im);
+
+    hwMap->clientDisconnected();
 }
 
-void HWMap::SendToClientFirst()
+void HWMap::onFailure(void *context, const char *errormessage)
 {
-    SendIPC(QString("eseed %1").arg(m_seed).toUtf8());
-    SendIPC(QString("e$template_filter %1").arg(templateFilter).toUtf8());
-    SendIPC(QString("e$mapgen %1").arg(m_mapgen).toUtf8());
+    qDebug("HWMap::onFailure");
+    HWMap * hwMap = (HWMap *)context;
 
-    switch (m_mapgen)
-    {
-        case MAPGEN_MAZE:
-            SendIPC(QString("e$maze_size %1").arg(m_maze_size).toUtf8());
-            break;
+    hwMap->clientDisconnected();
+}
 
-        case MAPGEN_DRAWN:
-        {
-            QByteArray data = m_drawMapData;
-            while(data.size() > 0)
-            {
-                QByteArray tmp = data;
-                tmp.truncate(200);
-                SendIPC("edraw " + tmp);
-                data.remove(0, 200);
-            }
-            break;
-        }
-        default:
-            ;
-    }
+void HWMap::onEngineStart()
+{
+    qDebug("HWMap::onEngineStart");
+    m_conn = flib_mapconn_create(m_map);
+    flib_mapconn_onSuccess(m_conn, onSuccess, this);
+    flib_mapconn_onFailure(m_conn, onFailure, this);
 
-    SendIPC("!");
+    new FrontLibPoller((void (*)(void *))flib_mapconn_tick, m_conn, this);
 }

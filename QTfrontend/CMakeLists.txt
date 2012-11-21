@@ -123,6 +123,7 @@ set(hwfr_moc_hdrs
     team.h
     util/DataManager.h
     util/LibavInteraction.h
+    util/frontlibpoller.h
     )
 
 set(hwfr_hdrs
