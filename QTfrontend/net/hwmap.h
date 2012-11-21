@@ -23,16 +23,10 @@
 #include <QByteArray>
 #include <QString>
 #include <QImage>
+#include <QTimer>
 
 #include "tcpBase.h"
-
-enum MapGenerator
-{
-    MAPGEN_REGULAR,
-    MAPGEN_MAZE,
-    MAPGEN_DRAWN,
-    MAPGEN_MAP
-};
+#include "frontlib.h"
 
 class HWMap : public TCPBase
 {
@@ -41,13 +35,12 @@ class HWMap : public TCPBase
     public:
         HWMap(QObject *parent = 0);
         virtual ~HWMap();
-        void getImage(const QString & seed, int templateFilter, MapGenerator mapgen, int maze_size, const QByteArray & drawMapData);
+        void getImage(const QString & seed, int templateFilter, int mapgen, int maze_size, const QByteArray & drawMapData);
         bool couldBeRemoved();
 
     protected:
-        virtual QStringList getArguments();
-        virtual void onClientDisconnect();
-        virtual void SendToClientFirst();
+        QStringList getArguments();
+        void onEngineStart();
 
     signals:
         void ImageReceived(const QImage newImage);
@@ -55,11 +48,12 @@ class HWMap : public TCPBase
 
     private:
         QString m_seed;
-        int templateFilter;
-        MapGenerator m_mapgen;
-        int m_maze_size;
-        QByteArray m_drawMapData;
 
+        flib_mapconn * m_conn;
+        flib_map * m_map;
+
+        static void onSuccess(void *context, const uint8_t *bitmap, int numHedgehogs);
+        static void onFailure(void *context, const char *errormessage);
     private slots:
 };
 

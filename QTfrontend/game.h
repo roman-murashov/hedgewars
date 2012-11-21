@@ -70,6 +70,7 @@ class HWGame : public TCPBase
         virtual QStringList getArguments();
         virtual void onClientRead();
         virtual void onClientDisconnect();
+        void onEngineStart();
 
     signals:
         void SendNet(const QByteArray & msg);
@@ -96,7 +97,7 @@ class HWGame : public TCPBase
             gtCampaign = 6,
             gtSave     = 7,
         };
-        char msgbuf[MAXMSGCHARS];
+        //char msgbuf[MAXMSGCHARS];
         QString ammostr;
         GameUIConfig * config;
         GameCFGWidget * gamecfg;
