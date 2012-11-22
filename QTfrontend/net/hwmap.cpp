@@ -48,7 +48,7 @@ void HWMap::getImage(const QString & seed, int filter, int mapgen, int maze_size
         case MAPGEN_REGULAR: m_map =
                 flib_map_create_regular(
                     seed.toUtf8().constData()
-                    , "" // theme? here?
+                    , ""
                     , filter);
                 break;
         case MAPGEN_MAZE: m_map =
@@ -68,7 +68,7 @@ void HWMap::getImage(const QString & seed, int filter, int mapgen, int maze_size
         default:
             Q_ASSERT_X(false, "HWMap::getImage", "Unknown generator");
     }
-
+    qDebug(m_map->seed);
     start(true);
 }
 
