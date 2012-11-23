@@ -87,7 +87,6 @@ QStringList HWMap::getArguments()
 
 void HWMap::onSuccess(void *context, const uint8_t *bitmap, int numHedgehogs)
 {
-    qDebug("HWMap::onSuccess");
     HWMap * hwMap = (HWMap *)context;
 
     QImage im(bitmap, MAPIMAGE_WIDTH, MAPIMAGE_HEIGHT, QImage::Format_Mono);
@@ -100,7 +99,6 @@ void HWMap::onSuccess(void *context, const uint8_t *bitmap, int numHedgehogs)
 
 void HWMap::onFailure(void *context, const char *errormessage)
 {
-    qDebug("HWMap::onFailure");
     HWMap * hwMap = (HWMap *)context;
 
     hwMap->clientDisconnected();
@@ -108,7 +106,6 @@ void HWMap::onFailure(void *context, const char *errormessage)
 
 void HWMap::onEngineStart()
 {
-    qDebug("HWMap::onEngineStart");
     m_conn = flib_mapconn_create(m_map);
     flib_mapconn_onSuccess(m_conn, onSuccess, this);
     flib_mapconn_onFailure(m_conn, onFailure, this);
