@@ -9,6 +9,8 @@
 /*---------------------------- Includes ------------------------------------*/
 #include <ctype.h>
 #include "iniparser.h"
+#include "physfs.h"
+#include "physfsfgets.h"
 
 /*---------------------------- Defines -------------------------------------*/
 #define ASCIILINESZ         (1024)
@@ -628,7 +630,7 @@ static line_status iniparser_line(
 /*--------------------------------------------------------------------------*/
 dictionary * iniparser_load(const char * ininame)
 {
-    FILE * in ;
+    PHYSFS_File * in ;
 
     char line    [ASCIILINESZ+1] ;
     char section [ASCIILINESZ+1] ;
@@ -643,14 +645,14 @@ dictionary * iniparser_load(const char * ininame)
 
     dictionary * dict ;
 
-    if ((in=fopen(ininame, "r"))==NULL) {
+    if ((in = PHYSFS_openRead(ininame))==NULL) {
         fprintf(stderr, "iniparser: cannot open %s\n", ininame);
         return NULL ;
     }
 
     dict = dictionary_new(0) ;
     if (!dict) {
-        fclose(in);
+        PHYSFS_close(in);
         return NULL ;
     }
 
@@ -660,7 +662,7 @@ dictionary * iniparser_load(const char * ininame)
     memset(val,     0, ASCIILINESZ);
     last=0 ;
 
-    while (fgets(line+last, ASCIILINESZ-last, in)!=NULL) {
+    while (PHYSFS_fgets(line+last, ASCIILINESZ-last, in)!=NULL) {
         lineno++ ;
         len = (int)strlen(line)-1;
         if (len==0)
@@ -672,7 +674,7 @@ dictionary * iniparser_load(const char * ininame)
                     ininame,
                     lineno);
             dictionary_del(dict);
-            fclose(in);
+            PHYSFS_close(in);
             return NULL ;
         }
         /* Get rid of \n and spaces at end of line */
@@ -725,7 +727,7 @@ dictionary * iniparser_load(const char * ininame)
         dictionary_del(dict);
         dict = NULL ;
     }
-    fclose(in);
+    PHYSFS_close(in);
     return dict ;
 }
 

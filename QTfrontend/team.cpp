@@ -23,6 +23,7 @@
 #include <QCryptographicHash>
 #include <QSettings>
 #include <QStandardItemModel>
+#include <QDebug>
 
 #include "team.h"
 #include "hwform.h"
@@ -33,6 +34,7 @@ HWTeam::HWTeam(const QString & teamname) :
     , m_difficulty(0)
     , m_numHedgehogs(4)
     , m_isNetTeam(false)
+    , m_team(NULL)
 {
     m_name = teamname;
     OldTeamName = m_name;
@@ -62,6 +64,7 @@ HWTeam::HWTeam(const QStringList& strLst) :
     QObject(0)
     , m_numHedgehogs(4)
     , m_isNetTeam(true)
+    , m_team(NULL)
 {
     // net teams are configured from QStringList
     if(strLst.size() != 23) throw HWTeamConstructException();
@@ -92,6 +95,7 @@ HWTeam::HWTeam() :
     , m_difficulty(0)
     , m_numHedgehogs(4)
     , m_isNetTeam(false)
+    , m_team(NULL)
 {
     m_name = QString("Team");
     for (int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
@@ -129,6 +133,7 @@ HWTeam::HWTeam(const HWTeam & other) :
     , m_hedgehogs(other.m_hedgehogs)
     , m_difficulty(other.m_difficulty)
     , m_binds(other.m_binds)
+    , m_team(flib_team_copy(other.m_team))
     , m_numHedgehogs(other.m_numHedgehogs)
     , m_color(other.m_color)
     , m_isNetTeam(other.m_isNetTeam)
@@ -167,8 +172,20 @@ HWTeam & HWTeam::operator = (const HWTeam & other)
     return *this;
 }
 
+HWTeam::~HWTeam()
+{
+    if(m_team)
+        flib_team_destroy(m_team);
+}
+
 bool HWTeam::loadFromFile()
 {
+    if(m_team)
+        flib_team_destroy(m_team);
+
+    m_team = flib_team_from_ini(QString("/config/Teams/%1.hwt").arg(m_name).toUtf8().constData());
+
+    /*
     QSettings teamfile(QString("physfs://config/Teams/%1.hwt").arg(m_name), QSettings::IniFormat, 0);
     teamfile.setIniCodec("UTF-8");
     m_name = teamfile.value("Team/Name", m_name).toString();
@@ -196,8 +213,8 @@ bool HWTeam::loadFromFile()
         if(achievements[i][0][0])
             AchievementProgress[i] = teamfile.value(QString("Achievements/%1").arg(achievements[i][0]), 0).toUInt();
         else
-            break;
-    return true;
+            break;*/
+    return m_team != NULL;
 }
 
 bool HWTeam::fileExists()

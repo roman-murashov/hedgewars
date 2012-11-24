@@ -24,6 +24,7 @@
 #include "namegen.h"
 
 #include "tcpBase.h"
+#include "frontlib.h"
 
 class GameUIConfig;
 class GameCFGWidget;
@@ -103,6 +104,8 @@ class HWGame : public TCPBase
         GameCFGWidget * gamecfg;
         TeamSelWidget* m_pTeamSelWidget;
         GameType gameType;
+
+        flib_gameconn * m_conn;
 
         void commonConfig();
         void SendConfig();

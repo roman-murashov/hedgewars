@@ -25,6 +25,7 @@
 #include "binds.h"
 #include "achievements.h"
 #include "hwconsts.h"
+#include "frontlib.h"
 
 class HWForm;
 class GameUIConfig;
@@ -53,6 +54,7 @@ class HWTeam : public QObject
         HWTeam(const QStringList& strLst);
         HWTeam();
         HWTeam(const HWTeam & other);
+        ~HWTeam();
 
         // file operations
         static HWTeam loadFromFile(const QString & teamName);
@@ -116,6 +118,8 @@ public slots:
         QList<HWHog> m_hedgehogs;
         quint8 m_difficulty;
         QList<BindAction> m_binds;
+
+        flib_team * m_team;
 
         // class members that contain info for the current game setup
         quint8 m_numHedgehogs;
