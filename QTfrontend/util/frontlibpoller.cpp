@@ -8,7 +8,8 @@ FrontLibPoller::FrontLibPoller(void (*poll)(void * data), void *data, QObject *p
     m_poll = poll;
     m_data = data;
 
-    m_timer.start(50, this);
+    if(m_data)
+        m_timer.start(50, this);
 }
 
 void FrontLibPoller::timerEvent(QTimerEvent *event)

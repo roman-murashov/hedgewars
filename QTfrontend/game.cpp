@@ -30,16 +30,16 @@
 #include "teamselect.h"
 #include "proto.h"
 #include "campaign.h"
-
-#include <QTextStream>
 #include "ThemeModel.h"
+#include "frontlibpoller.h"
 
 QString training, campaign, campaignScript, campaignTeam; // TODO: Cleaner solution?
 
 HWGame::HWGame(GameUIConfig * config, GameCFGWidget * gamecfg, QString ammo, TeamSelWidget* pTeamSelWidget) :
-    TCPBase(0),
-    ammostr(ammo),
-    m_pTeamSelWidget(pTeamSelWidget)
+    TCPBase(0)
+    , ammostr(ammo)
+    , m_pTeamSelWidget(pTeamSelWidget)
+    , m_conn(NULL)
 {
     this->config = config;
     this->gamecfg = gamecfg;
@@ -49,6 +49,9 @@ HWGame::HWGame(GameUIConfig * config, GameCFGWidget * gamecfg, QString ammo, Tea
 HWGame::~HWGame()
 {
     SetGameState(gsDestroyed);
+
+    if(m_conn)
+        flib_gameconn_destroy(m_conn);
 }
 
 void HWGame::onClientDisconnect()
@@ -318,7 +321,7 @@ QStringList HWGame::getArguments()
     arguments << QString::number(resolution.width());
     arguments << QString::number(resolution.height());
     arguments << QString::number(config->bitDepth()); // bpp
-    //arguments << QString("%1").arg(ipc_port);
+    arguments << QString::number(flib_gameconn_getport(m_conn));
     arguments << (config->vid_Fullscreen() ? "1" : "0");
     arguments << (config->isSoundEnabled() ? "1" : "0");
     arguments << (config->isMusicEnabled() ? "1" : "0");
@@ -372,8 +375,27 @@ void HWGame::StartLocal()
 
 void HWGame::StartQuick()
 {
+    ThemeModel * themeModel = DataManager::instance().themeModel();
     gameType = gtQLocal;
-    //demo.clear();
+/*
+typedef struct {
+    char *style;				// e.g. "Capture the Flag"
+    flib_scheme *gamescheme;
+    flib_map *map;
+    flib_teamlist *teamlist;
+} flib_gamesetup;
+ */
+    flib_gamesetup gameSetup;
+    gameSetup.style = NULL;
+    gameSetup.gamescheme = flib_scheme_create("Default");
+    gameSetup.map = flib_map_create_regular(
+                QUuid::createUuid().toByteArray().constData()
+                , themeModel->rowCount() > 0 ? themeModel->index(rand() % themeModel->rowCount()).data().toString().toUtf8().constData() : "Sheep"
+                , 3);
+    gameSetup.teamlist = flib_teamlist_create();
+
+    m_conn = flib_gameconn_create(config->netNick().toUtf8().constData(), &gameSetup, false);
+
     start(false);
     SetGameState(gsStarted);
 }
@@ -442,5 +464,5 @@ void HWGame::writeCampaignVar(const QByteArray & varVal)
 
 void HWGame::onEngineStart()
 {
-
+    new FrontLibPoller((void (*)(void *))flib_gameconn_tick, m_conn, this);
 }
