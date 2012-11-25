@@ -64,9 +64,6 @@ HWTeam::HWTeam(const QString & teamname, QObject *parent) :
     team.bindingCount = binds.size();
 
     m_team = flib_team_copy(&team);
-
-    m_team->remoteDriven = false;
-    m_team->hogsInGame = 4;
 }
 
 HWTeam::HWTeam(const QStringList& strLst, QObject *parent) :
@@ -121,8 +118,6 @@ HWTeam::HWTeam(const QStringList& strLst, QObject *parent) :
     team.bindingCount = binds.size();
 
     m_team = flib_team_copy(&team);
-    m_team->remoteDriven = true;
-    m_team->hogsInGame = 4;
 }
 
 
