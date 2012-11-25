@@ -117,45 +117,6 @@ void HWGame::SendConfig()
     commonConfig();
 }
 
-void HWGame::SendQuickConfig()
-{
-    QByteArray teamscfg;
-    ThemeModel * themeModel = DataManager::instance().themeModel();
-
-    HWProto::addStringToBuffer(teamscfg, "TL");
-    HWProto::addStringToBuffer(teamscfg, QString("etheme %1")
-                               .arg((themeModel->rowCount() > 0) ? themeModel->index(rand() % themeModel->rowCount()).data().toString() : "steel"));
-    HWProto::addStringToBuffer(teamscfg, "eseed " + QUuid::createUuid().toString());
-
-    HWProto::addStringToBuffer(teamscfg, "e$template_filter 2");
-
-    HWTeam team1;
-    team1.setDifficulty(0);
-    team1.setColor(0);
-    team1.setNumHedgehogs(4);
-    HWNamegen::teamRandomNames(team1, true);
-//    HWProto::addStringListToBuffer(teamscfg,
-//                                   team1.teamGameConfig(100));
-
-    HWTeam team2;
-    team2.setDifficulty(4);
-    team2.setColor(1);
-    team2.setNumHedgehogs(4);
-    do
-        HWNamegen::teamRandomNames(team2,true);
-    while(!team2.name().compare(team1.name()) || !team2.hedgehogHat(0).compare(team1.hedgehogHat(0)));
-//    HWProto::addStringListToBuffer(teamscfg,
-//                                   team2.teamGameConfig(100));
-
-    HWProto::addStringToBuffer(teamscfg, QString("eammloadt %1").arg(cDefaultAmmoStore->mid(0, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammprob %1").arg(cDefaultAmmoStore->mid(cAmmoNumber, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammdelay %1").arg(cDefaultAmmoStore->mid(2 * cAmmoNumber, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammreinf %1").arg(cDefaultAmmoStore->mid(3 * cAmmoNumber, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammstore"));
-    HWProto::addStringToBuffer(teamscfg, QString("eammstore"));
-    //RawSendIPC(teamscfg);
-}
-
 void HWGame::SendTrainingConfig()
 {
     QByteArray traincfg;
@@ -181,7 +142,7 @@ void HWGame::SendNetConfig()
 {
     commonConfig();
 }
-
+/*
 void HWGame::ParseMessage(const QByteArray & msg)
 {
     switch(msg.at(1))
@@ -286,7 +247,7 @@ void HWGame::ParseMessage(const QByteArray & msg)
             //demo.append(msg);
         }
     }
-}
+}*/
 
 void HWGame::FromNet(const QByteArray & msg)
 {
@@ -377,14 +338,7 @@ void HWGame::StartQuick()
 {
     ThemeModel * themeModel = DataManager::instance().themeModel();
     gameType = gtQLocal;
-/*
-typedef struct {
-    char *style;				// e.g. "Capture the Flag"
-    flib_scheme *gamescheme;
-    flib_map *map;
-    flib_teamlist *teamlist;
-} flib_gamesetup;
- */
+
     flib_gamesetup gameSetup;
     gameSetup.style = NULL;
     gameSetup.gamescheme = flib_scheme_create("Default");
@@ -394,7 +348,30 @@ typedef struct {
                 , 3);
     gameSetup.teamlist = flib_teamlist_create();
 
+    { // add teams
+        HWTeam team1;
+        team1.setDifficulty(0);
+        team1.setColor(0);
+        team1.setNumHedgehogs(4);
+        HWNamegen::teamRandomNames(team1, true);
+
+        HWTeam team2;
+        team2.setDifficulty(4);
+        team2.setColor(1);
+        team2.setNumHedgehogs(4);
+        do
+            HWNamegen::teamRandomNames(team2,true);
+        while(!team2.name().compare(team1.name()) || !team2.hedgehogHat(0).compare(team1.hedgehogHat(0)));
+
+        flib_teamlist_insert(gameSetup.teamlist, team1.toFlibTeam(), 0);
+        flib_teamlist_insert(gameSetup.teamlist, team2.toFlibTeam(), 1);
+    }
+
     m_conn = flib_gameconn_create(config->netNick().toUtf8().constData(), &gameSetup, false);
+
+    flib_teamlist_destroy(gameSetup.teamlist);
+    flib_map_destroy(gameSetup.map);
+    flib_scheme_destroy(gameSetup.gamescheme);
 
     start(false);
     SetGameState(gsStarted);

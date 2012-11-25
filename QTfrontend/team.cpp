@@ -32,9 +32,12 @@
 HWTeam::HWTeam(const QString & teamname, QObject *parent) :
     QObject(parent)
 {
+    QList<QByteArray> baList;
+
     flib_team team;
     bzero(&team, sizeof(team));
-    team.name = teamname.toUtf8().data();
+    baList << teamname.toUtf8();
+    team.name = baList.last().data();
     team.grave = "Statue";
     team.fort = "Plane";
     team.voicepack = "Default";
@@ -42,7 +45,8 @@ HWTeam::HWTeam(const QString & teamname, QObject *parent) :
 
     for (int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
-        team.hogs[i].name = QLineEdit::tr("hedgehog %1").arg(i+1).toUtf8().data();
+        baList << QLineEdit::tr("hedgehog %1").arg(i+1).toUtf8();
+        team.hogs[i].name = baList.last().data();
         team.hogs[i].hat = "NoHat";
     }
 
@@ -51,43 +55,54 @@ HWTeam::HWTeam(const QString & teamname, QObject *parent) :
     QVector<flib_binding> binds(BINDS_NUMBER);
     for(int i = 0; i < BINDS_NUMBER; i++)
     {
-        binds[i].action = cbinds[i].action.toUtf8().data();
-        binds[i].binding = cbinds[i].strbind.toUtf8().data();
+        baList << cbinds[i].action.toUtf8();
+        binds[i].action = baList.last().data();
+        baList << cbinds[i].strbind.toUtf8();
+        binds[i].binding = baList.last().data();
     }
     team.bindings = binds.data();
     team.bindingCount = binds.size();
 
-    team.remoteDriven = false;
-    team.hogsInGame = 4;
-
     m_team = flib_team_copy(&team);
+
+    m_team->remoteDriven = false;
+    m_team->hogsInGame = 4;
 }
 
 HWTeam::HWTeam(const QStringList& strLst, QObject *parent) :
     QObject(parent)
 {
+    QList<QByteArray> baList;
+
     // net teams are configured from QStringList
     if(strLst.size() != 23) throw HWTeamConstructException();
     flib_team team;
     bzero(&team, sizeof(team));
-    team.name = strLst[0].toUtf8().data();
+
+    for(int i = 0; i < 6; ++i)
+        baList << strLst[i].toUtf8();
+    team.name = baList[0].data();
     m_oldTeamName = strLst[0];
-    team.grave = strLst[1].toUtf8().data();
-    team.fort = strLst[2].toUtf8().data();
-    team.voicepack = strLst[3].toUtf8().data();
-    team.flag = strLst[4].toUtf8().data();
-    team.ownerName = strLst[5].toUtf8().data();
+    team.grave = baList[1].data();
+    team.fort = baList[2].data();
+    team.voicepack = baList[3].data();
+    team.flag = baList[4].data();
+    team.ownerName = baList[5].data();
     int difficulty = strLst[6].toUInt();
 
     for (int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
-        team.hogs[i].name = strLst[i * 2 + 7].toUtf8().data();
+        baList << strLst[i * 2 + 7].toUtf8();
+        team.hogs[i].name = baList.last().data();
 
         QString hat = strLst[i * 2 + 8];
         if (hat.isEmpty())
             team.hogs[i].hat = "NoHat";
         else
-            team.hogs[i].hat = hat.toUtf8().data();
+        {
+            baList << hat.toUtf8();
+            team.hogs[i].hat = baList.last().data();
+        }
 
         team.hogs[i].difficulty = difficulty;
     }
@@ -97,16 +112,17 @@ HWTeam::HWTeam(const QStringList& strLst, QObject *parent) :
     QVector<flib_binding> binds(BINDS_NUMBER);
     for(int i = 0; i < BINDS_NUMBER; i++)
     {
-        binds[i].action = cbinds[i].action.toUtf8().data();
-        binds[i].binding = cbinds[i].strbind.toUtf8().data();
+        baList << cbinds[i].action.toUtf8();
+        binds[i].action = baList.last().data();
+        baList << cbinds[i].strbind.toUtf8();
+        binds[i].binding = baList.last().data();
     }
     team.bindings = binds.data();
     team.bindingCount = binds.size();
 
-    team.remoteDriven = true;
-    team.hogsInGame = 4;
-
     m_team = flib_team_copy(&team);
+    m_team->remoteDriven = true;
+    m_team->hogsInGame = 4;
 }
 
 
@@ -115,7 +131,8 @@ HWTeam::HWTeam(const HWTeam & other) :
     , m_oldTeamName(other.m_oldTeamName)
     , m_team(flib_team_copy(other.m_team))
 {
-
+    m_team->hogsInGame = other.m_team->hogsInGame;
+    m_team->remoteDriven = other.m_team->remoteDriven;
 }
 
 HWTeam & HWTeam::operator = (const HWTeam & other)
@@ -124,6 +141,9 @@ HWTeam & HWTeam::operator = (const HWTeam & other)
     {
         m_oldTeamName = other.m_oldTeamName;
         m_team = flib_team_copy(other.m_team);
+
+        m_team->hogsInGame = other.m_team->hogsInGame;
+        m_team->remoteDriven = other.m_team->remoteDriven;
     }
 
     return *this;
@@ -362,4 +382,9 @@ void HWTeam::incRounds()
 void HWTeam::incWins()
 {
     m_team->wins++;
+}
+
+flib_team * HWTeam::toFlibTeam()
+{
+    return m_team;
 }
