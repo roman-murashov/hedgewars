@@ -109,11 +109,9 @@ class HWGame : public TCPBase
 
         void commonConfig();
         void SendConfig();
-        void SendQuickConfig();
         void SendNetConfig();
         void SendTrainingConfig();
         void SendCampaignConfig();
-        void ParseMessage(const QByteArray & msg);
         void SetGameState(GameState state);
         void sendCampaignVar(const QByteArray & varToSend);
         void writeCampaignVar(const QByteArray &varVal);

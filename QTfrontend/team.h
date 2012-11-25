@@ -42,7 +42,7 @@ class HWTeam : public QObject
     public:
 
         // constructors
-        HWTeam(const QString & teamname = QString(), QObject * parent = 0);
+        HWTeam(const QString & teamname = QString("Team"), QObject * parent = 0);
         HWTeam(const QStringList& strLst, QObject * parent = 0);
         HWTeam(const HWTeam & other);
         ~HWTeam();
@@ -88,6 +88,8 @@ class HWTeam : public QObject
         // increments for statistical info
         void incRounds();
         void incWins();
+
+        flib_team * toFlibTeam();
 
         // comparison operators
         bool operator == (const HWTeam& t1) const;
