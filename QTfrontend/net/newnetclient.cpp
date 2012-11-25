@@ -132,9 +132,9 @@ void HWNewNet::AddTeam(const HWTeam & team)
     for(int i = 0; i < HEDGEHOGS_PER_TEAM; ++i)
     {
         cmd.append(delimeter);
-        cmd.append(team.hedgehog(i).Name);
+        cmd.append(team.hedgehogName(i));
         cmd.append(delimeter);
-        cmd.append(team.hedgehog(i).Hat);
+        cmd.append(team.hedgehogHat(i));
     }
     RawSendNet(cmd);
 }

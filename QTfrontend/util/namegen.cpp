@@ -64,24 +64,20 @@ void HWNamegen::teamRandomNames(HWTeam & team, const bool changeteamname)
 
     if ((TypesHatnames[kind].size()) <= 0)
     {
-        dicts = dictsForHat(team.hedgehog(0).Hat);
+        dicts = dictsForHat(team.hedgehogHat(0));
         dict  = dictContents(dicts[rand()%(dicts.size())]);
     }
 
     for(int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
         if ((TypesHatnames[kind].size()) > 0)
-        {
-            HWHog hh = team.hedgehog(i);
-            hh.Hat = TypesHatnames[kind][rand()%(TypesHatnames[kind].size())];
-            team.setHedgehog(i,hh);
-        }
+            team.setHedgehogHat(i, TypesHatnames[kind][rand()%(TypesHatnames[kind].size())]);
 
         // there is a chance that this hog has the same hat as the previous one
         // let's reuse the hat-specific dict in this case
-        if ((i == 0) || (team.hedgehog(i).Hat != team.hedgehog(i-1).Hat))
+        if ((i == 0) || (team.hedgehogHat(i) != team.hedgehogHat(i-1)))
         {
-            dicts = dictsForHat(team.hedgehog(i).Hat);
+            dicts = dictsForHat(team.hedgehogHat(i));
             dict  = dictContents(dicts[rand()%(dicts.size())]);
         }
 
@@ -93,7 +89,7 @@ void HWNamegen::teamRandomNames(HWTeam & team, const bool changeteamname)
 
 void HWNamegen::teamRandomName(HWTeam & team, const int HedgehogNumber)
 {
-    QStringList dicts = dictsForHat(team.hedgehog(HedgehogNumber).Hat);
+    QStringList dicts = dictsForHat(team.hedgehogHat(HedgehogNumber));
 
     QStringList dict = dictContents(dicts[rand()%(dicts.size())]);
 
@@ -106,18 +102,14 @@ void HWNamegen::teamRandomName(HWTeam & team, const int HedgehogNumber, const QS
 
     for(int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
-        namesDict.removeOne(team.hedgehog(i).Name);
+        namesDict.removeOne(team.hedgehogName(i));
     }
 
     // if our dict doesn't have any new names we'll have to use duplicates
     if (namesDict.size() < 1)
         namesDict = dict;
 
-    HWHog hh = team.hedgehog(HedgehogNumber);
-
-    hh.Name = namesDict[rand()%(namesDict.size())];
-
-    team.setHedgehog(HedgehogNumber, hh);
+    team.setHedgehogName(HedgehogNumber, namesDict[rand()%(namesDict.size())]);
 }
 
 QStringList HWNamegen::dictContents(const QString filename)
