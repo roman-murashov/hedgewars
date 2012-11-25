@@ -348,26 +348,40 @@ void HWGame::StartQuick()
                 , 3);
     gameSetup.teamlist = flib_teamlist_create();
 
-    { // add teams
-        HWTeam team1;
-        team1.setDifficulty(0);
-        team1.setColor(0);
-        team1.setNumHedgehogs(4);
-        HWNamegen::teamRandomNames(team1, true);
+    // add teams
+    HWTeam team1;
+    team1.setDifficulty(0);
+    team1.setColor(0);
+    team1.setNumHedgehogs(4);
+    HWNamegen::teamRandomNames(team1, true);
 
-        HWTeam team2;
-        team2.setDifficulty(4);
-        team2.setColor(1);
-        team2.setNumHedgehogs(4);
-        do
-            HWNamegen::teamRandomNames(team2,true);
-        while(!team2.name().compare(team1.name()) || !team2.hedgehogHat(0).compare(team1.hedgehogHat(0)));
+    HWTeam team2;
+    team2.setDifficulty(4);
+    team2.setColor(1);
+    team2.setNumHedgehogs(4);
+    do
+        HWNamegen::teamRandomNames(team2,true);
+    while(!team2.name().compare(team1.name()) || !team2.hedgehogHat(0).compare(team1.hedgehogHat(0)));
 
-        flib_teamlist_insert(gameSetup.teamlist, team1.toFlibTeam(), 0);
-        flib_teamlist_insert(gameSetup.teamlist, team2.toFlibTeam(), 1);
+    QList<flib_team *> teams;
+    teams << team1.toFlibTeam() << team2.toFlibTeam();
+
+    for(int i = 0; i < 2; ++i)
+    {
+        flib_weaponset *set = flib_weaponset_create("Default");
+        flib_team *team = teams[i];
+        team->hogsInGame = 4;
+        team->remoteDriven = false;
+        for(int h = 0; h < HEDGEHOGS_PER_TEAM; ++h)
+            team->hogs[h].weaponset = set;
+        flib_teamlist_insert(gameSetup.teamlist, team, 0);
     }
 
+
     m_conn = flib_gameconn_create(config->netNick().toUtf8().constData(), &gameSetup, false);
+
+    for(int i = 0; i < 2; ++i)
+        flib_weaponset_destroy(teams[i]->hogs[0].weaponset);
 
     flib_teamlist_destroy(gameSetup.teamlist);
     flib_map_destroy(gameSetup.map);
