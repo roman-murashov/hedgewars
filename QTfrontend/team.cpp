@@ -162,14 +162,14 @@ bool HWTeam::loadFromFile()
     if(m_team)
         flib_team_destroy(m_team);
 
-    m_team = flib_team_from_ini(QString("/config/Teams/%1.hwt").arg(name).toUtf8().data());
+    m_team = flib_team_from_ini(QString("/Teams/%1.hwt").arg(name).toUtf8().data());
 
     return m_team != NULL;
 }
 
 bool HWTeam::fileExists()
 {
-    QFile f(QString("physfs://config/Teams/%1.hwt").arg(name()));
+    QFile f(QString("physfs://Teams/%1.hwt").arg(name()));
     return f.exists();
 }
 
@@ -178,7 +178,7 @@ bool HWTeam::deleteFile()
     if(m_team->remoteDriven)
         return false;
 
-    QFile cfgfile(QString("physfs://config/Teams/%1.hwt").arg(name()));
+    QFile cfgfile(QString("physfs://Teams/%1.hwt").arg(name()));
     cfgfile.remove();
     return true;
 }
@@ -187,12 +187,12 @@ bool HWTeam::saveToFile()
 {
     if (m_oldTeamName != name())
     {
-        QFile cfgfile(QString("physfs://config/Teams/%1.hwt").arg(m_oldTeamName));
+        QFile cfgfile(QString("physfs://Teams/%1.hwt").arg(m_oldTeamName));
         cfgfile.remove();
         m_oldTeamName = name();
     }
 
-    return flib_team_to_ini(QString("physfs://config/Teams/%1.hwt").arg(name()).toUtf8(), m_team) == 0;
+    return flib_team_to_ini(QString("physfs://Teams/%1.hwt").arg(name()).toUtf8(), m_team) == 0;
 }
 
 
