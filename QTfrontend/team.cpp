@@ -221,7 +221,7 @@ void HWTeam::setName(const QString & name)
 {
     free(m_team->name);
 
-    m_team->name = qstrdup(name.toUtf8().constData());
+    m_team->name = strdup(name.toUtf8().constData());
 }
 
 QString HWTeam::hedgehogName(int index) const
@@ -238,14 +238,14 @@ void HWTeam::setHedgehogName(int index, const QString & name)
 {
     free(m_team->hogs[index].name);
 
-    m_team->hogs[index].name = qstrdup(name.toUtf8().constData());
+    m_team->hogs[index].name = strdup(name.toUtf8().constData());
 }
 
 void HWTeam::setHedgehogHat(int index, const QString & hat)
 {
     free(m_team->hogs[index].hat);
 
-    m_team->hogs[index].hat = qstrdup(hat.toUtf8().constData());
+    m_team->hogs[index].hat = strdup(hat.toUtf8().constData());
 }
 
 
@@ -296,7 +296,7 @@ void HWTeam::bindKey(unsigned int idx, const QString & key)
 {
     free(m_team->bindings[idx].binding);
 
-    m_team->bindings[idx].binding = qstrdup(key.toUtf8().constData());
+    m_team->bindings[idx].binding = strdup(key.toUtf8().constData());
 }
 
 // flag
@@ -381,5 +381,5 @@ void HWTeam::incWins()
 
 flib_team * HWTeam::toFlibTeam()
 {
-    return m_team;
+    return flib_team_copy(m_team);
 }
