@@ -44,6 +44,7 @@ HWMapContainer::HWMapContainer(QWidget * parent) :
     mapgen(MAPGEN_REGULAR),
     m_previewSize(256, 128)
 {
+    m_mapInfo.type = MapModel::GeneratedMap;
     hhSmall.load(":/res/hh_small.png");
     hhLimit = 18;
     templateFilter = 0;

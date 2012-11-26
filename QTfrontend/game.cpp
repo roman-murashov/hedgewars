@@ -345,7 +345,7 @@ void HWGame::StartQuick()
     gameSetup.map = flib_map_create_regular(
                 QUuid::createUuid().toByteArray().constData()
                 , themeModel->rowCount() > 0 ? themeModel->index(rand() % themeModel->rowCount()).data().toString().toUtf8().constData() : "Sheep"
-                , 3);
+                , 2);
     gameSetup.teamlist = flib_teamlist_create();
 
     // add teams
@@ -368,20 +368,19 @@ void HWGame::StartQuick()
 
     for(int i = 0; i < 2; ++i)
     {
-        flib_weaponset *set = flib_weaponset_create("Default");
         flib_team *team = teams[i];
         team->hogsInGame = 4;
         team->remoteDriven = false;
         for(int h = 0; h < HEDGEHOGS_PER_TEAM; ++h)
-            team->hogs[h].weaponset = set;
+        {
+            team->hogs[h].weaponset = flib_weaponset_create("Default");
+            team->hogs[h].initialHealth = 100;
+        }
         flib_teamlist_insert(gameSetup.teamlist, team, 0);
     }
 
 
     m_conn = flib_gameconn_create(config->netNick().toUtf8().constData(), &gameSetup, false);
-
-    for(int i = 0; i < 2; ++i)
-        flib_weaponset_destroy(teams[i]->hogs[0].weaponset);
 
     flib_teamlist_destroy(gameSetup.teamlist);
     flib_map_destroy(gameSetup.map);
