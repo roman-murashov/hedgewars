@@ -44,7 +44,7 @@ extern QString * cDefaultAmmoStore;
 extern int cAmmoNumber;
 extern QList< QPair<QString, QString> > cDefaultAmmos;
 
-extern unsigned int colors[];
+extern quint32 colors[];
 
 extern QString * netHost;
 extern quint16 netPort;
@@ -105,40 +105,3 @@ extern int years_since_foundation;
 #define SEASON_EASTER 8
 
 #define NETGAME_DEFAULT_PORT 46631
-
-
-// see http://en.wikipedia.org/wiki/List_of_colors
-/*define HW_TEAMCOLOR_ARRAY  {0xff007fff, /. azure          ./ \
-                              0xffdd0000, /. classic red    ./ \
-                              0xff3e9321, /. classic green  ./ \
-                              0xffa23dbb, /. classic purple ./ \
-                              0xffffb347, /. pastel orange  ./ \
-                              0xffcfcfc4, /. pastel gray    ./ \
-                              0xffbff000, /. lime           ./ \
-                              0xffffef00, /. yellow         ./ \
-                              // add new colors here
-                              0 }*/
-/*
-#define HW_TEAMCOLOR_ARRAY  { 0xffd12b42, /. red    ./ \
-                              0xff4980c1, /. blue   ./ \
-                              0xff6ab530, /. green  ./ \
-                              0xffbc64c4, /. purple ./ \
-                              0xffe76d14, /. orange ./ \
-                              0xff3fb6e6, /. cyan   ./ \
-                              0xffe3e90c, /. yellow ./ \
-                              0xff61d4ac, /. mint   ./ \
-                              0xfff1c3e1, /. pink   ./ \
-                              // add new colors here
-                              0 }*/
-/* another set. this one is a merge of mikade/bugq colours w/ a bit of channel feedback */
-#define HW_TEAMCOLOR_ARRAY  { 0xffff0204, /* red    */ \
-                              0xff4980c1, /* blue   */ \
-                              0xff1de6ba, /* teal   */ \
-                              0xffb541ef, /* purple */ \
-                              0xffe55bb0, /* pink   */ \
-                              0xff20bf00, /* green  */ \
-                              0xfffe8b0e, /* orange */ \
-                              0xff5f3605, /* brown  */ \
-                              0xffffff01, /* yellow */ \
-                              /* add new colors here */ \
-                              0 }

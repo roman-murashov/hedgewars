@@ -59,7 +59,7 @@ void HWGame::onClientDisconnect()
     switch (gameType)
     {
         case gtDemo:
-            // for video recording we need demo anyway 
+            // for video recording we need demo anyway
             emit HaveRecord(rtNeither, demo);
             break;
         case gtNet:
@@ -343,7 +343,7 @@ void HWGame::StartQuick()
     gameSetup.style = NULL;
     gameSetup.gamescheme = flib_scheme_create("Default");
     gameSetup.map = flib_map_create_regular(
-                QUuid::createUuid().toByteArray().constData()
+                QUuid::createUuid().toString().toAscii().constData()
                 , themeModel->rowCount() > 0 ? themeModel->index(rand() % themeModel->rowCount()).data().toString().toUtf8().constData() : "Sheep"
                 , 2);
     gameSetup.teamlist = flib_teamlist_create();

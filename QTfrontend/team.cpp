@@ -35,19 +35,19 @@ HWTeam::HWTeam(const QString & teamname, QObject *parent) :
     QList<QByteArray> baList;
 
     flib_team team;
-    bzero(&team, sizeof(team));
+    memset(&team, 0, sizeof(team));
     baList << teamname.toUtf8();
     team.name = baList.last().data();
-    team.grave = "Statue";
-    team.fort = "Plane";
-    team.voicepack = "Default";
-    team.flag = "hedgewars";
+    team.grave = const_cast<char *>("Statue");
+    team.fort = const_cast<char *>("Plane");
+    team.voicepack = const_cast<char *>("Default");
+    team.flag = const_cast<char *>("hedgewars");
 
     for (int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
         baList << QLineEdit::tr("hedgehog %1").arg(i+1).toUtf8();
         team.hogs[i].name = baList.last().data();
-        team.hogs[i].hat = "NoHat";
+        team.hogs[i].hat = const_cast<char *>("NoHat");
     }
 
     m_oldTeamName = teamname;
@@ -74,7 +74,7 @@ HWTeam::HWTeam(const QStringList& strLst, QObject *parent) :
     // net teams are configured from QStringList
     if(strLst.size() != 23) throw HWTeamConstructException();
     flib_team team;
-    bzero(&team, sizeof(team));
+    memset(&team, 0, sizeof(team));
 
     for(int i = 0; i < 6; ++i)
         baList << strLst[i].toUtf8();
@@ -94,7 +94,7 @@ HWTeam::HWTeam(const QStringList& strLst, QObject *parent) :
 
         QString hat = strLst[i * 2 + 8];
         if (hat.isEmpty())
-            team.hogs[i].hat = "NoHat";
+            team.hogs[i].hat = const_cast<char *>("NoHat");
         else
         {
             baList << hat.toUtf8();
