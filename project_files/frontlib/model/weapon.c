@@ -56,10 +56,10 @@ flib_weaponset *flib_weaponset_create(const char *name) {
 		if(newSet) {
 			newSet->name = flib_strdupnull(name);
 			if(newSet->name) {
-				setField(newSet->loadout, AMMOLINE_DEFAULT_QT, 0, false);
-				setField(newSet->crateprob, AMMOLINE_DEFAULT_PROB, 0, true);
-				setField(newSet->crateammo, AMMOLINE_DEFAULT_CRATE, 0, true);
-				setField(newSet->delay, AMMOLINE_DEFAULT_DELAY, 0, true);
+				setField(newSet->loadout, AMMOLINE_DEFAULT_QT, strlen(AMMOLINE_DEFAULT_QT), false);
+				setField(newSet->crateprob, AMMOLINE_DEFAULT_PROB, strlen(AMMOLINE_DEFAULT_PROB), true);
+				setField(newSet->crateammo, AMMOLINE_DEFAULT_CRATE, strlen(AMMOLINE_DEFAULT_CRATE), true);
+				setField(newSet->delay, AMMOLINE_DEFAULT_DELAY, strlen(AMMOLINE_DEFAULT_DELAY), true);
 				result = newSet;
 				newSet = NULL;
 			}
