@@ -541,23 +541,41 @@ end;
 {$INCLUDE "ArgParsers.inc"}
 
 procedure GetParams;
-var tmpInt: LongInt;
+var startIndex: LongInt;
+    tmpInt: LongInt;
 begin
-    if (ParamCount < 3) then
-        begin
+    if (ParamCount < 2) then
         DisplayUsage();
-        GameType:= gmtSyntax;
-        end
+        GameType:= gmtSyntax
     else
-        if (ParamCount = 3) and (ParamStr(3) = 'landpreview') then
+        if (ParamCount >= 2) then
+            begin
+            UserPathPrefix:= ParamStr(1);
+            PathPrefix:= ParamStr(2)
+            end;
+        if (ParamCount >= 3) then
+            recordFileName:= ParamStr(3);
+        if (ParamCount = 2) or
+           ((ParamCount >= 3) and (Copy(recordFileName,1,2) = '--')) then
+            begin
+            recordFileName := PathPrefix;
+            PathPrefix := UserPathPrefix;
+            startIndex := 3;
+            WriteLn(stdout,'defaulting UserPathPrefix')
+            end
+        else
+            startIndex := 4;
+        if (ParamCount = startIndex) and 
+           (ParamStr(startIndex) = 'landpreview') then
             begin
             ipcPort:= StrToInt(ParamStr(2));
             GameType:= gmtLandPreview;
             end
         else
             begin
-            if (ParamCount = 3) and (ParamStr(3) = '--stats-only') then
-                playReplayFileWithParameters()
+            if (ParamCount = startIndex) and 
+               (ParamStr(startIndex) = '--stats-only') then
+                playReplayFileWithParameters(startIndex)
             else
                 if ParamCount = cDefaultParamNum then
                     internalStartGameWithParameters()
@@ -566,7 +584,7 @@ begin
                     internalStartVideoRecordingWithParameters()
 {$ENDIF}
                 else
-                    playReplayFileWithParameters();
+                    playReplayFileWithParameters(startIndex);
             end
 end;
 
