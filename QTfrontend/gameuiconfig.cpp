@@ -94,11 +94,13 @@ void GameUIConfig::reloadValues(void)
     Form->ui.pageOptions->editNetPassword->installEventFilter(this);
 
     int passLength = value("net/passwordlength", 0).toInt();
-    setNetPasswordLength(passLength);
-    if (savePwd == false) {
-        Form->ui.pageOptions->editNetPassword->setEnabled(savePwd);
+    if (!savePwd) {
+        Form->ui.pageOptions->editNetPassword->setEnabled(false);
         Form->ui.pageOptions->editNetPassword->setText("");
         setNetPasswordLength(0);
+    } else
+    {
+        setNetPasswordLength(passLength);
     }
 
     delete netHost;
@@ -139,26 +141,34 @@ void GameUIConfig::reloadValues(void)
 
 void GameUIConfig::reloadVideosValues(void)
 {
-    Form->ui.pageVideos->framerateBox->setValue(value("videorec/fps",25).toUInt());
-    Form->ui.pageVideos->bitrateBox->setValue(value("videorec/bitrate",400).toUInt());
-    bool useGameRes = value("videorec/usegameres",true).toBool();
+    // one pass with default values
+    Form->ui.pageOptions->setDefaultOptions();
+
+    // then load user configuration
+    Form->ui.pageOptions->framerateBox->setCurrentIndex(
+            Form->ui.pageOptions->framerateBox->findData(
+                        value("videorec/framerate", rec_Framerate()).toString() + " fps",
+                    Qt::MatchExactly) );
+    Form->ui.pageOptions->bitrateBox->setValue(value("videorec/bitrate", rec_Bitrate()).toUInt());
+    bool useGameRes = value("videorec/usegameres",Form->ui.pageOptions->checkUseGameRes->isChecked()).toBool();
     if (useGameRes)
     {
         QRect res = vid_Resolution();
-        Form->ui.pageVideos->widthEdit->setText(QString::number(res.width()));
-        Form->ui.pageVideos->heightEdit->setText(QString::number(res.height()));
+        Form->ui.pageOptions->widthEdit->setText(QString::number(res.width()));
+        Form->ui.pageOptions->heightEdit->setText(QString::number(res.height()));
     }
     else
     {
-        Form->ui.pageVideos->widthEdit->setText(value("videorec/width","800").toString());
-        Form->ui.pageVideos->heightEdit->setText(value("videorec/height","600").toString());
+        Form->ui.pageOptions->widthEdit->setText(value("videorec/width","800").toString());
+        Form->ui.pageOptions->heightEdit->setText(value("videorec/height","600").toString());
     }
-    Form->ui.pageVideos->checkUseGameRes->setChecked(useGameRes);
-    Form->ui.pageVideos->checkRecordAudio->setChecked(value("videorec/audio",true).toBool());
-    if (!Form->ui.pageVideos->tryCodecs(value("videorec/format","no").toString(),
+    Form->ui.pageOptions->checkUseGameRes->setChecked(useGameRes);
+    Form->ui.pageOptions->checkRecordAudio->setChecked(
+            value("videorec/audio",Form->ui.pageOptions->checkRecordAudio->isChecked()).toBool() );
+    if (!Form->ui.pageOptions->tryCodecs(value("videorec/format","no").toString(),
                                         value("videorec/videocodec","no").toString(),
                                         value("videorec/audiocodec","no").toString()))
-        Form->ui.pageVideos->setDefaultCodecs();
+        Form->ui.pageOptions->setDefaultCodecs();
 }
 
 QStringList GameUIConfig::GetTeamsList()
@@ -177,7 +187,16 @@ QStringList GameUIConfig::GetTeamsList()
 
 void GameUIConfig::resizeToConfigValues()
 {
-    Form->resize(value("frontend/width", 800).toUInt(), value("frontend/height", 600).toUInt());
+    // fill 2/3 of the screen desktop
+    const QRect deskSize = QApplication::desktop()->screenGeometry(-1);
+    Form->resize(value("frontend/width", deskSize.width()*2/3).toUInt(),
+                 value("frontend/height", deskSize.height()*2/3).toUInt());
+
+    // move the window to the center of the screen
+    QPoint center = QApplication::desktop()->availableGeometry(-1).center();
+    center.setX(center.x() - (Form->width()/2));
+    center.setY(center.y() - (Form->height()/2));
+    Form->move(center);
 }
 
 void GameUIConfig::SaveOptions()
@@ -270,7 +289,7 @@ void GameUIConfig::SaveOptions()
             setValue(QString("colors/color%1").arg(i), model->item(i)->data());
     }
 
-    Form->gameSettings->sync();
+    sync();
 }
 
 void GameUIConfig::SaveVideosOptions()
@@ -279,14 +298,19 @@ void GameUIConfig::SaveVideosOptions()
     setValue("videorec/format", AVFormat());
     setValue("videorec/videocodec", videoCodec());
     setValue("videorec/audiocodec", audioCodec());
-    setValue("videorec/fps", rec_Framerate());
+    setValue("videorec/framerate", rec_Framerate());
     setValue("videorec/bitrate", rec_Bitrate());
     setValue("videorec/width", res.width());
     setValue("videorec/height", res.height());
-    setValue("videorec/usegameres", Form->ui.pageVideos->checkUseGameRes->isChecked());
+    setValue("videorec/usegameres", Form->ui.pageOptions->checkUseGameRes->isChecked());
     setValue("videorec/audio", recordAudio());
 
-    Form->gameSettings->sync();
+    sync();
+}
+
+void GameUIConfig::setValue(const QString &key, const QVariant &value)
+{
+    QSettings::setValue(key, value);
 }
 
 QString GameUIConfig::language()
@@ -447,7 +471,7 @@ int GameUIConfig::netPasswordLength()
 
 bool GameUIConfig::netPasswordIsValid()
 {
-    return (netPasswordLength() == 0 || Form->ui.pageOptions->editNetPassword->text() != QString(netPasswordLength(), '\0'));
+    return (netPasswordLength() == 0 || Form->ui.pageOptions->editNetPassword->text() != QString(netPasswordLength(), '*'));
 }
 
 // When hedgewars launches, the password field is set with null characters. If the user tries to edit the field and there are such characters, then clear the field
@@ -472,7 +496,7 @@ void GameUIConfig::setNetPasswordLength(int passwordLength)
 {
     if (passwordLength > 0)
     {
-        Form->ui.pageOptions->editNetPassword->setText(QString(passwordLength, '\0'));
+        Form->ui.pageOptions->editNetPassword->setText(QString(passwordLength, '*'));
     }
     else
     {
@@ -487,40 +511,43 @@ quint8 GameUIConfig::volume()
 
 QString GameUIConfig::AVFormat()
 {
-    return Form->ui.pageVideos->format();
+    return Form->ui.pageOptions->format();
 }
 
 QString GameUIConfig::videoCodec()
 {
-    return Form->ui.pageVideos->videoCodec();
+    return Form->ui.pageOptions->videoCodec();
 }
 
 QString GameUIConfig::audioCodec()
 {
-    return Form->ui.pageVideos->audioCodec();
+    return Form->ui.pageOptions->audioCodec();
 }
 
 QRect GameUIConfig::rec_Resolution()
 {
-    if (Form->ui.pageVideos->checkUseGameRes->isChecked())
+    if (Form->ui.pageOptions->checkUseGameRes->isChecked())
         return vid_Resolution();
     QRect res(0,0,0,0);
-    res.setWidth(Form->ui.pageVideos->widthEdit->text().toUInt());
-    res.setHeight(Form->ui.pageVideos->heightEdit->text().toUInt());
+    res.setWidth(Form->ui.pageOptions->widthEdit->text().toUInt());
+    res.setHeight(Form->ui.pageOptions->heightEdit->text().toUInt());
     return res;
 }
 
 int GameUIConfig::rec_Framerate()
 {
-    return Form->ui.pageVideos->framerateBox->value();
+    // remove the "fps" label
+    QString fpsText = Form->ui.pageOptions->framerateBox->currentText();
+    QStringList fpsList = fpsText.split(" ");
+    return fpsList.first().toInt();
 }
 
 int GameUIConfig::rec_Bitrate()
 {
-    return Form->ui.pageVideos->bitrateBox->value();
+    return Form->ui.pageOptions->bitrateBox->value();
 }
 
 bool GameUIConfig::recordAudio()
 {
-    return Form->ui.pageVideos->checkRecordAudio->isChecked();
+    return Form->ui.pageOptions->checkRecordAudio->isChecked();
 }
