@@ -12,6 +12,12 @@ configure_file(${hedgewars_SOURCE_DIR}/hedgewars/config.inc.in ${CMAKE_CURRENT_B
 set(hwengine_project ${hedgewars_SOURCE_DIR}/hedgewars/hwengine.pas)
 set(engine_output_name "hwengine")
 
+if (APPLE)
+    set(required_fpc_version 2.6)
+else()
+    set(required_fpc_version 2.2)
+endif()
+
 set(engine_sources
     ${hwengine_project}
     LuaPas.pas
@@ -53,7 +59,6 @@ set(engine_sources
     uLandTexture.pas
     uLocale.pas
     uMisc.pas
-    uMobile.pas
     uPhysFSLayer.pas
     uRandom.pas
     uRender.pas
@@ -101,54 +106,13 @@ if(BUILD_ENGINE_LIBRARY)
 endif(BUILD_ENGINE_LIBRARY)
 
 
-#PASCAL DETECTION SECTION
-IF(FPC)
-    set(fpc_executable ${FPC})
-ELSE()
-    find_program(fpc_executable fpc)
-ENDIF()
+# Check Freepascal version
+find_package(Freepascal)
 
-message(STATUS "Check for working FPC compiler: ${fpc_executable}")
-execute_process(COMMAND ${fpc_executable} -iV OUTPUT_VARIABLE fpc_output ERROR_VARIABLE fpc_error)
-if(fpc_error)
-    message(STATUS "Check for working FPC compiler: ${fpc_executable} -- broken")
-else(fpc_error)
-    message(STATUS "Check for working FPC compiler: ${fpc_executable} -- works")
-endif(fpc_error)
-
-string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" fpc_version "${fpc_output}")
-if(fpc_version)
-    string(REGEX REPLACE "([0-9]+)\\.[0-9]+\\.[0-9]+" "\\1" fpc_vers_major "${fpc_version}")
-    string(REGEX REPLACE "[0-9]+\\.([0-9]+)\\.[0-9]+" "\\1" fpc_vers_minor "${fpc_version}")
-    string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+)" "\\1" fpc_vers_patch "${fpc_version}")
-    message(STATUS "Found Freepascal: ${fpc_executable} (version ${fpc_vers_major}.${fpc_vers_minor})")
-    math(EXPR fpc_version "${fpc_vers_major}*10000 + ${fpc_vers_minor}*100 + ${fpc_vers_patch}")
-
-    if(fpc_version LESS "020200")
-        message(FATAL_ERROR "Minimum required version of FreePascal is 2.2.0")
-    elseif(APPLE AND (fpc_version LESS "020600"))
-        message(FATAL_ERROR "Minimum required version of FreePascal is 2.6.0 on Mac OS X")
-    endif()
-else()
-    message(FATAL_ERROR "No FreePascal compiler found!")
+if (FPC_VERSION VERSION_LESS required_fpc_version)
+    message(FATAL_ERROR "Freepascal is too old, minimum version required is ${required_fpc_version}")
 endif()
 
-message(STATUS "Checking whether linker supports noexecstack flag")
-set(noexecstack_flags "-k-z" "-knoexecstack")
-file(WRITE ${EXECUTABLE_OUTPUT_PATH}/checkstack.pas "begin end.")
-
-execute_process(COMMAND ${fpc_executable} ${noexecstack_flags} checkstack.pas
-    WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
-    RESULT_VARIABLE testnoexecstack
-    OUTPUT_QUIET ERROR_QUIET
-    )
-
-if(${testnoexecstack})
-    set (noexecstack_flags "")
-    message(STATUS "Checking whether linker supports noexecstack flag -- no")
-else(${testnoexecstack})
-    message(STATUS "Checking whether linker supports noexecstack flag -- yes")
-endif(${testnoexecstack})
 
 #DEPENDECIES AND EXECUTABLES SECTION
 if(APPLE)
@@ -198,9 +162,8 @@ endif()
 
 
 #this command is a workaround to some inlining issues present in older FreePascal versions and fixed in 2.6
-if(fpc_version LESS "020600")
+if(FPC_VERSION VERSION_LESS "2.6")
     #under some configurations CMAKE_BUILD_TOOL fails to pass on the jobserver, breaking parallel compilation
-    #TODO: check if this is needed on windows too
     if(UNIX)
         set(SAFE_BUILD_TOOL $(MAKE))
     else()
@@ -239,22 +202,22 @@ endif()
 
 set(pascal_flags "-Fl${LIBRARY_OUTPUT_PATH}" ${pascal_flags})
 
-set(fpc_flags ${noexecstack_flags} ${pascal_flags} ${hwengine_project})
+set(fpc_flags ${NOEXECSTACK_FLAGS} ${pascal_flags} ${hwengine_project})
 
-IF(NOT APPLE)
+if(NOT APPLE)
     #here is the command for standard executables or for shared library
     add_custom_command(OUTPUT "${EXECUTABLE_OUTPUT_PATH}/${engine_output_name}${CMAKE_EXECUTABLE_SUFFIX}"
-        COMMAND "${fpc_executable}"
+        COMMAND "${FPC_EXECUTABLE}"
         ARGS ${fpc_flags}
         MAIN_DEPENDENCY ${hwengine_project}
         DEPENDS ${engine_sources}
         )
-ELSE()
+else()
     #these are the dependencies for building a universal binary on Mac OS X
     foreach (build_arch ${powerpc_build} ${i386_build} ${x86_64_build})
         set(lipo_args_list "${EXECUTABLE_OUTPUT_PATH}/hwengine.${build_arch}" ${lipo_args_list})
         add_custom_command(OUTPUT "${EXECUTABLE_OUTPUT_PATH}/hwengine.${build_arch}"
-            COMMAND "${fpc_executable}"
+            COMMAND "${FPC_EXECUTABLE}"
             ARGS ${fpc_flags} -ohwengine.${build_arch} -P${build_arch}
             MAIN_DEPENDENCY ${hwengine_project}
             DEPENDS ${engine_sources}
@@ -267,7 +230,7 @@ ELSE()
         ARGS ${lipo_args_list} -create -output ${EXECUTABLE_OUTPUT_PATH}/${engine_output_name}
         DEPENDS ${lipo_args_list}
         )
-ENDIF()
+endif()
 
 
 add_custom_target(${engine_output_name} ALL DEPENDS "${EXECUTABLE_OUTPUT_PATH}/${engine_output_name}${CMAKE_EXECUTABLE_SUFFIX}")
@@ -287,7 +250,7 @@ if(${FFMPEG_FOUND})
 endif()
 
 #this command is a workaround to some inlining issues present in older FreePascal versions and fixed in 2.6
-if((fpc_version LESS "020600") AND (NOVIDEOREC OR NOT ${FFMPEG_FOUND}))
+if((FPC_VERSION VERSION_LESS "2.6") AND (NOVIDEOREC OR NOT ${FFMPEG_FOUND}))
     add_dependencies(${engine_output_name} ENGINECLEAN)
 endif()
 
