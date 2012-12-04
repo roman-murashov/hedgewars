@@ -70,7 +70,6 @@ class HWGame : public TCPBase
     protected:
         virtual QStringList getArguments();
         virtual void onClientRead();
-        virtual void onClientDisconnect();
         void onEngineStart();
 
     signals:
@@ -81,7 +80,7 @@ class HWGame : public TCPBase
         void GameStats(char type, const QString & info);
         void HaveRecord(RecordType type, const QByteArray & record);
         void ErrorMessage(const QString &);
-        void CampStateChanged(int);
+        void campStateChanged(int);
 
     public slots:
         void FromNet(const QByteArray & msg);
@@ -115,6 +114,13 @@ class HWGame : public TCPBase
         void SetGameState(GameState state);
         void sendCampaignVar(const QByteArray & varToSend);
         void writeCampaignVar(const QByteArray &varVal);
+
+        static void onChat(void* context, const char *msg, bool teamchat);
+        static void onConnect(void* context);
+        static void onDisconnect(void* context, int reason);
+        static void onEngineMessage(void *context, const uint8_t *em, size_t size);
+        static void onErrorMessage(void* context, const char *msg);
+        static void onGameRecorded(void *context, const uint8_t *record, size_t size, bool isSavegame);
 };
 
 #endif
