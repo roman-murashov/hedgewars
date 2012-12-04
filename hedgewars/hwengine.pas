@@ -541,25 +541,30 @@ end;
 {$INCLUDE "ArgParsers.inc"}
 
 procedure GetParams;
-var tmpInt: LongInt;
+var startIndex,tmpInt: LongInt;
+    debug: string;
 begin
     if (ParamCount < 2) then
-        GameType:= gmtSyntax
+        begin
+        DisplayUsage();
+        GameType:= gmtSyntax;
+        end
     else
+        begin
         if (ParamCount >= 2) then
             begin
-            UserPathPrefix:= ParamStr(1);
-            PathPrefix:= ParamStr(2)
+            UserPathPrefix := ParamStr(1);
+            PathPrefix     := ParamStr(2)
             end;
         if (ParamCount >= 3) then
-            recordFileName:= ParamStr(3);
+            recordFilename := ParamStr(3);
         if (ParamCount = 2) or
            ((ParamCount >= 3) and (Copy(recordFileName,1,2) = '--')) then
             begin
             recordFileName := PathPrefix;
-            PathPrefix := UserPathPrefix;
+            PathPrefix     := UserPathPrefix;
+            UserPathPrefix := '.';
             startIndex := 3;
-            WriteLn(stdout,'defaulting UserPathPrefix')
             end
         else
             startIndex := 4;
@@ -584,6 +589,10 @@ begin
                 else
                     playReplayFileWithParameters(startIndex);
             end
+        end;
+    WriteLn(stdout,recordFilename);
+    WriteLn(stdout,PathPrefix);
+    WriteLn(stdout,UserPathPrefix);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////
