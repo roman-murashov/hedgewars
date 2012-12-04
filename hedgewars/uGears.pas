@@ -57,7 +57,7 @@ procedure doStepDrowningGear(Gear: PGear);
 
 implementation
 uses uStore, uSound, uTeams, uRandom, uCollisions, uIO, uLandGraphics,
-    uLocale, uAI, uAmmos, uStats, uVisualGears, uScript, GLunit, uMobile, uVariables,
+    uLocale, uAI, uAmmos, uStats, uVisualGears, uScript, GLunit, uVariables,
     uCommands, uUtils, uTextures, uRenderUtils, uGearsRender, uCaptions, uDebug, uLandTexture,
     uGearsHedgehog, uGearsUtils, uGearsList, uGearsHandlers, uGearsHandlersRope;
 
@@ -677,8 +677,8 @@ while t <> nil do
             gtKnife,
             gtCase,
             gtTarget,
-            gtExplosives,
-            gtStructure: begin
+            gtExplosives: begin//,
+//            gtStructure: begin
 //addFileLog('ShotgunShot radius: ' + inttostr(Gear^.Radius) + ', t^.Radius = ' + inttostr(t^.Radius) + ', distance = ' + inttostr(dist) + ', dmg = ' + inttostr(dmg));
                     dmg:= 0;
                     r:= Gear^.Radius + t^.Radius;
@@ -777,8 +777,8 @@ while i > 0 do
             gtKnife,
             gtTarget,
             gtCase,
-            gtExplosives,
-            gtStructure:
+            gtExplosives: //,
+            //gtStructure:
             begin
             if (Ammo^.Kind = gtDrill) then
                 begin
@@ -1363,7 +1363,7 @@ const handlers: array[TGearType] of TGearStepProcedure = (
             @doStepNapalmBomb,
             @doStepSnowball,
             @doStepSnowflake,
-            @doStepStructure,
+            //@doStepStructure,
             @doStepLandGun,
             @doStepTardis,
             @doStepIceGun,

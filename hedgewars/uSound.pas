@@ -386,7 +386,7 @@ begin
         if (voicepack^.chunks[snd] = nil) and (Soundz[snd].Path = ptVoices) and (Soundz[snd].FileName <> '') then
             begin
             s:= cPathz[Soundz[snd].Path] + '/' + voicepack^.name + '/' + Soundz[snd].FileName;
-            if (not FileExists(s)) and (snd in [sndFirePunch2, sndFirePunch3, sndFirePunch4, sndFirePunch5, sndFirePunch6]) then
+            if (not pfsExists(s)) and (snd in [sndFirePunch2, sndFirePunch3, sndFirePunch4, sndFirePunch5, sndFirePunch6]) then
                 s:= cPathz[Soundz[sndFirePunch1].Path] + '/' + voicepack^.name + '/' + Soundz[snd].FileName;
             WriteToConsole(msgLoading + s + ' ');
             voicepack^.chunks[snd]:= Mix_LoadWAV_RW(rwopsOpenRead(s), 1);
@@ -419,7 +419,7 @@ begin
     if (snd = sndVictory) or (snd = sndFlawless) then
         begin
         Mix_FadeOutChannel(-1, 800);
-        for i:= 0 to 7 do
+        for i:= 0 to High(VoiceList) do
             VoiceList[i].snd:= sndNone;
         LastVoice.snd:= sndNone;
         end;
@@ -441,7 +441,7 @@ begin
     if (not isSoundEnabled) or fastUntilLag or ((LastVoice.snd <> sndNone) and (lastChan[LastVoice.snd] <> -1) and (Mix_Playing(lastChan[LastVoice.snd]) <> 0)) then
         exit;
     i:= 0;
-    while (i<8) and (VoiceList[i].snd = sndNone) do
+    while (i<High(VoiceList)) and (VoiceList[i].snd = sndNone) do
         inc(i);
     
     if (VoiceList[i].snd <> sndNone) then
@@ -719,7 +719,7 @@ begin
                 voicepacks[t].chunks[i]:= nil;
 
     (* on MOBILE SDL_mixer has to be compiled against Tremor (USE_OGG_TREMOR)
-       or sound files bigger than 32k will lockup the game *)
+       or sound files bigger than 32k will lockup the game on slow cpu *)
     for i:= Low(TSound) to High(TSound) do
         defVoicepack^.chunks[i]:= nil;
 
