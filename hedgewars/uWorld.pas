@@ -60,7 +60,6 @@ uses
     , uCaptions
     , uCursor
     , uCommands
-    , uMobile
 {$IFDEF USE_VIDEO_RECORDING}    
     , uVideoRec
 {$ENDIF}    
@@ -84,6 +83,10 @@ var cWaveWidth, cWaveHeight: LongInt;
     isFirstFrame: boolean;
     AMAnimType: LongInt;
     recTexture: PTexture;
+    AmmoMenuTex     : PTexture;
+    HorizontOffset: LongInt;
+    cOffsetY: LongInt;
+    AFRToggle: Boolean;
 
 const cStereo_Sky           = 0.0500;
       cStereo_Horizon       = 0.0250;
@@ -92,6 +95,28 @@ const cStereo_Sky           = 0.0500;
       cStereo_Land          = 0.0075;
       cStereo_Water_near    = 0.0025;
       cStereo_Outside       = -0.0400;
+
+      AMAnimDuration = 200;
+      AMHidden    = 0;//AMState values
+      AMShowingUp = 1;
+      AMShowing   = 2;
+      AMHiding    = 3;
+
+      AMTypeMaskX     = $00000001;
+      AMTypeMaskY     = $00000002;
+      AMTypeMaskAlpha = $00000004;
+      AMTypeMaskSlide = $00000008;
+
+{$IFDEF MOBILE}
+      AMSlotSize = 48;
+      AMTITLE    = 30;
+{$ELSE}
+      AMSlotSize = 32;
+{$ENDIF}
+      AMSlotPadding = (AMSlotSize - 32) shr 1;
+
+      cSendCursorPosTime = 50;
+      cCursorEdgesDist   = 100;
 
 // helper functions to create the goal/game mode string
 function AddGoal(s: ansistring; gf: longword; si: TGoalStrId; i: LongInt): ansistring;
@@ -220,7 +245,7 @@ begin
 {$IFDEF USE_TOUCH_INTERFACE}
 
 //positioning of the buttons
-buttonScale:= uMobile.getScreenDPI/cDefaultZoomLevel;
+buttonScale:= mobileRecord.getScreenDPI()/cDefaultZoomLevel;
 
 
 with JumpWidget do
@@ -961,7 +986,7 @@ begin
         glClear(GL_COLOR_BUFFER_BIT);
         DrawWorldStereo(Lag, rmDefault)
         end
-{$IFNDEF S3D_DISABLED}
+{$IFDEF USE_S3D_RENDERING}
     else if (cStereoMode = smAFR) then
         begin
         AFRToggle:= not AFRToggle;
@@ -1074,7 +1099,7 @@ end;
 
 procedure ChangeDepth(rm: TRenderMode; d: GLfloat);
 begin
-{$IFDEF S3D_DISABLED}
+{$IFNDEF USE_S3D_RENDERING}
     rm:= rm; d:= d; // avoid hint
     exit;
 {$ELSE}
@@ -1092,7 +1117,7 @@ end;
  
 procedure ResetDepth(rm: TRenderMode);
 begin
-{$IFDEF S3D_DISABLED}
+{$IFNDEF USE_S3D_RENDERING}
     rm:= rm; // avoid hint
     exit;
 {$ELSE}

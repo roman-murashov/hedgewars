@@ -33,7 +33,7 @@ procedure AddProgress;
 procedure FinishProgress;
 function  LoadImage(const filename: shortstring; imageFlags: LongInt): PSDL_Surface;
 
-// loads an image from the game's data files
+// loads an image from the games data files
 function  LoadDataImage(const path: TPathType; const filename: shortstring; imageFlags: LongInt): PSDL_Surface;
 // like LoadDataImage but uses altPath as fallback-path if file not found/loadable in path
 function  LoadDataImageAltPath(const path, altPath: TPathType; const filename: shortstring; imageFlags: LongInt): PSDL_Surface;
@@ -56,7 +56,7 @@ procedure WarpMouse(x, y: Word); inline;
 procedure SwapBuffers; {$IFDEF USE_VIDEO_RECORDING}cdecl{$ELSE}inline{$ENDIF};
 
 implementation
-uses uMisc, uConsole, uMobile, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands
+uses uMisc, uConsole, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands
     , uPhysFSLayer
     , uDebug
     {$IFDEF USE_CONTEXT_RESTORE}, uWorld{$ENDIF}
@@ -71,6 +71,13 @@ var MaxTextureSize: LongInt;
 {$ELSE}
     SDLPrimSurface: PSDL_Surface;
 {$ENDIF}
+    squaresize : LongInt;
+    numsquares : LongInt;
+    ProgrTex: PTexture;
+
+const 
+    cHHFileName = 'Hedgehog';
+    cCHFileName = 'Crosshair';
 
 function WriteInRect(Surface: PSDL_Surface; X, Y: LongInt; Color: LongWord; Font: THWFont; s: ansistring): TSDL_Rect;
 var w, h: LongInt;
@@ -437,7 +444,7 @@ if not reload then
 IMG_Quit();
 end;
 
-{$IF NOT DEFINED(S3D_DISABLED) OR DEFINED(USE_VIDEO_RECORDING)}
+{$IF DEFINED(USE_S3D_RENDERING) OR DEFINED(USE_VIDEO_RECORDING)}
 procedure CreateFramebuffer(var frame, depth, tex: GLuint);
 begin
     glGenFramebuffersEXT(1, @frame);
@@ -539,7 +546,7 @@ for i:= Low(CountTexz) to High(CountTexz) do
     if defaultFrame <> 0 then
         DeleteFramebuffer(defaultFrame, depthv, texv);
 {$ENDIF}
-{$IFNDEF S3D_DISABLED}
+{$IFDEF USE_S3D_RENDERING}
     if (cStereoMode = smHorizontal) or (cStereoMode = smVertical) or (cStereoMode = smAFR) then
         begin
         DeleteFramebuffer(framel, depthl, texl);
@@ -805,7 +812,7 @@ begin
     end;
 {$ENDIF}
 
-{$IFNDEF S3D_DISABLED}
+{$IFDEF USE_S3D_RENDERING}
     if (cStereoMode = smHorizontal) or (cStereoMode = smVertical) or (cStereoMode = smAFR) then
     begin
         // prepare left and right frame buffers and associated textures
@@ -879,8 +886,10 @@ begin
         squaresize:= texsurf^.w shr 1;
         numsquares:= texsurf^.h div squaresize;
         SDL_FreeSurface(texsurf);
-
-        uMobile.GameLoading();
+        with mobileRecord do
+            if GameLoading <> nil then
+                GameLoading();
+        
         end;
 
     TryDo(ProgrTex <> nil, 'Error - Progress Texure is nil!', true);
@@ -903,7 +912,9 @@ end;
 
 procedure FinishProgress;
 begin
-    uMobile.GameLoaded();
+    with mobileRecord do
+        if GameLoaded <> nil then
+            GameLoaded();
     WriteLnToConsole('Freeing progress surface... ');
     FreeTexture(ProgrTex);
     ProgrTex:= nil;

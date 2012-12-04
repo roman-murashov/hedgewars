@@ -57,7 +57,7 @@ procedure doStepDrowningGear(Gear: PGear);
 
 implementation
 uses uStore, uSound, uTeams, uRandom, uCollisions, uIO, uLandGraphics,
-    uLocale, uAI, uAmmos, uStats, uVisualGears, uScript, GLunit, uMobile, uVariables,
+    uLocale, uAI, uAmmos, uStats, uVisualGears, uScript, GLunit, uVariables,
     uCommands, uUtils, uTextures, uRenderUtils, uGearsRender, uCaptions, uDebug, uLandTexture,
     uGearsHedgehog, uGearsUtils, uGearsList, uGearsHandlers, uGearsHandlersRope;
 
@@ -677,8 +677,8 @@ while t <> nil do
             gtKnife,
             gtCase,
             gtTarget,
-            gtExplosives,
-            gtStructure: begin
+            gtExplosives: begin//,
+//            gtStructure: begin
 //addFileLog('ShotgunShot radius: ' + inttostr(Gear^.Radius) + ', t^.Radius = ' + inttostr(t^.Radius) + ', distance = ' + inttostr(dist) + ', dmg = ' + inttostr(dmg));
                     dmg:= 0;
                     r:= Gear^.Radius + t^.Radius;
@@ -777,8 +777,8 @@ while i > 0 do
             gtKnife,
             gtTarget,
             gtCase,
-            gtExplosives,
-            gtStructure:
+            gtExplosives: //,
+            //gtStructure:
             begin
             if (Ammo^.Kind = gtDrill) then
                 begin
@@ -906,10 +906,6 @@ if (GameFlags and gfDivideTeams) <> 0 then
                     inc(Count)
                     end;
         end;
-    // unC0Rr, while it is true user can watch value on map screen, IMO this (and check above) should be enforced in UI
-    // - is there a good place to put values for the different widgets to check?  Right now they are kind of disconnected.
-    //it would be nice if divide teams, forts mode and hh per map could all be checked by the team widget, or maybe disable start button
-    TryDo(Count <= MaxHedgehogs, 'Too many hedgehogs for this map! (max # is ' + inttostr(MaxHedgehogs) + ')', true);
     while (Count > 0) do
         begin
         i:= GetRandom(Count);
@@ -1367,7 +1363,7 @@ const handlers: array[TGearType] of TGearStepProcedure = (
             @doStepNapalmBomb,
             @doStepSnowball,
             @doStepSnowflake,
-            @doStepStructure,
+            //@doStepStructure,
             @doStepLandGun,
             @doStepTardis,
             @doStepIceGun,
