@@ -54,28 +54,6 @@ HWGame::~HWGame()
         flib_gameconn_destroy(m_conn);
 }
 
-void HWGame::onClientDisconnect()
-{/*
-    switch (gameType)
-    {
-        case gtDemo:
-            // for video recording we need demo anyway
-            emit HaveRecord(rtNeither, demo);
-            break;
-        case gtNet:
-            emit HaveRecord(rtDemo, demo);
-            break;
-        default:
-            if (gameState == gsInterrupted || gameState == gsHalted)
-                emit HaveRecord(rtSave, demo);
-            else if (gameState == gsFinished)
-                emit HaveRecord(rtDemo, demo);
-            else
-                emit HaveRecord(rtNeither, demo);
-    }*/
-    SetGameState(gsStopped);
-}
-
 void HWGame::commonConfig()
 {
     QByteArray buf;
@@ -416,7 +394,7 @@ void HWGame::SetGameState(GameState state)
     emit GameStateChanged(state);
     if (gameType == gtCampaign)
     {
-      emit CampStateChanged(1);
+      emit campStateChanged(1);
     }
 }
 
@@ -452,7 +430,64 @@ void HWGame::writeCampaignVar(const QByteArray & varVal)
     teamfile.setValue("Campaign " + campaign + "/" + varToWrite, varValue);
 }
 
+
+static void HWGame::onChat(void* context, const char *msg, bool teamchat)
+{
+    HWGame * game = (HWGame *) context;
+}
+
+static void HWGame::onConnect(void* context)
+{
+    HWGame * game = (HWGame *) context;
+}
+
+static void HWGame::onDisconnect(void* context, int reason)
+{
+    HWGame * game = (HWGame *) context;
+    /*
+        switch (gameType)
+        {
+            case gtDemo:
+                // for video recording we need demo anyway
+                emit HaveRecord(rtNeither, demo);
+                break;
+            case gtNet:
+                emit HaveRecord(rtDemo, demo);
+                break;
+            default:
+                if (gameState == gsInterrupted || gameState == gsHalted)
+                    emit HaveRecord(rtSave, demo);
+                else if (gameState == gsFinished)
+                    emit HaveRecord(rtDemo, demo);
+                else
+                    emit HaveRecord(rtNeither, demo);
+        }*/
+     game->SetGameState(gsStopped);
+}
+
+static void HWGame::onEngineMessage(void *context, const uint8_t *em, size_t size)
+{
+    HWGame * game = (HWGame *) context;
+}
+
+static void HWGame::onErrorMessage(void* context, const char *msg)
+{
+    HWGame * game = (HWGame *) context;
+}
+
+static void HWGame::onGameRecorded(void *context, const uint8_t *record, size_t size, bool isSavegame)
+{
+    HWGame * game = (HWGame *) context;
+}
+
 void HWGame::onEngineStart()
 {
+    flib_gameconn_onChat(m_conn, onChat, this);
+    flib_gameconn_onConnect(m_conn, onConnect, this);
+    flib_gameconn_onDisconnect(m_conn, onDisconnect, this);
+    flib_gameconn_onEngineMessage(m_conn, onEngineMessage, this);
+    flib_gameconn_onErrorMessage(m_conn, onErrorMessage, this);
+    flib_gameconn_onGameRecorded(m_conn, onGameRecorded, this);
+
     new FrontLibPoller((void (*)(void *))flib_gameconn_tick, m_conn, this);
 }
