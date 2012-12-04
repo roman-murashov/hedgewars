@@ -21,7 +21,7 @@
 unit uVariables;
 interface
 
-uses SDLh, uTypes, uFloat, GLunit, uConsts, Math, uMobile, uUtils;
+uses SDLh, uTypes, uFloat, GLunit, uConsts, Math, uUtils;
 
 var
 /////// init flags ///////
@@ -196,6 +196,8 @@ var
     LuaTemplateNumber : LongWord;
 
     LastVoice : TVoice = ( snd: sndNone; voicepack: nil );
+
+    mobileRecord: TMobileRecord;
 
 /////////////////////////////////////
 //Buttons
@@ -2127,6 +2129,7 @@ var
             ejectY: 0),
 
 // Structure      
+{
             (NameId: sidStructure;
             NameTex: nil;
             Probability: 0;
@@ -2152,6 +2155,7 @@ var
             PosSprite: sprWater;
             ejectX: 0;
             ejectY: 0),
+}
             
 // Land Gun
             (NameId: sidLandGun;
@@ -2517,6 +2521,19 @@ begin
     cMapName:= '';
 
     LuaTemplateNumber:= 0;
+
+    mobileRecord.getScreenDPI:= @getScreenDPI; //TODO: define external function.
+    {$IFDEF IPHONEOS}
+    mobileRecord.PerformRumble:= @AudioServicesPlaySystemSound;
+    mobileRecord.GameLoading:= @startLoadingIndicator;
+    mobileRecord.GameLoaded:= @stopLoadingIndicator;
+    mobileRecord.SaveLoadingEnded:= @saveFinishedSynching;
+    {$ELSE}
+    mobileRecord.PerformRumble:= nil;
+    mobileRecord.GameLoading:= nil;
+    mobileRecord.GameLoaded:= nil;
+    mobileRecord.SaveLoadingEnded:= nil;
+    {$ENDIF}
 end;
 
 procedure freeModule;
