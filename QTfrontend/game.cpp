@@ -431,17 +431,17 @@ void HWGame::writeCampaignVar(const QByteArray & varVal)
 }
 
 
-static void HWGame::onChat(void* context, const char *msg, bool teamchat)
+void HWGame::onChat(void* context, const char *msg, bool teamchat)
 {
     HWGame * game = (HWGame *) context;
 }
 
-static void HWGame::onConnect(void* context)
+void HWGame::onConnect(void* context)
 {
     HWGame * game = (HWGame *) context;
 }
 
-static void HWGame::onDisconnect(void* context, int reason)
+void HWGame::onDisconnect(void* context, int reason)
 {
     HWGame * game = (HWGame *) context;
     /*
@@ -465,17 +465,17 @@ static void HWGame::onDisconnect(void* context, int reason)
      game->SetGameState(gsStopped);
 }
 
-static void HWGame::onEngineMessage(void *context, const uint8_t *em, size_t size)
+void HWGame::onEngineMessage(void *context, const uint8_t *em, size_t size)
 {
     HWGame * game = (HWGame *) context;
 }
 
-static void HWGame::onErrorMessage(void* context, const char *msg)
+void HWGame::onErrorMessage(void* context, const char *msg)
 {
     HWGame * game = (HWGame *) context;
 }
 
-static void HWGame::onGameRecorded(void *context, const uint8_t *record, size_t size, bool isSavegame)
+void HWGame::onGameRecorded(void *context, const uint8_t *record, size_t size, bool isSavegame)
 {
     HWGame * game = (HWGame *) context;
 }
