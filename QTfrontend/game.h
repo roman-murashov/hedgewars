@@ -48,7 +48,7 @@ enum RecordType
     rtNeither,
 };
 
-bool checkForDir(const QString & dir);
+class FrontLibPoller;
 
 class HWGame : public TCPBase
 {
@@ -105,6 +105,7 @@ class HWGame : public TCPBase
         GameType gameType;
 
         flib_gameconn * m_conn;
+        FrontLibPoller * m_poller;
 
         void commonConfig();
         void SendConfig();

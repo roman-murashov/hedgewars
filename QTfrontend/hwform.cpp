@@ -112,6 +112,8 @@ QString playerHash;
 
 GameUIConfig* HWForm::config = NULL;
 
+bool checkForDir(const QString & dir);
+
 HWForm::HWForm(QWidget *parent, QString styleSheet)
     : QMainWindow(parent)
     , game(0)

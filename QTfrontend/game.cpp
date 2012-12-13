@@ -39,7 +39,8 @@ HWGame::HWGame(GameUIConfig * config, GameCFGWidget * gamecfg, QString ammo, Tea
     TCPBase(0)
     , ammostr(ammo)
     , m_pTeamSelWidget(pTeamSelWidget)
-    , m_conn(NULL)
+    , m_conn(0)
+    , m_poller(0)
 {
     this->config = config;
     this->gamecfg = gamecfg;
@@ -462,7 +463,10 @@ void HWGame::onDisconnect(void* context, int reason)
                 else
                     emit HaveRecord(rtNeither, demo);
         }*/
+
      game->SetGameState(gsStopped);
+
+     delete game->m_poller;
 }
 
 void HWGame::onEngineMessage(void *context, const uint8_t *em, size_t size)
@@ -489,5 +493,5 @@ void HWGame::onEngineStart()
     flib_gameconn_onErrorMessage(m_conn, onErrorMessage, this);
     flib_gameconn_onGameRecorded(m_conn, onGameRecorded, this);
 
-    new FrontLibPoller((void (*)(void *))flib_gameconn_tick, m_conn, this);
+    m_poller = new FrontLibPoller((void (*)(void *))flib_gameconn_tick, m_conn, this);
 }
