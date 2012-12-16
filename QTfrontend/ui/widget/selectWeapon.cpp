@@ -84,7 +84,7 @@ SelWeaponWidget::SelWeaponWidget(int numItems, QWidget* parent) :
     QFrame(parent),
     m_numItems(numItems)
 {
-    wconf = new QSettings(cfgdir->absolutePath() + "/weapons.ini", QSettings::IniFormat, this);
+    wconf = new QSettings("physfs://weapons.ini", QSettings::IniFormat, this);
 
     for(int i = 0; i < cDefaultAmmos.size(); ++i)
         wconf->setValue(cDefaultAmmos[i].first, cDefaultAmmos[i].second);
