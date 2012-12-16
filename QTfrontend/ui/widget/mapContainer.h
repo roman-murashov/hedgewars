@@ -55,7 +55,7 @@ class HWMapContainer : public QWidget
         QString getCurrentScheme() const;
         QString getCurrentWeapons() const;
         quint32 getTemplateFilter() const;
-        MapGenerator get_mapgen(void) const;
+        int get_mapgen(void) const;
         int getMazeSize(void) const;
         bool getCurrentIsMission() const;
         QByteArray getDrawnMapData();
@@ -69,10 +69,10 @@ class HWMapContainer : public QWidget
         void setMap(const QString & map);
         void setTheme(const QString & theme);
         void setTemplateFilter(int);
-        void setMapgen(MapGenerator m);
+        void setMapgen(int m);
         void setMazeSize(int size);
         void setDrawnMapData(const QByteArray & ar);
-        void setAllMapParameters(const QString & map, MapGenerator m, int mazesize, const QString & seed, int tmpl);
+        void setAllMapParameters(const QString & map, int m, int mazesize, const QString & seed, int tmpl);
         void updateModelViews();
         void onPreviewMapDestroyed(QObject * map);
 
@@ -81,7 +81,7 @@ class HWMapContainer : public QWidget
         void mapChanged(const QString & map);
         void themeChanged(const QString & theme);
         void newTemplateFilter(int filter);
-        void mapgenChanged(MapGenerator m);
+        void mapgenChanged(int m);
         void mazeSizeChanged(int s);
         void drawMapRequested();
         void drawnMapChanged(const QByteArray & data);
@@ -119,12 +119,12 @@ class HWMapContainer : public QWidget
         QComboBox* cbTemplateFilter;
         QLabel *maze_size_label;
         QComboBox *cbMazeSize;
-        MapGenerator mapgen;
+        int mapgen;
         DrawMapScene drawMapScene;
 
         void intSetSeed(const QString & seed);
         void intSetMap(const QString & map);
-        void intSetMapgen(MapGenerator m);
+        void intSetMapgen(int m);
         void intSetTemplateFilter(int);
         void intSetMazeSize(int size);
         void updatePreview();

@@ -23,286 +23,188 @@
 #include <QCryptographicHash>
 #include <QSettings>
 #include <QStandardItemModel>
+#include <QDebug>
 
 #include "team.h"
 #include "hwform.h"
 #include "DataManager.h"
 
-HWTeam::HWTeam(const QString & teamname) :
-    QObject(0)
-    , m_difficulty(0)
-    , m_numHedgehogs(4)
-    , m_isNetTeam(false)
+HWTeam::HWTeam(const QString & teamname, QObject *parent) :
+    QObject(parent)
 {
-    m_name = teamname;
-    OldTeamName = m_name;
+    QList<QByteArray> baList;
+
+    flib_team team;
+    memset(&team, 0, sizeof(team));
+    baList << teamname.toUtf8();
+    team.name = baList.last().data();
+    team.grave = const_cast<char *>("Statue");
+    team.fort = const_cast<char *>("Plane");
+    team.voicepack = const_cast<char *>("Default");
+    team.flag = const_cast<char *>("hedgewars");
+
     for (int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
-        m_hedgehogs.append(HWHog());
-        m_hedgehogs[i].Name = (QLineEdit::tr("hedgehog %1").arg(i+1));
-        m_hedgehogs[i].Hat = "NoHat";
+        baList << QLineEdit::tr("hedgehog %1").arg(i+1).toUtf8();
+        team.hogs[i].name = baList.last().data();
+        team.hogs[i].hat = const_cast<char *>("NoHat");
     }
-    m_grave = "Statue";
-    m_fort = "Plane";
-    m_voicepack = "Default";
-    m_flag = "hedgewars";
+
+    m_oldTeamName = teamname;
+
+    QVector<flib_binding> binds(BINDS_NUMBER);
     for(int i = 0; i < BINDS_NUMBER; i++)
     {
-        m_binds.append(BindAction());
-        m_binds[i].action = cbinds[i].action;
-        m_binds[i].strbind = cbinds[i].strbind;
+        baList << cbinds[i].action.toUtf8();
+        binds[i].action = baList.last().data();
+        baList << cbinds[i].strbind.toUtf8();
+        binds[i].binding = baList.last().data();
     }
-    m_rounds = 0;
-    m_wins = 0;
-    m_campaignProgress = 0;
-    m_color = 0;
+    team.bindings = binds.data();
+    team.bindingCount = binds.size();
+
+    m_team = flib_team_copy(&team);
 }
 
-HWTeam::HWTeam(const QStringList& strLst) :
-    QObject(0)
-    , m_numHedgehogs(4)
-    , m_isNetTeam(true)
+HWTeam::HWTeam(const QStringList& strLst, QObject *parent) :
+    QObject(parent)
 {
+    QList<QByteArray> baList;
+
     // net teams are configured from QStringList
     if(strLst.size() != 23) throw HWTeamConstructException();
-    m_name = strLst[0];
-    m_grave = strLst[1];
-    m_fort = strLst[2];
-    m_voicepack = strLst[3];
-    m_flag = strLst[4];
-    m_owner = strLst[5];
-    m_difficulty = strLst[6].toUInt();
-    for(int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
-    {
-        m_hedgehogs.append(HWHog());
-        m_hedgehogs[i].Name=strLst[i * 2 + 7];
-        m_hedgehogs[i].Hat=strLst[i * 2 + 8];
-// Somehow claymore managed an empty hat.  Until we figure out how, this should avoid a repeat
-// Checking net teams is probably pointless, but can't hurt.
-        if (m_hedgehogs[i].Hat.isEmpty()) m_hedgehogs[i].Hat = "NoHat";
-    }
-    m_rounds = 0;
-    m_wins = 0;
-    m_campaignProgress = 0;
-    m_color = 0;
-}
+    flib_team team;
+    memset(&team, 0, sizeof(team));
 
-HWTeam::HWTeam() :
-    QObject(0)
-    , m_difficulty(0)
-    , m_numHedgehogs(4)
-    , m_isNetTeam(false)
-{
-    m_name = QString("Team");
+    for(int i = 0; i < 6; ++i)
+        baList << strLst[i].toUtf8();
+    team.name = baList[0].data();
+    m_oldTeamName = strLst[0];
+    team.grave = baList[1].data();
+    team.fort = baList[2].data();
+    team.voicepack = baList[3].data();
+    team.flag = baList[4].data();
+    team.ownerName = baList[5].data();
+    int difficulty = strLst[6].toUInt();
+
     for (int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
-        m_hedgehogs.append(HWHog());
-        m_hedgehogs[i].Name.sprintf("hedgehog %d", i);
-        m_hedgehogs[i].Hat = "NoHat";
+        baList << strLst[i * 2 + 7].toUtf8();
+        team.hogs[i].name = baList.last().data();
+
+        QString hat = strLst[i * 2 + 8];
+        if (hat.isEmpty())
+            team.hogs[i].hat = const_cast<char *>("NoHat");
+        else
+        {
+            baList << hat.toUtf8();
+            team.hogs[i].hat = baList.last().data();
+        }
+
+        team.hogs[i].difficulty = difficulty;
     }
 
-    m_grave = QString("Simple"); // default
-    m_fort = QString("Island"); // default
-    m_voicepack = "Default";
-    m_flag = "hedgewars";
+    m_oldTeamName = strLst[0];
 
+    QVector<flib_binding> binds(BINDS_NUMBER);
     for(int i = 0; i < BINDS_NUMBER; i++)
     {
-        m_binds.append(BindAction());
-        m_binds[i].action = cbinds[i].action;
-        m_binds[i].strbind = cbinds[i].strbind;
+        baList << cbinds[i].action.toUtf8();
+        binds[i].action = baList.last().data();
+        baList << cbinds[i].strbind.toUtf8();
+        binds[i].binding = baList.last().data();
     }
-    m_rounds = 0;
-    m_wins = 0;
-    m_campaignProgress = 0;
-    m_color = 0;
+    team.bindings = binds.data();
+    team.bindingCount = binds.size();
+
+    m_team = flib_team_copy(&team);
 }
 
-HWTeam::HWTeam(const HWTeam & other) :
-    QObject(0)
-    , OldTeamName(other.OldTeamName)
-    , m_name(other.m_name)
-    , m_grave(other.m_grave)
-    , m_fort(other.m_fort)
-    , m_flag(other.m_flag)
-    , m_voicepack(other.m_voicepack)
-    , m_hedgehogs(other.m_hedgehogs)
-    , m_difficulty(other.m_difficulty)
-    , m_binds(other.m_binds)
-    , m_numHedgehogs(other.m_numHedgehogs)
-    , m_color(other.m_color)
-    , m_isNetTeam(other.m_isNetTeam)
-    , m_owner(other.m_owner)
-    , m_campaignProgress(other.m_campaignProgress)
-    , m_rounds(other.m_rounds)
-    , m_wins(other.m_wins)
-//      , AchievementProgress(other.AchievementProgress)
-{
 
+HWTeam::HWTeam(const HWTeam & other) :
+    QObject(other.parent())
+    , m_oldTeamName(other.m_oldTeamName)
+    , m_team(flib_team_copy(other.m_team))
+{
+    m_team->hogsInGame = other.m_team->hogsInGame;
+    m_team->remoteDriven = other.m_team->remoteDriven;
 }
 
 HWTeam & HWTeam::operator = (const HWTeam & other)
 {
     if(this != &other)
     {
-        OldTeamName = other.OldTeamName;
-        m_name = other.m_name;
-        m_grave = other.m_grave;
-        m_fort = other.m_fort;
-        m_flag = other.m_flag;
-        m_voicepack = other.m_voicepack;
-        m_hedgehogs = other.m_hedgehogs;
-        m_difficulty = other.m_difficulty;
-        m_binds = other.m_binds;
-        m_numHedgehogs = other.m_numHedgehogs;
-        m_color = other.m_color;
-        m_isNetTeam = other.m_isNetTeam;
-        m_owner = other.m_owner;
-        m_campaignProgress = other.m_campaignProgress;
-        m_rounds = other.m_rounds;
-        m_wins = other.m_wins;
-        m_color = other.m_color;
+        m_oldTeamName = other.m_oldTeamName;
+        m_team = flib_team_copy(other.m_team);
+
+        m_team->hogsInGame = other.m_team->hogsInGame;
+        m_team->remoteDriven = other.m_team->remoteDriven;
     }
 
     return *this;
 }
 
+HWTeam::~HWTeam()
+{
+    if(m_team)
+        flib_team_destroy(m_team);
+}
+
 bool HWTeam::loadFromFile()
 {
-    QSettings teamfile(QString("physfs://Teams/%1.hwt").arg(m_name), QSettings::IniFormat, 0);
-    teamfile.setIniCodec("UTF-8");
-    m_name = teamfile.value("Team/Name", m_name).toString();
-    m_grave = teamfile.value("Team/Grave", "Statue").toString();
-    m_fort = teamfile.value("Team/Fort", "Plane").toString();
-    m_voicepack = teamfile.value("Team/Voicepack", "Default").toString();
-    m_flag = teamfile.value("Team/Flag", "hedgewars").toString();
-    m_difficulty = teamfile.value("Team/Difficulty", 0).toInt();
-    m_rounds = teamfile.value("Team/Rounds", 0).toInt();
-    m_wins = teamfile.value("Team/Wins", 0).toInt();
-    m_campaignProgress = teamfile.value("Team/CampaignProgress", 0).toInt();
-    for(int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
-    {
-        QString hh = QString("Hedgehog%1/").arg(i);
-        m_hedgehogs[i].Name = teamfile.value(hh + "Name", QString("hedgehog %1").arg(i+1)).toString();
-        m_hedgehogs[i].Hat = teamfile.value(hh + "Hat", "NoHat").toString();
-        m_hedgehogs[i].Rounds = teamfile.value(hh + "Rounds", 0).toInt();
-        m_hedgehogs[i].Kills = teamfile.value(hh + "Kills", 0).toInt();
-        m_hedgehogs[i].Deaths = teamfile.value(hh + "Deaths", 0).toInt();
-        m_hedgehogs[i].Suicides = teamfile.value(hh + "Suicides", 0).toInt();
-    }
-    for(int i = 0; i < BINDS_NUMBER; i++)
-        m_binds[i].strbind = teamfile.value(QString("Binds/%1").arg(m_binds[i].action), cbinds[i].strbind).toString();
-    for(int i = 0; i < MAX_ACHIEVEMENTS; i++)
-        if(achievements[i][0][0])
-            AchievementProgress[i] = teamfile.value(QString("Achievements/%1").arg(achievements[i][0]), 0).toUInt();
-        else
-            break;
-    return true;
+    QString name = QString::fromUtf8(m_team->name);
+
+    if(m_team)
+        flib_team_destroy(m_team);
+
+    m_team = flib_team_from_ini(QString("/Teams/%1.hwt").arg(name).toUtf8().data());
+
+    return m_team != NULL;
 }
 
 bool HWTeam::fileExists()
 {
-    QFile f(QString("physfs://Teams/%1.hwt").arg(m_name));
+    QFile f(QString("physfs://Teams/%1.hwt").arg(name()));
     return f.exists();
 }
 
 bool HWTeam::deleteFile()
 {
-    if(m_isNetTeam)
+    if(m_team->remoteDriven)
         return false;
-    QFile cfgfile(QString("physfs://Teams/%1.hwt").arg(m_name));
+
+    QFile cfgfile(QString("physfs://Teams/%1.hwt").arg(name()));
     cfgfile.remove();
     return true;
 }
 
 bool HWTeam::saveToFile()
 {
-    if (OldTeamName != m_name)
+    if (m_oldTeamName != name())
     {
-        QFile cfgfile(QString("physfs://Teams/%1.hwt").arg(OldTeamName));
+        QFile cfgfile(QString("physfs://Teams/%1.hwt").arg(m_oldTeamName));
         cfgfile.remove();
-        OldTeamName = m_name;
+        m_oldTeamName = name();
     }
 
-    QSettings teamfile(QString("physfs://Teams/%1.hwt").arg(m_name), QSettings::IniFormat, 0);
-    teamfile.setIniCodec("UTF-8");
-    teamfile.setValue("Team/Name", m_name);
-    teamfile.setValue("Team/Grave", m_grave);
-    teamfile.setValue("Team/Fort", m_fort);
-    teamfile.setValue("Team/Voicepack", m_voicepack);
-    teamfile.setValue("Team/Flag", m_flag);
-    teamfile.setValue("Team/Difficulty", m_difficulty);
-    teamfile.setValue("Team/Rounds", m_rounds);
-    teamfile.setValue("Team/Wins", m_wins);
-    teamfile.setValue("Team/CampaignProgress", m_campaignProgress);
-
-    for(int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
-    {
-        QString hh = QString("Hedgehog%1/").arg(i);
-        teamfile.setValue(hh + "Name", m_hedgehogs[i].Name);
-        teamfile.setValue(hh + "Hat", m_hedgehogs[i].Hat);
-        teamfile.setValue(hh + "Rounds", m_hedgehogs[i].Rounds);
-        teamfile.setValue(hh + "Kills", m_hedgehogs[i].Kills);
-        teamfile.setValue(hh + "Deaths", m_hedgehogs[i].Deaths);
-        teamfile.setValue(hh + "Suicides", m_hedgehogs[i].Suicides);
-    }
-    for(int i = 0; i < BINDS_NUMBER; i++)
-        teamfile.setValue(QString("Binds/%1").arg(m_binds[i].action), m_binds[i].strbind);
-    for(int i = 0; i < MAX_ACHIEVEMENTS; i++)
-        if(achievements[i][0][0])
-            teamfile.setValue(QString("Achievements/%1").arg(achievements[i][0]), AchievementProgress[i]);
-        else
-            break;
-
-    return true;
+    return flib_team_to_ini(QString("physfs://Teams/%1.hwt").arg(name()).toUtf8(), m_team) == 0;
 }
 
-QStringList HWTeam::teamGameConfig(quint32 InitHealth) const
-{
-    QStringList sl;
-    if (m_isNetTeam)
-    {
-        sl.push_back(QString("eaddteam %3 %1 %2").arg(qcolor().rgb() & 0xffffff).arg(m_name).arg(QString(QCryptographicHash::hash(m_owner.toUtf8(), QCryptographicHash::Md5).toHex())));
-        sl.push_back("erdriven");
-    }
-    else sl.push_back(QString("eaddteam %3 %1 %2").arg(qcolor().rgb() & 0xffffff).arg(m_name).arg(playerHash));
-
-    sl.push_back(QString("egrave " + m_grave));
-    sl.push_back(QString("efort " + m_fort));
-    sl.push_back(QString("evoicepack " + m_voicepack));
-    sl.push_back(QString("eflag " + m_flag));
-
-    if (!m_isNetTeam)
-        for(int i = 0; i < BINDS_NUMBER; i++)
-            if(!m_binds[i].strbind.isEmpty())
-                sl.push_back(QString("ebind " + m_binds[i].strbind + " " + m_binds[i].action));
-
-    for (int t = 0; t < m_numHedgehogs; t++)
-    {
-        sl.push_back(QString("eaddhh %1 %2 %3")
-                     .arg(QString::number(m_difficulty),
-                          QString::number(InitHealth),
-                          m_hedgehogs[t].Name));
-        sl.push_back(QString("ehat %1")
-                     .arg(m_hedgehogs[t].Hat));
-    }
-    return sl;
-}
 
 bool HWTeam::isNetTeam() const
 {
-    return m_isNetTeam;
+    return m_team->remoteDriven;
 }
 
 
 bool HWTeam::operator==(const HWTeam& t1) const
 {
-    return m_name==t1.m_name;
+    return qstrcmp(m_team->name, t1.m_team->name) == 0;
 }
 
 bool HWTeam::operator<(const HWTeam& t1) const
 {
-    return m_name<t1.m_name; // if names are equal - test if it is net team
+    return qstrcmp(m_team->name, t1.m_team->name) < 0; // if names are equal - test if it is net team
 }
 
 
@@ -312,27 +214,45 @@ bool HWTeam::operator<(const HWTeam& t1) const
 // name
 QString HWTeam::name() const
 {
-    return m_name;
-}
-void HWTeam::setName(const QString & name)
-{
-    m_name = name;
+    return QString::fromUtf8(m_team->name);
 }
 
-// single hedgehog
-const HWHog & HWTeam::hedgehog(unsigned int idx) const
+void HWTeam::setName(const QString & name)
 {
-    return m_hedgehogs[idx];
+    free(m_team->name);
+
+    m_team->name = strdup(name.toUtf8().constData());
 }
-void HWTeam::setHedgehog(unsigned int idx, HWHog hh)
+
+QString HWTeam::hedgehogName(int index) const
 {
-    m_hedgehogs[idx] = hh;
+    return QString::fromUtf8(m_team->hogs[index].name);
 }
+
+QString HWTeam::hedgehogHat(int index) const
+{
+    return QString::fromUtf8(m_team->hogs[index].hat);
+}
+
+void HWTeam::setHedgehogName(int index, const QString & name)
+{
+    free(m_team->hogs[index].name);
+
+    m_team->hogs[index].name = strdup(name.toUtf8().constData());
+}
+
+void HWTeam::setHedgehogHat(int index, const QString & hat)
+{
+    free(m_team->hogs[index].hat);
+
+    m_team->hogs[index].hat = strdup(hat.toUtf8().constData());
+}
+
 
 // owner
 QString HWTeam::owner() const
 {
-    return m_owner;
+    return QString::fromUtf8(m_team->ownerName);
 }
 
 
@@ -340,105 +260,126 @@ QString HWTeam::owner() const
 // difficulty
 unsigned int HWTeam::difficulty() const
 {
-    return m_difficulty;
+    return m_team->hogs[0].difficulty;
 }
+
 void HWTeam::setDifficulty(unsigned int level)
 {
-    m_difficulty = level;
+    for(int i = 0; i < HEDGEHOGS_PER_TEAM; ++i)
+        m_team->hogs[i].difficulty = level;
 }
 
 // color
 int HWTeam::color() const
 {
-    return m_color;
+    return m_team->colorIndex;
 }
 
 QColor HWTeam::qcolor() const
 {
-    return DataManager::instance().colorsModel()->item(m_color)->data().value<QColor>();
+    return DataManager::instance().colorsModel()->item(m_team->colorIndex)->data().value<QColor>();
 }
 
 void HWTeam::setColor(int color)
 {
-    m_color = color % DataManager::instance().colorsModel()->rowCount();
+    m_team->colorIndex = color % DataManager::instance().colorsModel()->rowCount();
 }
 
 
 // binds
 QString HWTeam::keyBind(unsigned int idx) const
 {
-    return m_binds[idx].strbind;
+    return QString::fromUtf8(m_team->bindings[idx].binding);
 }
+
 void HWTeam::bindKey(unsigned int idx, const QString & key)
 {
-    m_binds[idx].strbind = key;
+    free(m_team->bindings[idx].binding);
+
+    m_team->bindings[idx].binding = strdup(key.toUtf8().constData());
 }
 
 // flag
-void    HWTeam::setFlag(const QString & flag)
+void HWTeam::setFlag(const QString & flag)
 {
-    m_flag = flag;
+    free(m_team->flag);
+
+    m_team->flag = strdup(flag.toUtf8().constData());
 }
+
 QString HWTeam::flag() const
 {
-    return m_flag;
+    return QString::fromUtf8(m_team->flag);
 }
 
 // fort
-void    HWTeam::setFort(const QString & fort)
+void HWTeam::setFort(const QString & fort)
 {
-    m_fort = fort;
+    free(m_team->fort);
+
+    m_team->fort = strdup(fort.toUtf8().constData());
 }
+
 QString HWTeam::fort() const
 {
-    return m_fort;
+    return QString::fromUtf8(m_team->fort);
 }
 
 // grave
 void HWTeam::setGrave(const QString & grave)
 {
-    m_grave = grave;
+    free(m_team->grave);
+
+    m_team->grave = strdup(grave.toUtf8().constData());
 }
+
 QString HWTeam::grave() const
 {
-    return m_grave;
+    return QString::fromUtf8(m_team->grave);
 }
 
 // voicepack - getter/setter
 void HWTeam::setVoicepack(const QString & voicepack)
 {
-    m_voicepack = voicepack;
+    free(m_team->voicepack);
+
+    m_team->voicepack = strdup(voicepack.toUtf8().constData());
 }
+
 QString HWTeam::voicepack() const
 {
-    return m_voicepack;
+    return QString::fromUtf8(m_team->voicepack);
 }
 
 
 // campaignProgress - getter
 unsigned int HWTeam::campaignProgress() const
 {
-    return m_campaignProgress;
-};
+    return m_team->campaignProgress;
+}
 
 // amount of hedgehogs
 unsigned char HWTeam::numHedgehogs() const
 {
-    return m_numHedgehogs;
+    return m_team->hogsInGame;
 }
+
 void HWTeam::setNumHedgehogs(unsigned char num)
 {
-    m_numHedgehogs = num;
+    m_team->hogsInGame = num;
 }
-
-
 
 // rounds+wins - incrementors
 void HWTeam::incRounds()
 {
-    m_rounds++;
+    m_team->rounds++;
 }
 void HWTeam::incWins()
 {
-    m_wins++;
+    m_team->wins++;
+}
+
+flib_team * HWTeam::toFlibTeam()
+{
+    return flib_team_copy(m_team);
 }

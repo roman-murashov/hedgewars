@@ -61,7 +61,7 @@ static flib_tcpsocket *createSocket(TCPsocket sdlsock) {
 	return result;
 }
 
-TCPsocket listen(uint16_t port) {
+TCPsocket flib_listen(uint16_t port) {
 	IPaddress addr;
 	addr.host = INADDR_ANY;
 	SDLNet_Write16(port, &addr.port);
@@ -77,7 +77,7 @@ flib_acceptor *flib_acceptor_create(uint16_t port) {
 	if(result) {
 		if(port > 0) {
 			result->port = port;
-			result->sock = listen(result->port);
+			result->sock = flib_listen(result->port);
 		} else {
 			/* SDL_net does not seem to have a way to listen on a random unused port
 			   and find out which port that is, so let's try to find one ourselves. */
@@ -85,7 +85,7 @@ flib_acceptor *flib_acceptor_create(uint16_t port) {
 			for(int i=0; !result->sock && i<1000; i++) {
 				// IANA suggests using ports in the range 49152-65535 for things like this
 				result->port = 49152+(rand()%(65536-49152));
-				result->sock = listen(result->port);
+				result->sock = flib_listen(result->port);
 			}
 		}
 		if(!result->sock) {

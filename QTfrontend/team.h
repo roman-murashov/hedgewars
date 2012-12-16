@@ -25,20 +25,13 @@
 #include "binds.h"
 #include "achievements.h"
 #include "hwconsts.h"
+#include "frontlib.h"
 
 class HWForm;
 class GameUIConfig;
 
 class HWTeamConstructException
 {
-};
-
-// structure for customization and statistics of a single hedgehog
-struct HWHog
-{
-    QString Name;
-    QString Hat;
-    int Rounds, Kills, Deaths, Suicides;
 };
 
 // class representing a team
@@ -49,10 +42,10 @@ class HWTeam : public QObject
     public:
 
         // constructors
-        HWTeam(const QString & teamname);
-        HWTeam(const QStringList& strLst);
-        HWTeam();
+        HWTeam(const QString & teamname = QString("Team"), QObject * parent = 0);
+        HWTeam(const QStringList& strLst, QObject * parent = 0);
         HWTeam(const HWTeam & other);
+        ~HWTeam();
 
         // file operations
         static HWTeam loadFromFile(const QString & teamName);
@@ -69,7 +62,7 @@ class HWTeam : public QObject
         QString flag() const;
         QString fort() const;
         QString grave() const;
-        const HWHog & hedgehog(unsigned int idx) const;
+        //const HWHog & hedgehog(unsigned int idx) const;
         bool isNetTeam() const;
         QString keyBind(unsigned int idx) const;
         QString name() const;
@@ -83,17 +76,20 @@ class HWTeam : public QObject
         void setFlag(const QString & flag);
         void setFort(const QString & fort);
         void setGrave(const QString & grave);
-        void setHedgehog(unsigned int idx, HWHog hh);
         void setName(const QString & name);
         void setNumHedgehogs(unsigned char num);
         void setVoicepack(const QString & voicepack);
+
+        QString hedgehogName(int index) const;
+        QString hedgehogHat(int index) const;
+        void setHedgehogName(int index, const QString & name);
+        void setHedgehogHat(int index, const QString & hat);
 
         // increments for statistical info
         void incRounds();
         void incWins();
 
-        // convert team info into strings for further computation
-        QStringList teamGameConfig(quint32 InitHealth) const;
+        flib_team * toFlibTeam();
 
         // comparison operators
         bool operator == (const HWTeam& t1) const;
@@ -104,30 +100,10 @@ public slots:
         void setColor(int color);
 
     private:
-
-        QString OldTeamName;
+        QString m_oldTeamName;
 
         // class members that contain the general team info and settings
-        QString m_name;
-        QString m_grave;
-        QString m_fort;
-        QString m_flag;
-        QString m_voicepack;
-        QList<HWHog> m_hedgehogs;
-        quint8 m_difficulty;
-        QList<BindAction> m_binds;
-
-        // class members that contain info for the current game setup
-        quint8 m_numHedgehogs;
-        int m_color;
-        bool m_isNetTeam;
-        QString m_owner;
-
-        // class members that contain statistics, etc.
-        unsigned int m_campaignProgress;
-        unsigned int m_rounds;
-        unsigned int m_wins;
-        unsigned int AchievementProgress[MAX_ACHIEVEMENTS];
+        flib_team * m_team;
 };
 
 #endif
