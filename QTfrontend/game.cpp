@@ -435,6 +435,11 @@ void HWGame::writeCampaignVar(const QByteArray & varVal)
 void HWGame::onChat(void* context, const char *msg, bool teamchat)
 {
     HWGame * game = (HWGame *) context;
+
+    if(teamchat)
+        emit game->SendTeamMessage(QString::fromUtf8(msg));
+    else
+        emit game->SendChat(QString::fromUtf8(msg));
 }
 
 void HWGame::onConnect(void* context)
@@ -477,6 +482,8 @@ void HWGame::onEngineMessage(void *context, const uint8_t *em, size_t size)
 void HWGame::onErrorMessage(void* context, const char *msg)
 {
     HWGame * game = (HWGame *) context;
+
+    emit game->ErrorMessage(QString("Last two engine messages:\n%1").arg(QString::fromUtf8(msg)));
 }
 
 void HWGame::onGameRecorded(void *context, const uint8_t *record, size_t size, bool isSavegame)
