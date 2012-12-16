@@ -45,6 +45,7 @@ class HWRecorder : public TCPBase
         virtual QStringList getArguments();
         virtual void onClientRead();
         virtual void onClientDisconnect();
+        void onEngineStart();
 
     signals:
         void onProgress(float progress); // 0 < progress < 1

@@ -143,6 +143,7 @@ SET(PHYSFS_SRCS
     extras/physfsrwops.c
     extras/physfslualoader.c
     extras/hwpacksmounter.c
+    extras/physfsfgets.c
     ${PHYSFS_BEOS_SRCS}
 )
 

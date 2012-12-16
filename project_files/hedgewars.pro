@@ -11,6 +11,7 @@ INCLUDEPATH += ../QTfrontend/net
 INCLUDEPATH += ../QTfrontend/util
 INCLUDEPATH += ../misc/physfs/src
 INCLUDEPATH += ../misc/physfs/extras
+INCLUDEPATH += ../project_files/frontlib
 
 DESTDIR = ../bin
 
@@ -108,6 +109,7 @@ HEADERS += ../QTfrontend/model/ThemeModel.h \
     ../QTfrontend/model/playerslistmodel.h \
     ../QTfrontend/util/LibavInteraction.h \
     ../QTfrontend/util/FileEngine.h \
+    ../QTfrontend/util/frontlibpoller.h \
     ../QTfrontend/ui/dialog/bandialog.h
 
 
@@ -200,6 +202,7 @@ SOURCES += ../QTfrontend/model/ammoSchemeModel.cpp \
     ../QTfrontend/model/playerslistmodel.cpp \
     ../QTfrontend/util/LibavInteraction.cpp \
     ../QTfrontend/util/FileEngine.cpp \
+    ../QTfrontend/util/frontlibpoller.cpp \
     ../QTfrontend/ui/dialog/bandialog.cpp
 
 
@@ -235,7 +238,7 @@ TRANSLATIONS += ../share/hedgewars/Data/Locale/hedgewars_ar.ts \
 
 RESOURCES += ../QTfrontend/hedgewars.qrc
 
-LIBS += -L../bin -lphysfs
+LIBS += -L../bin -lfrontlib -lphysfs
 
 macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6

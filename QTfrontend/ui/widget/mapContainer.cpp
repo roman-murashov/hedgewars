@@ -44,6 +44,7 @@ HWMapContainer::HWMapContainer(QWidget * parent) :
     mapgen(MAPGEN_REGULAR),
     m_previewSize(256, 128)
 {
+    m_mapInfo.type = MapModel::GeneratedMap;
     hhSmall.load(":/res/hh_small.png");
     hhLimit = 18;
     templateFilter = 0;
@@ -254,7 +255,7 @@ void HWMapContainer::mapChanged(int index)
             cbMazeSize->hide();
             break;
         default:
-            mapgen = MAPGEN_MAP;
+            mapgen = MAPGEN_NAMED;
             gbThemes->hide();
             lblFilter->hide();
             cbTemplateFilter->hide();
@@ -339,7 +340,7 @@ QString HWMapContainer::getCurrentSeed() const
 
 QString HWMapContainer::getCurrentMap() const
 {
-    if(chooseMap->currentIndex() < MAPGEN_MAP) return QString();
+    if(chooseMap->currentIndex() < MAPGEN_NAMED) return QString();
     return(m_curMap);
 }
 
@@ -468,7 +469,7 @@ void HWMapContainer::setTemplateFilter(int filter)
         updatePreview();
 }
 
-MapGenerator HWMapContainer::get_mapgen(void) const
+int HWMapContainer::get_mapgen(void) const
 {
     return mapgen;
 }
@@ -491,7 +492,7 @@ void HWMapContainer::setMazeSize(int size)
         updatePreview();
 }
 
-void HWMapContainer::intSetMapgen(MapGenerator m)
+void HWMapContainer::intSetMapgen(int m)
 {
     if (mapgen != m)
     {
@@ -508,7 +509,7 @@ void HWMapContainer::intSetMapgen(MapGenerator m)
             case MAPGEN_DRAWN:
                 m_mapInfo.type = MapModel::HandDrawnMap;
                 break;
-            case MAPGEN_MAP:
+            case MAPGEN_NAMED:
                 switch (m_mapInfo.type)
                 {
                     case MapModel::GeneratedMap:
@@ -521,17 +522,17 @@ void HWMapContainer::intSetMapgen(MapGenerator m)
                 break;
         }
 
-        if(m != MAPGEN_MAP)
+        if(m != MAPGEN_NAMED)
             chooseMap->setCurrentIndex(m);
 
         emit mapgenChanged(m);
     }
 }
 
-void HWMapContainer::setMapgen(MapGenerator m)
+void HWMapContainer::setMapgen(int m)
 {
     intSetMapgen(m);
-    if(m != MAPGEN_MAP)
+    if(m != MAPGEN_NAMED)
         updatePreview();
 }
 
@@ -619,7 +620,7 @@ void HWMapContainer::updatePreview()
     }
 }
 
-void HWMapContainer::setAllMapParameters(const QString &map, MapGenerator m, int mazesize, const QString &seed, int tmpl)
+void HWMapContainer::setAllMapParameters(const QString &map, int m, int mazesize, const QString &seed, int tmpl)
 {
     intSetMapgen(m);
     intSetMazeSize(mazesize);
