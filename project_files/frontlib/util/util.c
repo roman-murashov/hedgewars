@@ -37,12 +37,18 @@ char *flib_asprintf(const char *fmt, ...) {
 }
 
 char *flib_vasprintf(const char *fmt, va_list args) {
-	char *result = NULL;
+    char *result = NULL;
 	if(!log_badargs_if(fmt==NULL)) {
-		int requiredSize = vsnprintf(NULL, 0, fmt, args)+1;					// Figure out how much memory we need,
-		if(!log_e_if(requiredSize<0, "Error formatting string with template \"%s\"", fmt)) {
+        va_list args_copy;
+        va_copy(args_copy, args);
+
+        int requiredSize = vsnprintf(NULL, 0, fmt, args_copy)+1;					// Figure out how much memory we need,
+
+        va_end(args_copy);
+
+        if(!log_e_if(requiredSize<0, "Error formatting string with template \"%s\"", fmt)) {
 			char *tmpbuf = flib_malloc(requiredSize);						// allocate it
-			if(tmpbuf && vsnprintf(tmpbuf, requiredSize, fmt, args)>=0) {	// and then do the actual formatting.
+            if(tmpbuf && vsnprintf(tmpbuf, requiredSize, fmt, args)>=0) {	// and then do the actual formatting.
 				result = tmpbuf;
 				tmpbuf = NULL;
 			}

@@ -277,6 +277,9 @@ endif()
 #main engine
 add_subdirectory(hedgewars)
 
+#frontend library
+add_subdirectory(project_files/frontlib)
+
 #Android related build scripts
 if(ANDROID)
     #run cmake -DANDROID=1 to enable this

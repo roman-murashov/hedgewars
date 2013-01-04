@@ -36,6 +36,7 @@ include_directories(${SDLMIXER_INCLUDE_DIR})
 include_directories(${FFMPEG_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/misc/physfs/src)
 include_directories(${CMAKE_SOURCE_DIR}/misc/physfs/extras)
+include_directories(${CMAKE_SOURCE_DIR}/project_files/frontlib)
 if(UNIX)
     # HACK: in freebsd cannot find iconv.h included via SDL.h
     include_directories("/usr/local/include")
@@ -115,6 +116,7 @@ set(hwfr_moc_hdrs
     team.h
     util/DataManager.h
     util/LibavInteraction.h
+    util/frontlibpoller.h
     )
 
 set(hwfr_hdrs
@@ -178,10 +180,12 @@ if((UNIX AND NOT APPLE) AND ${BUILD_ENGINE_LIBRARY})
 endif()
 
 list(APPEND HW_LINK_LIBS
+    frontlib
     physfs
     ${QT_LIBRARIES}
     ${SDL_LIBRARY}
     ${SDLMIXER_LIBRARY}
+    ${SDLNET_LIBRARY}
     ${FFMPEG_LIBRARIES}
     )
 

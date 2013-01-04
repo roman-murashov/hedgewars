@@ -34,16 +34,17 @@
 #include "proto.h"
 #include "binds.h"
 #include "campaign.h"
-
-#include <QTextStream>
 #include "ThemeModel.h"
+#include "frontlibpoller.h"
 
 QString training, campaign, campaignScript, campaignTeam; // TODO: Cleaner solution?
 
 HWGame::HWGame(GameUIConfig * config, GameCFGWidget * gamecfg, QString ammo, TeamSelWidget* pTeamSelWidget) :
-    TCPBase(true, 0),
-    ammostr(ammo),
-    m_pTeamSelWidget(pTeamSelWidget)
+    TCPBase(0)
+    , ammostr(ammo)
+    , m_pTeamSelWidget(pTeamSelWidget)
+    , m_conn(0)
+    , m_poller(0)
 {
     this->config = config;
     this->gamecfg = gamecfg;
@@ -53,28 +54,9 @@ HWGame::HWGame(GameUIConfig * config, GameCFGWidget * gamecfg, QString ammo, Tea
 HWGame::~HWGame()
 {
     SetGameState(gsDestroyed);
-}
 
-void HWGame::onClientDisconnect()
-{
-    switch (gameType)
-    {
-        case gtDemo:
-            // for video recording we need demo anyway 
-            emit HaveRecord(rtNeither, demo);
-            break;
-        case gtNet:
-            emit HaveRecord(rtDemo, demo);
-            break;
-        default:
-            if (gameState == gsInterrupted || gameState == gsHalted)
-                emit HaveRecord(rtSave, demo);
-            else if (gameState == gsFinished)
-                emit HaveRecord(rtDemo, demo);
-            else
-                emit HaveRecord(rtNeither, demo);
-    }
-    SetGameState(gsStopped);
+    if(m_conn)
+        flib_gameconn_destroy(m_conn);
 }
 
 void HWGame::addKeyBindings(QByteArray * buf)
@@ -119,60 +101,18 @@ void HWGame::commonConfig()
             HWProto::addStringToBuffer(buf, QString("eammdelay %1").arg(ammostr.mid(2 * cAmmoNumber, cAmmoNumber)));
             HWProto::addStringToBuffer(buf, QString("eammreinf %1").arg(ammostr.mid(3 * cAmmoNumber, cAmmoNumber)));
             if(gamecfg->schemeData(15).toBool() || !gamecfg->schemeData(21).toBool()) HWProto::addStringToBuffer(buf, QString("eammstore"));
-            HWProto::addStringListToBuffer(buf,
-                                           team.teamGameConfig(gamecfg->getInitHealth(), config));
-            ;
+//            HWProto::addStringListToBuffer(buf,
+//                                           team.teamGameConfig(gamecfg->getInitHealth(), config));
+           ;
         }
     }
-    
-    RawSendIPC(buf);
+
+    //RawSendIPC(buf);
 }
 
 void HWGame::SendConfig()
 {
     commonConfig();
-}
-
-void HWGame::SendQuickConfig()
-{
-    QByteArray teamscfg;
-    ThemeModel * themeModel = DataManager::instance().themeModel();
-
-    addKeyBindings(&teamscfg);
-
-    HWProto::addStringToBuffer(teamscfg, "TL");
-    HWProto::addStringToBuffer(teamscfg, QString("etheme %1")
-                               .arg((themeModel->rowCount() > 0) ? themeModel->index(rand() % themeModel->rowCount()).data().toString() : "steel"));
-    HWProto::addStringToBuffer(teamscfg, "eseed " + QUuid::createUuid().toString());
-
-    HWProto::addStringToBuffer(teamscfg, "e$template_filter 2");
-
-    HWTeam team1;
-    team1.setDifficulty(0);
-    team1.setColor(0);
-    team1.setNumHedgehogs(4);
-    HWNamegen::teamRandomNames(team1,true);
-    HWProto::addStringListToBuffer(teamscfg,
-                                   team1.teamGameConfig(100, config));
-
-    HWTeam team2;
-    team2.setDifficulty(4);
-    team2.setColor(1);
-    team2.setNumHedgehogs(4);
-    do
-        HWNamegen::teamRandomNames(team2,true);
-    while(!team2.name().compare(team1.name()) || !team2.hedgehog(0).Hat.compare(team1.hedgehog(0).Hat));
-    HWProto::addStringListToBuffer(teamscfg,
-                                   team2.teamGameConfig(100, config));
-
-    HWProto::addStringToBuffer(teamscfg, QString("eammloadt %1").arg(cDefaultAmmoStore->mid(0, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammprob %1").arg(cDefaultAmmoStore->mid(cAmmoNumber, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammdelay %1").arg(cDefaultAmmoStore->mid(2 * cAmmoNumber, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammreinf %1").arg(cDefaultAmmoStore->mid(3 * cAmmoNumber, cAmmoNumber)));
-    HWProto::addStringToBuffer(teamscfg, QString("eammstore"));
-    HWProto::addStringToBuffer(teamscfg, QString("eammstore"));
-    
-    RawSendIPC(teamscfg);
 }
 
 void HWGame::SendTrainingConfig()
@@ -184,7 +124,7 @@ void HWGame::SendTrainingConfig()
 
     addKeyBindings(&traincfg);
 
-    RawSendIPC(traincfg);
+    //RawSendIPC(traincfg);
 }
 
 void HWGame::SendCampaignConfig()
@@ -197,21 +137,21 @@ void HWGame::SendCampaignConfig()
 
     addKeyBindings(&campaigncfg);
 
-    RawSendIPC(campaigncfg);
+    //RawSendIPC(campaigncfg);
 }
 
 void HWGame::SendNetConfig()
 {
     commonConfig();
 }
-
+/*
 void HWGame::ParseMessage(const QByteArray & msg)
 {
     switch(msg.at(1))
     {
         case '?':
         {
-            SendIPC("!");
+            //SendIPC("!");
             break;
         }
         case 'C':
@@ -282,7 +222,7 @@ void HWGame::ParseMessage(const QByteArray & msg)
             emit SendChat(msgbody);
             QByteArray buf;
             HWProto::addStringToBuffer(buf, "s" + HWProto::formatChatMsg(config->netNick(), msgbody) + "\x20\x20");
-            demo.append(buf);
+            //demo.append(buf);
             break;
         }
         case 'b':
@@ -316,25 +256,25 @@ void HWGame::ParseMessage(const QByteArray & msg)
             {
                 emit SendNet(msg);
             }
-            demo.append(msg);
+            //demo.append(msg);
         }
     }
-}
+}*/
 
 void HWGame::FromNet(const QByteArray & msg)
 {
-    RawSendIPC(msg);
+    //RawSendIPC(msg);
 }
 
 void HWGame::FromNetChat(const QString & msg)
 {
     QByteArray buf;
     HWProto::addStringToBuffer(buf, 's' + msg + "\x20\x20");
-    RawSendIPC(buf);
+    //RawSendIPC(buf);
 }
 
 void HWGame::onClientRead()
-{
+{/*
     quint8 msglen;
     quint32 bufsize;
     while (!readbuffer.isEmpty() && ((bufsize = readbuffer.size()) > 0) &&
@@ -343,7 +283,7 @@ void HWGame::onClientRead()
         QByteArray msg = readbuffer.left(msglen + 1);
         readbuffer.remove(0, msglen + 1);
         ParseMessage(msg);
-    }
+    }*/
 }
 
 QStringList HWGame::getArguments()
@@ -354,7 +294,7 @@ QStringList HWGame::getArguments()
 
     arguments << "--internal"; //Must be passed as first argument
     arguments << "--port";
-    arguments << QString("%1").arg(ipc_port);
+    arguments << QString::number(flib_gameconn_getport(m_conn));
     arguments << "--prefix";
     arguments << datadir->absolutePath();
     arguments << "--user-prefix";
@@ -406,35 +346,83 @@ void HWGame::PlayDemo(const QString & demofilename, bool isSave)
     }
 
     // read demo
-    toSendBuf = demofile.readAll();
+    //toSendBuf = demofile.readAll();
 
     // run engine
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
 void HWGame::StartNet()
 {
     gameType = gtNet;
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
 void HWGame::StartLocal()
 {
     gameType = gtLocal;
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
 void HWGame::StartQuick()
 {
+    ThemeModel * themeModel = DataManager::instance().themeModel();
     gameType = gtQLocal;
-    demo.clear();
-    Start(false);
+
+    flib_gamesetup gameSetup;
+    gameSetup.style = NULL;
+    gameSetup.gamescheme = flib_scheme_create("Default");
+    gameSetup.map = flib_map_create_regular(
+                QUuid::createUuid().toString().toAscii().constData()
+                , themeModel->rowCount() > 0 ? themeModel->index(rand() % themeModel->rowCount()).data().toString().toUtf8().constData() : "Sheep"
+                , 2);
+    gameSetup.teamlist = flib_teamlist_create();
+
+    // add teams
+    HWTeam team1;
+    team1.setDifficulty(0);
+    team1.setColor(0);
+    team1.setNumHedgehogs(4);
+    HWNamegen::teamRandomNames(team1, true);
+
+    HWTeam team2;
+    team2.setDifficulty(4);
+    team2.setColor(1);
+    team2.setNumHedgehogs(4);
+    do
+        HWNamegen::teamRandomNames(team2,true);
+    while(!team2.name().compare(team1.name()) || !team2.hedgehogHat(0).compare(team1.hedgehogHat(0)));
+
+    QList<flib_team *> teams;
+    teams << team1.toFlibTeam() << team2.toFlibTeam();
+
+    for(int i = 0; i < 2; ++i)
+    {
+        flib_team *team = teams[i];
+        team->hogsInGame = 4;
+        team->remoteDriven = false;
+        for(int h = 0; h < HEDGEHOGS_PER_TEAM; ++h)
+        {
+            team->hogs[h].weaponset = flib_weaponset_create("Default");
+            team->hogs[h].initialHealth = 100;
+        }
+        flib_teamlist_insert(gameSetup.teamlist, team, 0);
+    }
+
+
+    m_conn = flib_gameconn_create(config->netNick().toUtf8().constData(), &gameSetup, false);
+
+    flib_teamlist_destroy(gameSetup.teamlist);
+    flib_map_destroy(gameSetup.map);
+    flib_scheme_destroy(gameSetup.gamescheme);
+
+    start(false);
     SetGameState(gsStarted);
 }
 
@@ -442,8 +430,8 @@ void HWGame::StartTraining(const QString & file)
 {
     gameType = gtTraining;
     training = "Missions/Training/" + file + ".lua";
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
@@ -453,8 +441,8 @@ void HWGame::StartCampaign(const QString & camp, const QString & campScript, con
     campaign = camp;
     campaignScript = "Missions/Campaign/" + camp + "/" + campScript;
     campaignTeam = campTeam;
-    demo.clear();
-    Start(false);
+    //demo.clear();
+    start(false);
     SetGameState(gsStarted);
 }
 
@@ -464,7 +452,7 @@ void HWGame::SetGameState(GameState state)
     emit GameStateChanged(state);
     if (gameType == gtCampaign)
     {
-      emit CampStateChanged(1);
+      emit campStateChanged(1);
     }
 }
 
@@ -472,18 +460,18 @@ void HWGame::abort()
 {
     QByteArray buf;
     HWProto::addStringToBuffer(buf, QString("efinish"));
-    RawSendIPC(buf);
+    //RawSendIPC(buf);
 }
 
 void HWGame::sendCampaignVar(const QByteArray &varToSend)
 {
     QString varToFind(varToSend);
-    QSettings teamfile(cfgdir->absolutePath() + "/Teams/" + campaignTeam + ".hwt", QSettings::IniFormat, 0);
+    QSettings teamfile("/Teams/" + campaignTeam + ".hwt", QSettings::IniFormat, 0);
     teamfile.setIniCodec("UTF-8");
     QString varValue = teamfile.value("Campaign " + campaign + "/" + varToFind, "").toString();
     QByteArray command;
     HWProto::addStringToBuffer(command, "V." + varValue);
-    RawSendIPC(command);
+    //RawSendIPC(command);
 }
 
 void HWGame::writeCampaignVar(const QByteArray & varVal)
@@ -495,8 +483,80 @@ void HWGame::writeCampaignVar(const QByteArray & varVal)
     QString varToWrite = QString::fromUtf8(varVal.left(i));
     QString varValue = QString::fromUtf8(varVal.mid(i + 1));
 
-    QSettings teamfile(cfgdir->absolutePath() + "/Teams/" + campaignTeam + ".hwt", QSettings::IniFormat, 0);
+    QSettings teamfile("/Teams/" + campaignTeam + ".hwt", QSettings::IniFormat, 0);
     teamfile.setIniCodec("UTF-8");
     teamfile.setValue("Campaign " + campaign + "/" + varToWrite, varValue);
 }
 
+
+void HWGame::onChat(void* context, const char *msg, bool teamchat)
+{
+    HWGame * game = (HWGame *) context;
+
+    if(teamchat)
+        emit game->SendTeamMessage(QString::fromUtf8(msg));
+    else
+        emit game->SendChat(QString::fromUtf8(msg));
+}
+
+void HWGame::onConnect(void* context)
+{
+    HWGame * game = (HWGame *) context;
+}
+
+void HWGame::onDisconnect(void* context, int reason)
+{
+    HWGame * game = (HWGame *) context;
+    /*
+        switch (gameType)
+        {
+            case gtDemo:
+                // for video recording we need demo anyway
+                emit HaveRecord(rtNeither, demo);
+                break;
+            case gtNet:
+                emit HaveRecord(rtDemo, demo);
+                break;
+            default:
+                if (gameState == gsInterrupted || gameState == gsHalted)
+                    emit HaveRecord(rtSave, demo);
+                else if (gameState == gsFinished)
+                    emit HaveRecord(rtDemo, demo);
+                else
+                    emit HaveRecord(rtNeither, demo);
+        }*/
+
+     game->SetGameState(gsStopped);
+     game->clientDisconnected();
+
+     delete game->m_poller;
+}
+
+void HWGame::onEngineMessage(void *context, const uint8_t *em, size_t size)
+{
+    HWGame * game = (HWGame *) context;
+}
+
+void HWGame::onErrorMessage(void* context, const char *msg)
+{
+    HWGame * game = (HWGame *) context;
+
+    emit game->ErrorMessage(QString("Last two engine messages:\n%1").arg(QString::fromUtf8(msg)));
+}
+
+void HWGame::onGameRecorded(void *context, const uint8_t *record, size_t size, bool isSavegame)
+{
+    HWGame * game = (HWGame *) context;
+}
+
+void HWGame::onEngineStart()
+{
+    flib_gameconn_onChat(m_conn, onChat, this);
+    flib_gameconn_onConnect(m_conn, onConnect, this);
+    flib_gameconn_onDisconnect(m_conn, onDisconnect, this);
+    flib_gameconn_onEngineMessage(m_conn, onEngineMessage, this);
+    flib_gameconn_onErrorMessage(m_conn, onErrorMessage, this);
+    flib_gameconn_onGameRecorded(m_conn, onGameRecorded, this);
+
+    m_poller = new FrontLibPoller((void (*)(void *))flib_gameconn_tick, m_conn, this);
+}

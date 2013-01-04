@@ -47,16 +47,21 @@ HWRecorder::~HWRecorder()
     if (queue.empty())
         numRecorders--;
     else
-        queue.takeFirst()->Start(false);
+        queue.takeFirst()->start(false);
 }
 
 void HWRecorder::onClientDisconnect()
 {
 }
 
+void HWRecorder::onEngineStart()
+{
+
+}
+
 void HWRecorder::onClientRead()
 {
-    quint8 msglen;
+/*    quint8 msglen;
     quint32 bufsize;
     while (!readbuffer.isEmpty() && ((bufsize = readbuffer.size()) > 0) &&
             ((msglen = readbuffer.data()[0]) < bufsize))
@@ -75,12 +80,12 @@ void HWRecorder::onClientRead()
             finished = true;
             break;
         }
-    }
+    }*/
 }
 
 void HWRecorder::EncodeVideo(const QByteArray & record)
 {
-    toSendBuf = record;
+    /*toSendBuf = record;
     toSendBuf.replace(QByteArray("\x02TD"), QByteArray("\x02TV"));
     toSendBuf.replace(QByteArray("\x02TL"), QByteArray("\x02TV"));
     toSendBuf.replace(QByteArray("\x02TN"), QByteArray("\x02TV"));
@@ -92,7 +97,7 @@ void HWRecorder::EncodeVideo(const QByteArray & record)
         Start(false); // run engine
     }
     else
-        queue.push_back(this);
+        queue.push_back(this);*/
 }
 
 QStringList HWRecorder::getArguments()
@@ -103,7 +108,7 @@ QStringList HWRecorder::getArguments()
 
     arguments << "--internal";
     arguments << "--port";
-    arguments << QString("%1").arg(ipc_port);
+    //arguments << QString("%1").arg(ipc_port);
     arguments << "--prefix";
     arguments << datadir->absolutePath();
     arguments << "--user-prefix";

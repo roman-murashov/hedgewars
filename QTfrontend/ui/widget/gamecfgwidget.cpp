@@ -108,7 +108,7 @@ GameCFGWidget::GameCFGWidget(QWidget* parent) :
 
     connect(pMapContainer, SIGNAL(seedChanged(const QString &)), this, SLOT(seedChanged(const QString &)));
     connect(pMapContainer, SIGNAL(mapChanged(const QString &)), this, SLOT(mapChanged(const QString &)));
-    connect(pMapContainer, SIGNAL(mapgenChanged(MapGenerator)), this, SLOT(mapgenChanged(MapGenerator)));
+    connect(pMapContainer, SIGNAL(mapgenChanged(int)), this, SLOT(mapgenChanged(int)));
     connect(pMapContainer, SIGNAL(mazeSizeChanged(int)), this, SLOT(maze_sizeChanged(int)));
     connect(pMapContainer, SIGNAL(themeChanged(const QString &)), this, SLOT(themeChanged(const QString &)));
     connect(pMapContainer, SIGNAL(newTemplateFilter(int)), this, SLOT(templateFilterChanged(int)));
@@ -343,7 +343,7 @@ void GameCFGWidget::setParam(const QString & param, const QStringList & slValue)
         }
         if (param == "MAPGEN")
         {
-            pMapContainer->setMapgen((MapGenerator)value.toUInt());
+            pMapContainer->setMapgen(value.toInt());
             return;
         }
         if (param == "MAZE_SIZE")
@@ -382,7 +382,7 @@ void GameCFGWidget::setParam(const QString & param, const QStringList & slValue)
 
             pMapContainer->setAllMapParameters(
                 slValue[0],
-                (MapGenerator)slValue[1].toUInt(),
+                slValue[1].toInt(),
                 slValue[2].toUInt(),
                 seed,
                 slValue[4].toUInt()
@@ -553,7 +553,7 @@ void GameCFGWidget::scriptChanged(int index)
     emit paramChanged("SCRIPT", QStringList(name));
 }
 
-void GameCFGWidget::mapgenChanged(MapGenerator m)
+void GameCFGWidget::mapgenChanged(int m)
 {
     emit paramChanged("MAPGEN", QStringList(QString::number(m)));
 }

@@ -370,14 +370,13 @@ void PageEditTeam::loadTeam(const HWTeam & team)
 
     for(int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
-        HWHog hh = team.hedgehog(i);
+        HHNameEdit[i]->setText(team.hedgehogName(i));
 
-        HHNameEdit[i]->setText(hh.Name);
+        QString hat = team.hedgehogHat(i);
+        if (hat.startsWith("Reserved"))
+            hat = "Reserved " + hat.mid(40);
 
-        if (hh.Hat.startsWith("Reserved"))
-            hh.Hat = "Reserved "+hh.Hat.remove(0,40);
-
-        HHHats[i]->setCurrentIndex(HHHats[i]->findData(hh.Hat, Qt::DisplayRole));
+        HHHats[i]->setCurrentIndex(HHHats[i]->findData(hat, Qt::DisplayRole));
     }
 
     CBGrave->setCurrentIndex(CBGrave->findText(team.grave()));
@@ -407,14 +406,13 @@ HWTeam PageEditTeam::data()
 
     for(int i = 0; i < HEDGEHOGS_PER_TEAM; i++)
     {
-        HWHog hh;
-        hh.Name = HHNameEdit[i]->text();
-        hh.Hat = HHHats[i]->currentText();
+        QString hat = HHHats[i]->currentText();
 
-        if (hh.Hat.startsWith("Reserved"))
-            hh.Hat = "Reserved"+m_playerHash+hh.Hat.remove(0,9);
+        if (hat.startsWith("Reserved"))
+            hat = "Reserved" + m_playerHash + hat.mid(9);
 
-        team.setHedgehog(i,hh);
+        team.setHedgehogName(i, HHNameEdit[i]->text());
+        team.setHedgehogHat(i, hat);
     }
 
     team.setGrave(CBGrave->currentText());
