@@ -126,6 +126,8 @@ QString playerHash;
 
 GameUIConfig* HWForm::config = NULL;
 
+bool checkForDir(const QString & dir);
+
 HWForm::HWForm(QWidget *parent, QString styleSheet)
     : QMainWindow(parent)
     , game(0)
@@ -1593,7 +1595,7 @@ void HWForm::GameStateChanged(GameState gameState)
 void HWForm::CreateGame(GameCFGWidget * gamecfg, TeamSelWidget* pTeamSelWidget, QString ammo)
 {
     game = new HWGame(config, gamecfg, ammo, pTeamSelWidget);
-    connect(game, SIGNAL(CampStateChanged(int)), this, SLOT(UpdateCampaignPageProgress(int)));
+    connect(game, SIGNAL(campStateChanged(int)), this, SLOT(UpdateCampaignPageProgress(int)));
     connect(game, SIGNAL(GameStateChanged(GameState)), this, SLOT(GameStateChanged(GameState)));
     connect(game, SIGNAL(GameStats(char, const QString &)), ui.pageGameStats, SLOT(GameStats(char, const QString &)));
     connect(game, SIGNAL(ErrorMessage(const QString &)), this, SLOT(ShowErrorMessage(const QString &)), Qt::QueuedConnection);

@@ -69,7 +69,7 @@ class GameCFGWidget : public QGroupBox
         void scriptChanged(int);
         void jumpToSchemes();
         void jumpToWeapons();
-        void mapgenChanged(MapGenerator m);
+        void mapgenChanged(int m);
         void maze_sizeChanged(int s);
         void onDrawnMapChanged(const QByteArray & data);
         void updateModelViews();

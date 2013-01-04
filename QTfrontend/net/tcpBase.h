@@ -21,64 +21,37 @@
 #define _TCPBASE_INCLUDED
 
 #include <QObject>
-#include <QTcpServer>
-#include <QTcpSocket>
-#include <QByteArray>
-#include <QString>
-#include <QDir>
 #include <QProcess>
-#include <QPointer>
-
-#include <QImage>
-
-#define MAXMSGCHARS 255
 
 class TCPBase : public QObject
 {
         Q_OBJECT
 
     public:
-        TCPBase(bool demoMode, QObject * parent = 0);
+        TCPBase(QObject * parent = 0);
         virtual ~TCPBase();
 
         virtual bool couldBeRemoved();
 
     signals:
-        void isReadyNow();
+        void nextPlease();
 
     protected:
         bool m_hasStarted;
-        quint16 ipc_port;
+        int m_port;
 
-        void Start(bool couldCancelPreviousRequest);
+        void start(bool couldCancelPreviousRequest);
 
-        QByteArray readbuffer;
+        virtual QStringList getArguments() = 0;
+        virtual void onEngineStart() = 0;
 
-        QByteArray toSendBuf;
-        QByteArray demo;
-
-        void SendIPC(const QByteArray & buf);
-        void RawSendIPC(const QByteArray & buf);
-
-        virtual QStringList getArguments()=0;
-        virtual void onClientRead();
-        virtual void onClientDisconnect();
-        virtual void SendToClientFirst();
+        void clientDisconnected();
 
     private:
-        static QPointer<QTcpServer> IPCServer;
-
-        bool m_isDemoMode;
         void RealStart();
-        QPointer<QTcpSocket> IPCSocket;
 
     private slots:
-        void NewConnection();
-        void ClientDisconnect();
-        void ClientRead();
-        void StartProcessError(QProcess::ProcessError error);
-
-        void tcpServerReady();
+        void iStart();
 };
 
 #ifdef HWLIBRARY

@@ -124,6 +124,7 @@ set(PHYSFS_HEDGE_SRCS
     extras/physfsrwops.c
     extras/physfslualoader.c
     extras/hwpacksmounter.c
+    extras/physfsfgets.c
 )
 
 # Almost everything is "compiled" here, but things that don't apply to the

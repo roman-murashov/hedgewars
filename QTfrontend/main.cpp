@@ -37,6 +37,8 @@
 #include "DataManager.h"
 #include "FileEngine.h"
 
+#include "frontlib.h"
+
 #ifdef _WIN32
 #include <Shlobj.h>
 #elif defined __APPLE__
@@ -164,6 +166,8 @@ int main(int argc, char *argv[])
 #endif
 
     FileEngineHandler engine(argv[0]);
+
+    flib_init();
 
     app.setAttribute(Qt::AA_DontShowIconsInMenus,false);
 
@@ -345,7 +349,13 @@ int main(int argc, char *argv[])
 
     app.form = new HWForm(NULL, style);
     app.form->show();
+
     if(splash)
         splash->close();
-    return app.exec();
+
+    int r = app.exec();
+
+    flib_quit();
+
+    return r;
 }

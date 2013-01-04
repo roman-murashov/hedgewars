@@ -21,6 +21,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QTime>
+#include <QTextStream>
 
 #include "pagemain.h"
 #include "hwconsts.h"

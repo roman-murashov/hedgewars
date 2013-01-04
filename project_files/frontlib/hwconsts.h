@@ -44,8 +44,7 @@
 //! Used for sending scripts to the engine
 #define MULTIPLAYER_SCRIPT_PATH "Scripts/Multiplayer/"
 
-#define WEAPONS_COUNT 56
-
+#define WEAPONS_COUNT 55
 // TODO allow frontend to override these?
 /*! A merge of mikade/bugq colours w/ a bit of channel feedback */
 #define HW_TEAMCOLOR_ARRAY  { UINT32_C(0xffff0204), /*! red    */ \
@@ -59,6 +58,11 @@
                               UINT32_C(0xffffff01), /*! yellow */ \
                               /*! add new colors here */ \
                               0 } /*! Keep this 0 at the end */
+
+#define AMMOLINE_DEFAULT_QT     "9391929422199121032235111001201000000211110101011111101"
+#define AMMOLINE_DEFAULT_PROB   "0405040541600655546554464776576666666155510101115411101"
+#define AMMOLINE_DEFAULT_DELAY  "0000000000000205500000040007004000000000220000000600000"
+#define AMMOLINE_DEFAULT_CRATE  "1311110312111111123114111111111111111211111101111111101"
 
 extern const size_t flib_teamcolor_count;
 extern const uint32_t flib_teamcolors[];
