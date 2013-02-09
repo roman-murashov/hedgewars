@@ -77,6 +77,7 @@ data Action =
     | CheckBanned Bool
     | SaveReplay
     | Stats
+    | CheckRecord
 
 
 type CmdHandler = [B.ByteString] -> Reader (ClientIndex, IRnC) [Action]
@@ -430,7 +431,7 @@ processAction CheckRegistered = do
     uid <- client's clUID
     -- allow multiple checker logins
     haveSameNick <- liftM (not . null . tail . filter (\c -> (not $ isChecker c) && caseInsensitiveCompare (nick c) n)) allClientsS
-    if haveSameNick && (not checker) then
+    if (not checker) && haveSameNick then
         if p < 38 then
             processAction $ ByeClient $ loc "Nickname is already in use"
             else
@@ -670,6 +671,17 @@ processAction SaveReplay = do
     io $ do
         r <- room'sM rnc id ri
         saveReplay r
+
+
+processAction CheckRecord = do
+    p <- client's clientProto
+    c <- client's sendChan
+    l <- io $ loadReplay (fromIntegral p)
+    when (not $ null l) $
+        processAction $ AnswerClients [c] ("REPLAY" : l)
+
+
 #else
 processAction SaveReplay = return ()
+processAction CheckRecord = return ()
 #endif
