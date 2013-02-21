@@ -29,12 +29,25 @@ data Message = Packet [B.ByteString]
              | CheckSuccess [B.ByteString]
     deriving Show
 
+serverAddress = "netserver.hedgewars.org"
 protocolNumber = "43"
+
+getLines :: Handle -> IO [String]
+getLines h = g
+    where
+        g = do
+            l <- liftM Just (hGetLine h) `Exception.catch` (\(_ :: Exception.IOException) -> return Nothing)
+            if isNothing l then
+                return []
+                else
+                do
+                lst <- g
+                return $ fromJust l : lst
 
 
 engineListener :: Chan Message -> Handle -> IO ()
 engineListener coreChan h = do
-    output <- liftM lines $ hGetContents h
+    output <- getLines h
     debugM "Engine" $ show output
     if isNothing $ L.find start output then
         writeChan coreChan $ CheckFailed "No stats msg"
@@ -42,6 +55,7 @@ engineListener coreChan h = do
         writeChan coreChan $ CheckSuccess []
     where
         start = flip L.elem ["WINNERS", "DRAW"]
+
 
 checkReplay :: Chan Message -> [B.ByteString] -> IO ()
 checkReplay coreChan msgs = do
@@ -51,7 +65,7 @@ checkReplay coreChan msgs = do
     hFlush h
     hClose h
 
-    (_, Just hErr, _, _) <- createProcess (proc "/usr/home/unC0Rr/Sources/Hedgewars/Releases/0.9.18/bin/hwengine"
+    (_, Just hOut, _, _) <- createProcess (proc "/usr/home/unC0Rr/Sources/Hedgewars/Releases/0.9.18/bin/hwengine"
                 ["/usr/home/unC0Rr/.hedgewars"
                 , "/usr/home/unC0Rr/Sources/Hedgewars/Releases/0.9.18/share/hedgewars/Data"
                 , fileName
@@ -61,8 +75,8 @@ checkReplay coreChan msgs = do
                 , "0"
                 ])
             {std_out = CreatePipe}
-    hSetBuffering hErr LineBuffering
-    void $ forkIO $ engineListener coreChan hErr
+    hSetBuffering hOut LineBuffering
+    void $ forkIO $ engineListener coreChan hOut
 
 
 takePacks :: State B.ByteString [[B.ByteString]]
@@ -125,7 +139,9 @@ session l p s = do
         answer ["CHECKER", protocolNumber, l, p]
         answer ["READY"]
     onPacket _ ["PING"] = answer ["PONG"]
-    onPacket chan ("REPLAY":msgs) = checkReplay chan msgs
+    onPacket chan ("REPLAY":msgs) = do
+        checkReplay chan msgs
+        warningM "Check" "Started check"
     onPacket _ ("BYE" : xs) = error $ show xs
     onPacket _ _ = return ()
 
@@ -165,5 +181,3 @@ main = withSocketsDo $ do
             sock <- socket AF_INET Stream proto
             connect sock (SockAddrInet 46631 host)
             return sock
-
-        serverAddress = "netserver.hedgewars.org"
