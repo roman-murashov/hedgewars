@@ -29,6 +29,7 @@ procedure doStepHedgehogMoving(Gear: PGear);
 procedure HedgehogChAngle(HHGear: PGear); 
 procedure PickUp(HH, Gear: PGear);
 procedure AddPickup(HH: THedgehog; ammo: TAmmoType; cnt, X, Y: LongWord);
+procedure CheckIce(Gear: PGear); inline;
 
 implementation
 uses uConsts, uVariables, uFloat, uAmmos, uSound, uCaptions, 
@@ -53,7 +54,6 @@ with HHGear^.Hedgehog^ do
     prevAmmo:= CurAmmoType;
     ammoidx:= 0;
     if ((HHGear^.State and (gstAttacking or gstAttacked)) <> 0)
-    or ((MultiShootAttacks > 0) and ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_NoRoundEnd) = 0))
     or ((HHGear^.State and gstHHDriven) = 0) then
         exit;
     ChangeAmmo:= true;
@@ -61,8 +61,12 @@ with HHGear^.Hedgehog^ do
     while (ammoidx < cMaxSlotAmmoIndex) and (Ammo^[slot, ammoidx].AmmoType <> CurAmmoType) do
         inc(ammoidx);
 
-    if ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_NoRoundEnd) <> 0) and (MultiShootAttacks > 0) then
-        OnUsedAmmo(HHGear^.Hedgehog^);
+    if (MultiShootAttacks > 0) then
+        begin
+        if (CurAmmoType = amSniperRifle) and ((GameFlags and gfArtillery) = 0) then
+            cArtillery := false;
+        OnUsedAmmo(HHGear^.Hedgehog^)
+        end;
 
     MultiShootAttacks:= 0;
     HHGear^.Message:= HHGear^.Message and (not (gmLJump or gmHJump));
@@ -374,7 +378,10 @@ with Gear^,
                                  end;
                     //amStructure: newGear:= AddGear(hwRound(lx) + hwSign(dX) * 7, hwRound(ly), gtStructure, gstWait, SignAs(_0_02, dX), _0, 3000);
                        amTardis: newGear:= AddGear(hwRound(X), hwRound(Y), gtTardis, 0, _0, _0, 5000);
-                       amIceGun: newGear:= AddGear(hwRound(X), hwRound(Y), gtIceGun, 0, _0, _0, 0);
+                       amIceGun: begin
+                       newGear:= AddGear(hwRound(X), hwRound(Y), gtIceGun, 0, _0, _0, 0);
+                       newGear^.radius := 8;
+                       end;
             end;
             if altUse and (newGear <> nil) then
                begin
@@ -455,7 +462,7 @@ with Gear^,
             if (CurAmmoGear <> nil)
                 and ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_AltUse) = 0){check for dropping ammo from rope} then
                 begin
-                if CurAmmoType = amRope then Message:= Message or gmAttack;
+                if CurAmmoType in [amRope,amResurrector] then Message:= Message or gmAttack;
                 CurAmmoGear^.Message:= Message
                 end
             else
@@ -775,7 +782,7 @@ if ((Gear^.State and (gstAttacking or gstMoving)) = 0) then
     if (not cArtillery) and ((Gear^.Message and gmPrecise) = 0) then
         MakeHedgehogsStep(Gear);
 
-    SetAllHHToActive;
+    SetAllHHToActive(false);
     AddGearCI(Gear)
     end
 end;
@@ -998,20 +1005,13 @@ var t: PGear;
     Hedgehog: PHedgehog;
 begin
 Hedgehog:= HHGear^.Hedgehog;
-// Some weapons, deagle in particular, wouldn't play so nice in infinite attack mode if hogs were still moving.  Most likely scenario
-// is trying to shoot them twice while rolling.  This is mostly about not wasting ammo, but shouldn't apply to gears not using AmmoShove (portal
-// Should we rethink AmmoShove? Presumably we'd need a way of knowing if current gear had already attacked a gear
-if isInMultiShoot and not AllInactive and (Hedgehog^.CurAmmoType in [amShotgun, amDEagle, amSniperRifle]) then HHGear^.Message:= HHGear^.Message and not gmAttack;
-(*
-if isInMultiShoot then
-    HHGear^.Message:= 0;
-*)
-
-(*if ((Ammoz[CurrentHedgehog^.CurAmmoType].Ammo.Propz and ammoprop_Utility) <> 0) and isInMultiShoot then 
-    AllInactive:= true
-else if not isInMultiShoot then
-   AllInactive:= false;*)
- AllInactive:= false;
+//if isInMultiShoot and not AllInactive and (Hedgehog^.CurAmmoType in [amShotgun, amDEagle, amSniperRifle]) then HHGear^.Message:= HHGear^.Message and not gmAttack;
+if isInMultiShoot and (Hedgehog^.CurAmmoType in [amShotgun, amDEagle, amSniperRifle]) then
+    begin
+    AllInactive:= true;
+    HHGear^.Message:= 0
+    end
+else AllInactive:= false;
 
 if (TurnTimeLeft = 0) or (HHGear^.Damage > 0) then
     begin
@@ -1128,7 +1128,7 @@ if (HHGear^.State and gstMoving) <> 0 then
     exit
     end;
 
-    if Hedgehog^.Gear <> nil then
+    if not(isInMultiShoot and (Hedgehog^.CurAmmoType in [amShotgun, amDEagle, amSniperRifle])) and (Hedgehog^.Gear <> nil) then
         begin
         if GHStepTicks > 0 then
             dec(GHStepTicks);
@@ -1200,7 +1200,7 @@ else
     if Gear^.Timer = 0 then
         begin
         Gear^.State:= Gear^.State and (not (gstWait or gstLoser or gstWinner or gstAttacked or gstNotKickable or gstHHChooseTarget));
-        Gear^.Active:= false;
+        if Gear^.Hedgehog^.Effects[heFrozen] = 0 then Gear^.Active:= false;
         AddGearCI(Gear);
         exit
         end
@@ -1210,40 +1210,24 @@ else
 AllInactive:= false
 end;
 
-////////////////////////////////////////////////////////////////////////////////
-procedure doStepHedgehog(Gear: PGear);
+procedure CheckIce(Gear: PGear); inline;
 (*
 var x,y,tx,ty: LongInt;
     tdX, tdY, slope: hwFloat; 
     land: Word; *)
 var slope: hwFloat; 
 begin
-CheckSum:= CheckSum xor Gear^.Hedgehog^.BotLevel;
-if (Gear^.Message and gmDestroy) <> 0 then
-    begin
-    DeleteGear(Gear);
-    exit
-    end;
-
-if (Gear^.State and gstHHDriven) = 0 then
-    doStepHedgehogFree(Gear)
-else
-    begin
-    with Gear^.Hedgehog^ do
-        if Team^.hasGone then
-            TeamGoneEffect(Team^)
-        else
-            doStepHedgehogDriven(Gear)
-    end;
-if (Gear^.Message and (gmAllStoppable or gmLJump or gmHJump) = 0)
-and (Gear^.State and (gstHHJumping or gstHHHJump or gstAttacking) = 0)
-and (not Gear^.dY.isNegative) and (GameTicks mod (100*LongWOrd(hwRound(cMaxWindSpeed*2/cGravity))) = 0)
-and (TestCollisionYwithGear(Gear, 1) and lfIce <> 0) then
-    begin
-    slope:= CalcSlopeBelowGear(Gear);
-    Gear^.dX:=Gear^.dX+slope*_0_07;
-    if slope.QWordValue <> 0 then
-        Gear^.State:= Gear^.State or gstMoving;
+    if (Gear^.Message and (gmAllStoppable or gmLJump or gmHJump) = 0)
+    and (Gear^.State and (gstHHJumping or gstHHHJump or gstAttacking) = 0)
+    and (not Gear^.dY.isNegative) and (TestCollisionYwithGear(Gear, 1) and lfIce <> 0) then
+        begin
+        slope:= CalcSlopeBelowGear(Gear);
+        if slope.QWordValue > 730144440 then // ignore mild slopes
+            begin
+            Gear^.dX:=Gear^.dX+slope*cGravity*_256;
+            Gear^.State:= Gear^.State or gstMoving
+            end
+        end;
 (*
     x:= hwRound(Gear^.X);
     y:= hwRound(Gear^.Y);
@@ -1258,7 +1242,35 @@ and (TestCollisionYwithGear(Gear, 1) and lfIce <> 0) then
     AddVisualGear(x + hwRound(_40 * slope), y - hwRound(_40 * slope), vgtSmokeTrace);
     AddVisualGear(x - hwRound(_50 * slope), y + hwRound(_50 * slope), vgtSmokeTrace);
     AddVisualGear(x + hwRound(_50 * slope), y - hwRound(_50 * slope), vgtSmokeTrace); *)
-    end
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+procedure doStepHedgehog(Gear: PGear);
+begin
+CheckSum:= CheckSum xor Gear^.Hedgehog^.BotLevel;
+if (Gear^.Message and gmDestroy) <> 0 then
+    begin
+    DeleteGear(Gear);
+    exit
+    end;
+if GameTicks mod 100 = 0 then CheckIce(Gear);
+if Gear^.Hedgehog^.Effects[heFrozen] > 0 then 
+    begin
+    if Gear^.Hedgehog^.Effects[heFrozen] > 256 then
+        dec(Gear^.Hedgehog^.Effects[heFrozen])
+    else if GameTicks mod 10 = 0 then
+        dec(Gear^.Hedgehog^.Effects[heFrozen])
+    end;
+if (Gear^.State and gstHHDriven) = 0 then
+    doStepHedgehogFree(Gear)
+else
+    begin
+    with Gear^.Hedgehog^ do
+        if Team^.hasGone then
+            TeamGoneEffect(Team^)
+        else
+            doStepHedgehogDriven(Gear)
+    end;
 end;
 
 end.
