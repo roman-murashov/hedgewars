@@ -42,7 +42,7 @@ function  LandBackPixel(x, y: LongInt): LongWord;
 procedure DrawLine(X1, Y1, X2, Y2: LongInt; Color: Longword);
 procedure DrawThickLine(X1, Y1, X2, Y2, radius: LongInt; color: Longword);
 procedure DumpLandToLog(x, y, r: LongInt);
-
+procedure DrawIceBreak(x, y, iceRadius, iceHeight: Longint);
 function TryPlaceOnLand(cpX, cpY: LongInt; Obj: TSprite; Frame: LongInt; doPlace: boolean; indestructible: boolean): boolean;
 
 implementation
@@ -247,19 +247,9 @@ if (t and LAND_HEIGHT_MASK) = 0 then
 end;
 
 
-function isLandscapeEdge(weight:Longint):boolean;
+function isLandscapeEdge(weight:Longint):boolean; inline;
 begin
     result := (weight < 8) and (weight >= 2);
-end;
-
-function isLandscape(weight:Longint):boolean;
-begin
-    result := weight < 2;
-end;
-
-function isEmptySpace(weight:Longint):boolean;
-begin
-    result := not isLandscape(weight) and not isLandscapeEdge(weight);
 end;
 
 function getPixelWeight(x, y:Longint): Longint;
@@ -273,8 +263,13 @@ begin
         if (i < 0) or
            (i > LAND_WIDTH - 1) or
            (j < 0) or
-           (j > LAND_HEIGHT -1) or
-           ((Land[j, i] and $FF00) = 0) then
+           (j > LAND_HEIGHT -1) then
+               begin               
+                result := 0;
+                exit;
+               end;
+
+        if ((Land[j, i] and $FF00) = 0) and ((Land[j, i] and lfIce) = 0) then
            begin
            result := result + 1;
            end;
@@ -289,42 +284,29 @@ var
     w, c: LongWord;
     weight: Longint;
 begin
-    weight := getPixelWeight(x, y);
-    if isLandscape(weight) then
-        begin
-        // So. 3 parameters here. Ice colour, Ice opacity, and a bias on the greyscaled pixel towards lightness
-        iceSurface:= SpritesData[sprIceTexture].Surface;
-        pictureX := x mod iceSurface^.w;
-        pictureY := y mod iceSurface^.h;
-        icePixels := iceSurface^.pixels;
-        w:= LandPixels[y, x];
-        w:= round(((w shr RShift and $FF) * RGB_LUMINANCE_RED +
-              (w shr BShift and $FF) * RGB_LUMINANCE_GREEN +
-              (w shr GShift and $FF) * RGB_LUMINANCE_BLUE));
-        if w < 128 then w:= w+128;
-        if w > 255 then w:= 255;
-        w:= (w shl RShift) or (w shl BShift) or (w shl GShift) or (LandPixels[y,x] and AMask);
-        //LandPixels[y, x]:= w;
-        LandPixels[y, x]:= addBgColor(w, IceColor);
-        LandPixels[y, x]:= addBgColor(LandPixels[y, x], icePixels^[iceSurface^.w * (y mod iceSurface^.h) + (x mod iceSurface^.w)]);
-        Land[y, x] := land[y, x] or lfIce;
-        end
-    else if (isLandscapeEdge(weight)) then
-        begin
-        LandPixels[y, x] := $FFB2AF8A;
-        if Land[y, x] > 255 then Land[y, x] := Land[y, x] or lfIce;
-        end;
-
+    // So. 3 parameters here. Ice colour, Ice opacity, and a bias on the greyscaled pixel towards lightness
+    iceSurface:= SpritesData[sprIceTexture].Surface;
+    icePixels := iceSurface^.pixels;
+    w:= LandPixels[y, x];
+    w:= round(((w shr RShift and $FF) * RGB_LUMINANCE_RED +
+          (w shr BShift and $FF) * RGB_LUMINANCE_GREEN +
+          (w shr GShift and $FF) * RGB_LUMINANCE_BLUE));
+    if w < 128 then w:= w+128;
+    if w > 255 then w:= 255;
+    w:= (w shl RShift) or (w shl BShift) or (w shl GShift) or (LandPixels[y,x] and AMask);
+    //LandPixels[y, x]:= w;
+    LandPixels[y, x]:= addBgColor(w, IceColor);
+    LandPixels[y, x]:= addBgColor(LandPixels[y, x], icePixels^[iceSurface^.w * (y mod iceSurface^.h) + (x mod iceSurface^.w)]);
 end;
 
-function getIncrementInquarter(dx, dy, quarter: Longint): Longint;
+function getIncrementInquarter(dx, dy, quarter: Longint): Longint; inline;
 const directionX : array [0..3] of Longint = (0, 0, 1, -1);
 const directionY : array [0..3] of Longint = (1, -1, 0, 0);
 begin
     getIncrementInquarter := directionX[quarter] * dx + directionY[quarter] * dy;
 end;
 
-function getIncrementInquarter2(dx, dy, quarter: Longint): Longint;
+function getIncrementInquarter2(dx, dy, quarter: Longint): Longint; inline;
 const directionY : array [0..3] of Longint = (0, 0, 1, 1);
 const directionX : array [0..3] of Longint = (1, 1, 0, 0);
 begin
@@ -332,42 +314,91 @@ begin
 end;
 
 procedure FillLandCircleLinesIce(x, y, dx, dy: LongInt);
-var q, i, t: LongInt;
+var q, i, t, px, py: LongInt;
 begin
 for q := 0 to 3 do
     begin
-        t:= y + getIncrementInquarter(dx, dy, q);
-        if (t and LAND_HEIGHT_MASK) = 0 then
-            for i:= Max(x - getIncrementInquarter2(dx, dy, q), 0) to Min(x + getIncrementInquarter2(dx, dy, q), LAND_WIDTH - 1) do
-                if (Land[t, i] and (lfIndestructible or lfIce) = 0) and (not disableLandBack or (Land[t, i] > 255))  then
-                    if (cReducedQuality and rqBlurryLand) = 0 then
-                       drawIcePixel(t, i)
-                    else
-                       drawIcePixel(t div 2, i div 2) ;
-    end;
+    t:= y + getIncrementInquarter(dx, dy, q);
+    if (t and LAND_HEIGHT_MASK) = 0 then
+        for i:= Max(x - getIncrementInquarter2(dx, dy, q), 0) to Min(x + getIncrementInquarter2(dx, dy, q), LAND_WIDTH - 1) do
+            if Land[t, i] and lfIce = 0 then
+                begin
+                if (cReducedQuality and rqBlurryLand) = 0 then
+                    begin
+                    px:= i; py:= t
+                    end
+                else
+                    begin
+                    px:= i div 2; py:= t div 2
+                    end;
+                if isLandscapeEdge(getPixelWeight(i, t)) then
+                    begin
+                    if (LandPixels[py, px] and AMask < 255) and (LandPixels[py, px] and AMask > 0) then
+                        LandPixels[py, px] := (IceEdgeColor and not AMask) or (LandPixels[py, px] and AMask)
+                    else if (LandPixels[py, px] and AMask < 255) or (Land[t, i] > 255) then
+                        LandPixels[py, px] := IceEdgeColor
+                    end
+                else if Land[t, i] > 255 then
+                    begin
+                    drawIcePixel(py, px)
+                    end;
+                if Land[t, i] > 255 then Land[t, i] := Land[t, i] or lfIce and not lfDamaged;
+                end;
+    end
 end;
 
 procedure FillRoundInLandWithIce(X, Y, Radius: LongInt);
 var dx, dy, d: LongInt;
+    landRect: TSDL_Rect;
 begin
 dx:= 0;
 dy:= Radius;
 d:= 3 - 2 * Radius;
-    while (dx < dy) do
+while (dx < dy) do
+    begin
+    FillLandCircleLinesIce(x, y, dx, dy);
+    if (d < 0) then
+        d:= d + 4 * dx + 6
+    else
         begin
-        FillLandCircleLinesIce(x, y, dx, dy);
-        if (d < 0) then
-            d:= d + 4 * dx + 6
-        else
-            begin
-            d:= d + 4 * (dx - dy) + 10;
-            dec(dy)
-            end;
-        inc(dx)
+        d:= d + 4 * (dx - dy) + 10;
+        dec(dy)
         end;
-    if (dx = dy) then
-        FillLandCircleLinesIce(x, y, dx, dy);
+    inc(dx)
+    end;
+if (dx = dy) then
+    FillLandCircleLinesIce(x, y, dx, dy);
+landRect.x := min(max(x - Radius, 0), LAND_WIDTH - 1);
+landRect.y := min(max(y - Radius, 0), LAND_HEIGHT - 1);
+landRect.w := min(2*Radius, LAND_WIDTH - landRect.x - 1);
+landRect.h := min(2*Radius, LAND_HEIGHT - landRect.y - 1);
+UpdateLandTexture(landRect.x, landRect.w, landRect.y, landRect.h, true);        
 end;
+
+
+procedure DrawIceBreak(x, y, iceRadius, iceHeight: Longint);
+var
+    i, j: integer;
+    landRect: TSDL_Rect;
+begin
+for i := min(max(x - iceRadius, 0), LAND_WIDTH - 1) to min(max(x + iceRadius, 0), LAND_WIDTH - 1) do
+    begin
+    for j := min(max(y, 0), LAND_HEIGHT - 1) to min(max(y + iceHeight, 0), LAND_HEIGHT - 1) do
+        begin
+        if land[j, i] = 0 then
+            begin
+                land[j, i] := lfIce;                
+                drawIcePixel(j, i);
+            end;
+        end;        
+    end;
+landRect.x := min(max(x - iceRadius, 0), LAND_WIDTH - 1);
+landRect.y := min(max(y, 0), LAND_HEIGHT - 1);
+landRect.w := min(2*iceRadius, LAND_WIDTH - landRect.x - 1);
+landRect.h := min(iceHeight, LAND_HEIGHT - landRect.y - 1);
+UpdateLandTexture(landRect.x, landRect.w, landRect.y, landRect.h, true);        
+end;
+
 
 
 function FillLandCircleLinesBG(x, y, dx, dy: LongInt): Longword;
@@ -1019,7 +1050,7 @@ if (Land[Y, X] = 0) and (Y > LongInt(topY) + 1) and
         end
     end
 else if ((cReducedQuality and rqBlurryLand) = 0) and (LandPixels[Y, X] and AMask = 255)
-and ((Land[Y, X] and (lfDamaged or lfBasic) = lfBasic) or (Land[Y, X] and (lfDamaged or lfBasic) = lfBasic))
+and (Land[Y, X] and (lfDamaged or lfBasic) = lfBasic)
 and (Y > LongInt(topY) + 1) and (Y < LAND_HEIGHT-2) and (X > LongInt(leftX) + 1) and (X < LongInt(rightX) - 1) then
     begin
     if ((((Land[y, x-1] and lfDamaged) <> 0) and (((Land[y+1,x] and lfDamaged) <> 0)) or ((Land[y-1,x] and lfDamaged) <> 0))
