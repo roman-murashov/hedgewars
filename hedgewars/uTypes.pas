@@ -437,7 +437,7 @@ For example, say, a mode where the weaponset is reset each turn, or on sudden de
 
     TMsgStrId = (sidStartFight, sidDraw, sidWinner, sidVolume, sidPaused,
             sidConfirm, sidSuddenDeath, sidRemaining, sidFuel, sidSync,
-            sidNoEndTurn, sidNotYetAvailable, sidRoundSD, sidRoundsSD, sidReady, 
+            sidNoEndTurn, sidNotYetAvailable, sidRoundSD, sidRoundsSD, sidReady,
             sidBounce1, sidBounce2, sidBounce3, sidBounce4, sidBounce5, sidBounce,
             sidMute);
 
@@ -448,8 +448,8 @@ For example, say, a mode where the weaponset is reset each turn, or on sudden de
 
     TGoalStrId = (gidCaption, gidSubCaption, gidForts, gidLowGravity, gidInvulnerable,
             gidVampiric, gidKarma, gidKing, gidPlaceHog, gidArtillery,
-            gidSolidLand, gidSharedAmmo, gidMineTimer, gidNoMineTimer, 
-            gidRandomMineTimer, gidDamageModifier, gidResetHealth, gidAISurvival, 
+            gidSolidLand, gidSharedAmmo, gidMineTimer, gidNoMineTimer,
+            gidRandomMineTimer, gidDamageModifier, gidResetHealth, gidAISurvival,
             gidInfAttack, gidResetWeps, gidPerHogAmmo, gidTagTeam);
 
     TLandArray = packed array of array of LongWord;
