@@ -1,0 +1,335 @@
+/******************************************************************************
+ *
+ * CSS-like definition of Qt frontend appearance
+ *
+ ******************************************************************************
+ *
+ * see http://doc.qt.nokia.com/4.5/stylesheet.html
+ *
+ ******************************************************************************
+ *
+ * This file can be stored at different locations, but it will be read only
+ * once, based on first file found in this order:
+ *
+ *    <userdir>/Data/css/qt.css
+ *    <datadir>/css/qt.css
+ *    <internal default style-sheet> (:/res/css/qt.css)
+ *
+ *****************************************************************************/
+
+HWForm,QDialog {
+background-image: url(":/res/Background.png");
+background-position: bottom center;
+background-repeat: repeat-x;
+background-color: #141250;
+}
+
+* {
+color: #ffcc00;
+selection-background-color: #ffcc00;
+selection-color: #00351d;
+}
+
+a { color:#c8c8ff; }
+
+QLineEdit, QListWidget, QListView, QTableView, QTextBrowser, QSpinBox, QComboBox,
+QComboBox QAbstractItemView, QPlainTextEdit, QMenu::item, #labelLikeLineEdit {
+background-color: rgba(13, 5, 68, 70%);
+}
+
+QComboBox::separator {
+border: solid; border-width: 3px; border-color: #ffcc00;
+}
+
+QPushButton, QListWidget, QListView, QTableView, QLineEdit, QHeaderView,
+QTextBrowser, QSpinBox, QToolBox, QComboBox, QPlainTextEdit,
+QComboBox QAbstractItemView, IconedGroupBox,
+.QGroupBox, #gameStackContainer, TeamSelWidget, SelWeaponWidget,
+QTabWidget::pane, QTabBar::tab, #mapPreview, #labelLikeLineEdit {
+border: solid;
+border-width: 3px;
+border-color: #ffcc00;
+}
+
+QPushButton:hover, QLineEdit:hover, QListWidget:hover, QListView:hover,
+QSpinBox:hover, QToolBox:hover, QComboBox:hover {
+border-color: yellow;
+}
+
+QToolButton {
+background-color: #11084A;
+}
+
+QToolButton:hover {
+background-color: #150A61;
+}
+
+QToolButton:pressed {
+background-color: #100744;
+}
+
+QLineEdit, QListWidget, QListView, QTableView, QTextBrowser,
+QSpinBox, QToolBox, QPlainTextEdit, QToolButton, #mapPreview, #labelLikeLineEdit {
+border-radius: 10px;
+}
+
+#mapPreview {
+background-color: #0d0544;
+}
+
+QLineEdit, QLabel, QHeaderView, QListWidget, QListView, QTableView,
+QSpinBox, QToolBox::tab, QComboBox, QComboBox QAbstractItemView,
+IconedGroupBox, .QGroupBox, #gameStackContainer, TeamSelWidget,
+SelWeaponWidget, QCheckBox, QRadioButton, QPushButton, QPlainTextEdit {
+font: bold 13px;
+}
+SelWeaponWidget QTabWidget::pane, SelWeaponWidget QTabBar::tab:selected {
+background-position: bottom center;
+background-repeat: repeat-x;
+background-color: #000000;
+}
+.QGroupBox, #gameStackContainer, TeamSelWidget, SelWeaponWidget {
+background-position: bottom center;
+background-repeat: repeat-x;
+border-radius: 16px;
+background-color: rgba(13, 5, 68, 70%);
+padding: 6px;
+}
+/*  Experimenting with PaintOnScreen and border-radius on IconedGroupBox children didn't work out well
+IconedGroupBox QComboBox, IconedGroupBox QPushButton, IconedGroupBox QLineEdit,
+IconedGroupBox QSpinBox {
+border-radius: 0;
+}
+IconedGroupBox, IconedGroupBox *, QTabWidget::pane, QTabBar::tab:selected, QToolBox::tab QWidget{" */
+IconedGroupBox, QTabWidget::pane, QTabBar::tab:selected, QToolBox::tab QWidget{
+background-color: #130f2c;
+}
+
+QTabWidget::pane {
+border-radius: 8px;
+border-top-left-radius: 0px;
+}
+
+QLineEdit:disabled, QSpinBox:disabled {
+border-color: gray;
+}
+
+GameCFGWidget {
+border: none;
+}
+
+QPushButton {
+border-radius: 8px;
+background-origin: margin;
+background-position: top left;
+background-color: rgba(18, 42, 5, 70%);
+}
+
+QPushButton:pressed, QToolButton:pressed {
+border-color: white;
+}
+
+QPushButton:focus {
+outline: none;
+}
+
+QHeaderView {
+border-radius: 0;
+border-width: 0;
+border-bottom-width: 3px;
+background-color: #00351d;
+}
+QTableView {
+alternate-background-color: #2f213a;
+gridline-color: transparent;
+}
+QTabWidget::pane { top: -2px; }
+QTabBar::tab {
+border-radius: 0;
+border-top-left-radius: 6px;
+border-top-right-radius: 6px;
+padding: 3px;
+background-color: #00351d;
+color: #ffcc00;
+}
+QTabBar::tab:selected {
+border-bottom-color: #0d0544;
+border-bottom-width: 0;
+}
+QSpinBox::up-button{
+background: transparent;
+width: 16px;
+height: 10px;
+}
+
+QSpinBox::up-arrow {
+image: url(":/res/spin_up.png");
+}
+
+QSpinBox::down-arrow {
+image: url(":/res/spin_down.png");
+}
+
+QSpinBox::down-button {
+background: transparent;
+width: 16px;
+height: 10px;
+}
+
+QLabel {
+overflow: hidden;
+}
+
+QComboBox {
+border-radius: 10px;
+padding: 3px;
+height: 18px;
+overflow: hidden;
+}
+QComboBox:pressed{
+border-color: white;
+}
+QComboBox::drop-down{
+border: transparent;
+width: 25px;
+}
+QComboBox::down-arrow {
+image: url(":/res/dropdown.png");
+}
+
+VertScrArea {
+background-position: bottom center;
+background-repeat: repeat-x;
+}
+
+IconedGroupBox {
+border-radius: 16px;
+padding: 2px;
+}
+
+QGroupBox::title{
+subcontrol-origin: margin;
+subcontrol-position: top left;
+text-align: left;
+left: 15px;
+top: -4px;
+}
+
+QCheckBox::indicator:checked{
+image: url(":/res/checked.png");
+}
+QCheckBox::indicator:unchecked{
+image: url(":/res/unchecked.png");
+}
+
+.QWidget{
+background: transparent;
+}
+
+QTabWidget::pane {
+border-top-width: 2px;
+}
+
+QMenu{
+background-color: #ffcc00;
+margin: 3px;
+}
+QMenu::item {
+background-color: #0d0544;
+border: 1px solid transparent;
+font: bold;
+padding: 2px 25px 2px 20px;
+}
+QMenu::item:selected {
+background-color: #2d2564;
+}
+QMenu::indicator {
+width: 16px;
+height: 16px;
+}
+QMenu::indicator:non-exclusive:checked{
+image: url(":/res/checked.png");
+}
+QMenu::indicator:non-exclusive:unchecked{
+image: url(":/res/unchecked.png");
+}
+
+QToolTip{
+background-color: #0d0544;
+border: 1px solid #ffcc00;
+}
+
+:disabled{
+color: #a0a0a0;
+}
+SquareLabel, ItemNum {
+background-color: #000000;
+}
+
+QSlider::groove::horizontal {
+height: 2px;
+margin: 2px 0px;
+background-color: #ffcc00;
+}
+
+QSlider::handle::horizontal {
+border: 0px;
+margin: -8px 0px;
+background-color: #ffcc00;
+width: 12px;
+height: 6px;
+border-radius: 3px;
+}
+
+HatButton, ThemeButton {
+text-align: left;
+}
+
+#hatList, #hatList:hover, #themeList, #themeList:hover {
+border-color: #F6CB1C;
+}
+
+#hatList QScrollBar, #themeList QScrollBar {
+background-color: #130F2A;
+border-top-right-radius: 10px;
+border-bottom-right-radius: 10px;
+}
+
+#hatList, #themeList {
+border-color: #F6CB1C;
+border-width: 3px;
+border-style: solid;
+border-radius: 10px;
+border-top-left-radius: 0px;
+}
+
+#hatList::item, #themeList::item {
+background-color: #11084A;
+padding: 4px;
+border-radius: 10px;
+color: #ffcc00 !important;
+font: 8px;
+border-width: 2px;
+border-color: #11084A;
+}
+
+#hatList::item:hover, #themeList::item:hover {
+background-color: #150A61;
+}
+
+#hatList::item:selected, #themeList::item:selected {
+background-color: #150A61;
+}
+
+QDialogButtonBox QPushButton {
+padding: 3px 5px;
+}
+
+#gameCfgWidgetTabs {
+border-radius: 16px;
+border-top-left-radius: 0px;
+}
+
+TeamSelWidget, #gameStackContainer, #GBoxOptions {
+border-radius: 10px;
+}
