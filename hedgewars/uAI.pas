@@ -33,6 +33,11 @@ uses uConsts, SDLh, uAIMisc, uAIAmmoTests, uAIActions,
     uAmmos, SysUtils, uTypes,
     uVariables, uCommands, uUtils, uDebug, uAILandMarks;
 
+{$IFDEF AI_MAINTHREAD}
+const
+    mainThreadMaxThinkTime:Integer = 1500;
+{$ENDIF}
+
 var BestActions: TActions;
     CanUseAmmo: array [TAmmoType] of boolean;
     StopThinking: boolean;
@@ -351,6 +356,15 @@ if ((CurrentHedgehog^.MultiShootAttacks = 0) or ((Ammoz[Me^.Hedgehog^.CurAmmoTyp
 
             if GoInfo.FallPix >= FallPixForBranching then
                 Push(ticks, Actions, Me^, Me^.Message xor 3); // aia_Left xor 3 = aia_Right
+
+{$IFDEF AI_MAINTHREAD}
+            if StartTicks < (SDL_GetTicks() - mainThreadMaxThinkTime) then
+                StopThinking := true;
+{$ELSE}
+            if (StartTicks > GameTicks - 1500) and (not StopThinking) then
+                SDL_Delay(1000);
+{$ENDIF}
+
             end {while};
 
         if BestRate > BaseRate then
@@ -362,12 +376,13 @@ end;
 function Think(Me: PGear): LongInt; cdecl; export;
 var BackMe, WalkMe: TGear;
     switchCount: LongInt;
-    StartTicks, currHedgehogIndex, itHedgehog, switchesNum, i: Longword;
+    currHedgehogIndex, itHedgehog, switchesNum, i: Longword;
     switchImmediatelyAvailable: boolean;
     Actions: TActions;
 begin
 dmgMod:= 0.01 * hwFloat2Float(cDamageModifier) * cDamagePercent;
 StartTicks:= GameTicks;
+
 currHedgehogIndex:= CurrentTeam^.CurrHedgehog;
 itHedgehog:= currHedgehogIndex;
 switchesNum:= 0;
@@ -389,7 +404,7 @@ if ((Me^.State and gstAttacked) = 0) or isInMultiShoot then
             Actions.Score:= 0;
             if switchesNum > 0 then
                 begin
-                if not switchImmediatelyAvailable  then
+                if (not switchImmediatelyAvailable)  then
                     begin
                     // when AI has to use switcher, make it cost smth unless they have a lot of switches
                     if (switchCount < 10) then Actions.Score:= (-27+switchCount*3)*4000;
@@ -413,8 +428,13 @@ if ((Me^.State and gstAttacked) = 0) or isInMultiShoot then
             or (itHedgehog = currHedgehogIndex)
             or BestActions.isWalkingToABetterPlace;
 
-        if (StartTicks > GameTicks - 1500) and (not StopThinking) then
-            SDL_Delay(1000);
+            {$IFDEF AI_MAINTHREAD}
+                if StartTicks < (SDL_GetTicks() - mainThreadMaxThinkTime) then
+                    StopThinking := true;
+            {$ELSE}
+                if (StartTicks > GameTicks - 1500) and (not StopThinking) then
+                    SDL_Delay(1000);
+            {$ENDIF}
 
         if (BestActions.Score < -1023) and (not BestActions.isWalkingToABetterPlace) then
             begin
@@ -429,11 +449,13 @@ else
     i:= 12;
     while (not StopThinking) and (BestActions.Count = 0) and (i > 0) do
         begin
+
 (*
         // Maybe this would get a bit of movement out of them? Hopefully not *toward* water. Need to check how often he'd choose that strategy
         if SuddenDeathDmg and ((hwRound(BackMe.Y)+cWaterRise*2) > cWaterLine) then
             AddBonus(hwRound(BackMe.X), hwRound(BackMe.Y), 250, -40);
 *)
+
         FillBonuses(true);
         WalkMe:= BackMe;
         Actions.Count:= 0;

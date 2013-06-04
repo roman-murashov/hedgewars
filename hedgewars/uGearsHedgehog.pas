@@ -447,15 +447,15 @@ with Gear^,
                 begin
                 elastic:=  int2hwfloat(CurWeapon^.Bounciness) / _1000;
 
-                if elastic < _1 then
-                    newGear^.Elasticity:= newGear^.Elasticity * elastic
-                else if elastic > _1 then
-                    newGear^.Elasticity:= _1 - ((_1-newGear^.Elasticity) / elastic);
-    (* Experimented with friction modifier. Didn't seem helpful
-                fric:= int2hwfloat(CurWeapon^.Bounciness) / _250;
-                if fric < _1 then newGear^.Friction:= newGear^.Friction * fric
-                else if fric > _1 then newGear^.Friction:= _1 - ((_1-newGear^.Friction) / fric)*)
-                end;
+            if elastic < _1 then
+                newGear^.Elasticity:= newGear^.Elasticity * elastic
+            else if elastic > _1 then
+                newGear^.Elasticity:= _1 - ((_1-newGear^.Elasticity) / elastic);
+(* Experimented with friction modifier. Didn't seem helpful
+            fric:= int2hwfloat(CurWeapon^.Bounciness) / _250;
+            if fric < _1 then newGear^.Friction:= newGear^.Friction * fric
+            else if fric > _1 then newGear^.Friction:= _1 - ((_1-newGear^.Friction) / fric)*)
+            end;
 
 
             uStats.AmmoUsed(CurAmmoType);
@@ -473,16 +473,15 @@ with Gear^,
                 end;
 
             Power:= 0;
-            if (CurAmmoGear <> nil)
-                and ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_AltUse) = 0){check for dropping ammo from rope} then
+            if (CurAmmoGear <> nil) and ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_AltUse) = 0){check for dropping ammo from rope} then
                 begin
-                if CurAmmoType in [amRope,amResurrector] then Message:= Message or gmAttack;
+                if CurAmmoType in [amRope,amResurrector] then
+                    Message:= Message or gmAttack;
                 CurAmmoGear^.Message:= Message
                 end
             else
                 begin
-                if not CurrentTeam^.ExtDriven
-                and ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_Power) <> 0) then
+                if (not CurrentTeam^.ExtDriven) and ((Ammoz[CurAmmoType].Ammo.Propz and ammoprop_Power) <> 0) then
                     SendIPC(_S'a');
                 AfterAttack;
                 end
@@ -1037,6 +1036,11 @@ if not isInMultiShoot then
     AllInactive:= false
 else if Hedgehog^.CurAmmoType in [amShotgun, amDEagle, amSniperRifle] then
     HHGear^.Message:= 0;
+
+if ((Ammoz[CurrentHedgehog^.CurAmmoType].Ammo.Propz and ammoprop_Utility) <> 0) and isInMultiShoot then
+    AllInactive:= true
+else if not isInMultiShoot then
+    AllInactive:= false;
 
 if (TurnTimeLeft = 0) or (HHGear^.Damage > 0) then
     begin
