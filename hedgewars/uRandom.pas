@@ -45,10 +45,11 @@ var cirbuf: array[0..63] of Longword;
 procedure AddRandomness(r: LongWord); inline;
 begin
 n:= (n + 1) and $3F;
-cirbuf[n]:= cirbuf[n] xor r
+   cirbuf[n]:= cirbuf[n] xor r;
 end;
 
 function GetNext: Longword; inline;
+var s : string;
 begin
 n:= (n + 1) and $3F;
 cirbuf[n]:=
@@ -56,7 +57,8 @@ cirbuf[n]:=
             cirbuf[(n +  9) and $3F])            {n - 55 mod 64}
             and $7FFFFFFF;                       {mod 2^31}
 
-GetNext:= cirbuf[n]
+   GetNext:= cirbuf[n];
+   str(GetNext, s);
 end;
 
 procedure SetRandomSeed(Seed: shortstring; dropAdditionalPart: boolean);
@@ -80,7 +82,7 @@ for i:= t to 54 do
     cirbuf[i]:= $A98765 + 68; // odd number
 
 for i:= 0 to 1023 do
-    GetNext
+   GetNext;
 end;
 
 function GetRandomf: hwFloat;
@@ -90,7 +92,7 @@ GetRandomf.isNegative:= false;
 GetRandomf.QWordValue:= GetNext
 end;
 
-function GetRandom(m: LongWord): LongWord; inline;
+function GetRandom(m: LongWord): LongWord; overload; inline;
 begin
 GetNext;
 GetRandom:= GetNext mod m

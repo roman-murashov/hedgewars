@@ -53,7 +53,17 @@ TBonus = record
     X, Y: LongInt;
     Radius: LongInt;
     Score: LongInt;
-    end;
+	 end;
+
+Tbonuses = record
+	      Count : Longword;
+	      ar    : array[0..Pred(MAXBONUS)] of TBonus;
+	   end;
+
+Twalkbonuses =  record
+        Count: Longword;
+        ar: array[0..Pred(MAXBONUS div 8)] of TBonus;  // don't use too many
+        end;
 
 procedure initModule;
 procedure freeModule;
@@ -82,15 +92,9 @@ function  AIrndSign(num: LongInt): LongInt;
 var ThinkingHH: PGear;
     Targets: TTargets;
 
-    bonuses: record
-        Count: Longword;
-        ar: array[0..Pred(MAXBONUS)] of TBonus;
-        end;
+    bonuses: Tbonuses;
 
-    walkbonuses: record
-        Count: Longword;
-        ar: array[0..Pred(MAXBONUS div 8)] of TBonus;  // don't use too many
-        end;
+    walkbonuses: Twalkbonuses;
 
 const KillScore = 200;
 var friendlyfactor: LongInt = 300;

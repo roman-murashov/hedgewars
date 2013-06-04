@@ -26,7 +26,7 @@ option(NOVIDEOREC "Disable video recording (off)" OFF)
 #set this to ON when 2.1.0 becomes more widespread (and only for linux)
 option(PHYSFS_SYSTEM "Use system physfs (off)" OFF)
 
-option(BUILD_ENGINE_LIBRARY "Enable hwengine library (off)" OFF)
+option(LIBENGINE "Enable hwengine library (off)" OFF)
 option(ANDROID "Enable Android build (off)" OFF)
 
 if(UNIX AND NOT APPLE)
@@ -34,6 +34,10 @@ if(UNIX AND NOT APPLE)
 else()
     option(NOAUTOUPDATE "Disable OS X Sparkle update checking" OFF)
 endif()
+
+option(WEBGL "Enable WebGL build (implies NOPASCAL) [default: off]" OFF)
+option(NOPASCAL "Compile hwengine as native C [default: off]" ${WEBGL})
+option(GL2 "Enable OpenGL 2 rendering [default: off]" OFF)
 
 set(FPFLAGS "" CACHE STRING "Additional Freepascal flags")
 set(GHFLAGS "" CACHE STRING "Additional Haskell flags")
@@ -86,8 +90,20 @@ set(CPACK_PACKAGE_VERSION_MINOR 9)
 set(CPACK_PACKAGE_VERSION_PATCH 19)
 set(HEDGEWARS_PROTO_VER 45)
 set(HEDGEWARS_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(required_clang_version 3.0)
 
 message(STATUS "Building ${HEDGEWARS_VERSION}-r${HEDGEWARS_REVISION} (${HEDGEWARS_HASH})")
+
+if (${NOPASCAL})
+    find_package(Clang)
+    # Check LLVM/Clang version
+	if (CLANG_VERSION VERSION_LESS required_clang_version)
+		message(FATAL_ERROR "LLVM/Clang compiler required version is ${required_clang_version} but version ${CLANG_VERSION} was found!")
+	else()
+		message(STATUS "Found CLANG: ${CLANG_EXECUTABLE} (version ${CLANG_VERSION})")
+	endif()
+endif(${NOPASCAL})
+
 
 
 #where to build libs and bins
@@ -302,12 +318,40 @@ endif()
 
 include(${CMAKE_MODULE_PATH}/utils.cmake)
 
+#Haskell compiler discovery (for server and engine in c)
+if((NOT NOSERVER) OR NOPASCAL)
+    if(GHC)
+        set(ghc_executable ${GHC})
+    else()
+        find_program(ghc_executable ghc)
+    endif()
+
+    if(ghc_executable)
+        exec_program(${ghc_executable} ARGS "-V" OUTPUT_VARIABLE ghc_version_long)
+        string(REGEX REPLACE ".*([0-9]+\\.[0-9]+\\.[0-9]+)" "\\1" ghc_version "${ghc_version_long}")
+        message(STATUS "Found GHC: ${ghc_executable} (version ${ghc_version})")
+    else()
+        message(STATUS "Could NOT find GHC, needed by gameServer and pas2c")
+    endif()
+endif()
+
+
+#check gameServer
+if((ghc_executable) AND (NOT NOSERVER) AND (NOT WEBGL))
+    set(HAVE_NETSERVER true)
+    add_subdirectory(gameServer)
+else()
+    message(STATUS "Skipping gameServer target")
+    set(HAVE_NETSERVER false)
+endif()
+
+
 #lua discovery
 find_package(Lua)
-if(LUA_FOUND)
+if(LUA_FOUND AND (NOT WEBGL))
     message(STATUS "Found LUA: ${LUA_DEFAULT}")
 else()
-    message(STATUS "LUA will be provided by the bundled sources")
+    message(STATUS "Using internal LUA library")
     add_subdirectory(misc/liblua)
     #linking with liblua.a requires system readline
     list(APPEND pascal_flags "-k${EXECUTABLE_OUTPUT_PATH}/lib${LUA_LIBRARY}.a" "-k-lreadline")
@@ -354,28 +398,32 @@ find_package_or_disable_msg(FFMPEG NOVIDEOREC "Video recording will not be built
 #physfs helper library
 add_subdirectory(misc/libphyslayer)
 
-#server
-if(NOT NOSERVER)
-    add_subdirectory(gameServer)
+if(NOPASCAL)
+    if (NOT ghc_executable)
+        message(FATAL_ERROR "A Haskell compiler is required to build engine in C")
+    endif()
+    #pascal to c converter
+    add_subdirectory(tools/pas2c)
+    add_subdirectory(project_files/hwc)
+else()
+    #main pascal engine
+    add_subdirectory(hedgewars)
 endif()
 
-#main engine
-add_subdirectory(hedgewars)
-
-#Android related build scripts
-if(ANDROID)
-    #run cmake -DANDROID=1 to enable this
-    add_subdirectory(project_files/Android-build)
-endif()
-
-#TODO: when ANDROID, BUILD_ENGINE_LIBRARY should be set
-if(NOT ANDROID)
-    add_subdirectory(bin)
-    add_subdirectory(QTfrontend)
-    add_subdirectory(share)
-    add_subdirectory(tools)
-endif()
-
+if(WEBGL)
+    #WEBGL deps
+else(WEBGL)
+    #Android related build scripts
+    #TODO: when ANDROID, LIBENGINE should be set
+    if(ANDROID)
+        add_subdirectory(project_files/Android-build)
+    else(ANDROID)
+        add_subdirectory(bin)
+        add_subdirectory(QTfrontend)
+        add_subdirectory(share)
+        add_subdirectory(tools)
+    endif(ANDROID)
+endif(WEBGL)
 
 include(${CMAKE_MODULE_PATH}/cpackvars.cmake)
 

@@ -23,7 +23,7 @@ interface
 uses uTypes;
 
 procedure doMakeExplosion(X, Y, Radius: LongInt; AttackingHog: PHedgehog; Mask: Longword); inline;
-procedure doMakeExplosion(X, Y, Radius: LongInt; AttackingHog: PHedgehog; Mask: Longword; const Tint: LongWord); 
+procedure doMakeExplosion(X, Y, Radius: LongInt; AttackingHog: PHedgehog; Mask: Longword; const Tint: LongWord);
 
 function  ModifyDamage(dmg: Longword; Gear: PGear): Longword;
 procedure ApplyDamage(Gear: PGear; AttackerHog: PHedgehog; Damage: Longword; Source: TDamageSource);
@@ -233,7 +233,7 @@ begin
                         end;
                     end
                 end;
-        if ((GameFlags and gfKarma) <> 0) and 
+        if ((GameFlags and gfKarma) <> 0) and
         ((GameFlags and gfInvulnerable) = 0)
         and (not CurrentHedgehog^.Gear^.Invulnerable) then
             begin // this cannot just use Damage or it interrupts shotgun and gets you called stupid
@@ -241,13 +241,13 @@ begin
             CurrentHedgehog^.Gear^.LastDamage := CurrentHedgehog;
             spawnHealthTagForHH(CurrentHedgehog^.Gear, tmpDmg);
             end;
-        uStats.HedgehogDamaged(Gear, AttackerHog, Damage, false);    
+        uStats.HedgehogDamaged(Gear, AttackerHog, Damage, false);
         end;
     end else
     //else if Gear^.Kind <> gtStructure then // not gtHedgehog nor gtStructure
         Gear^.Hedgehog:= AttackerHog;
     inc(Gear^.Damage, Damage);
-    
+
     ScriptCall('onGearDamage', Gear^.UID, Damage);
 end;
 
@@ -260,7 +260,7 @@ if (tag <> nil) then
 AllInactive:= false;
 HHGear^.Active:= true;
 end;
-    
+
 procedure HHHurt(Hedgehog: PHedgehog; Source: TDamageSource);
 begin
 if Hedgehog^.Effects[heFrozen] <> 0 then exit;
@@ -285,7 +285,7 @@ else
 end;
 
 procedure CheckHHDamage(Gear: PGear);
-var 
+var
     dmg: Longword;
     i: LongWord;
     particle: PVisualGear;
@@ -323,7 +323,7 @@ end;
 
 
 procedure CalcRotationDirAngle(Gear: PGear);
-var 
+var
     dAngle: real;
 begin
     // Frac/Round to be kind to JS as of 2012-08-27 where there is yet no int64/uint64
@@ -418,7 +418,7 @@ begin
             and (CurAmmoGear^.dY < _0_01))) then
                 if Gear^.Density * Gear^.dY > _1 then
                     PlaySound(sndSplash)
-                else if Gear^.Density * Gear^.dY > _0_5 then 
+                else if Gear^.Density * Gear^.dY > _0_5 then
                     PlaySound(sndSkip)
                 else
                     PlaySound(sndDroplet2);
@@ -430,7 +430,7 @@ begin
         and (CurAmmoGear^.dY < _0_01)))) then
             begin
             splash:= AddVisualGear(X, cWaterLine, vgtSplash);
-            if splash <> nil then 
+            if splash <> nil then
                 with splash^ do
                 begin
                 Scale:= hwFloat2Float(Gear^.Density / _3 * Gear^.dY);
@@ -453,12 +453,12 @@ begin
                         dY := dY - vdY / 5;
                         if splash <> nil then
                             begin
-                            if splash^.Scale > 1 then 
+                            if splash^.Scale > 1 then
                                 begin
                                 dX:= dX * power(splash^.Scale,0.3333); // tone down the droplet height further
                                 dY:= dY * power(splash^.Scale, 0.3333)
                                 end
-                            else 
+                            else
                                 begin
                                 dX:= dX * splash^.Scale;
                                 dY:= dY * splash^.Scale
@@ -492,7 +492,7 @@ begin
     gear^.Hedgehog^.Effects[hePoisoned] := 0;
     if (CurrentHedgehog^.Effects[heResurrectable] = 0) or ((CurrentHedgehog^.Effects[heResurrectable] <> 0)
           and (Gear^.Hedgehog^.Team^.Clan <> CurrentHedgehog^.Team^.Clan)) then
-        with CurrentHedgehog^ do 
+        with CurrentHedgehog^ do
             begin
             inc(Team^.stats.AIKills);
             FreeTexture(Team^.AIKillsTex);
@@ -509,7 +509,7 @@ begin
         sparkles^.Tint:= tempTeam^.Clan^.Color shl 8 or $FF;
         //sparkles^.Angle:= random(360);
         end;
-    FindPlace(gear, false, 0, LAND_WIDTH, true); 
+    FindPlace(gear, false, 0, LAND_WIDTH, true);
     if gear <> nil then
         begin
         AddVisualGear(hwRound(gear^.X), hwRound(gear^.Y), vgtExplosion);
@@ -567,6 +567,7 @@ var x: LongInt;
     y, sy: LongInt;
     ar: array[0..1023] of TPoint;
     ar2: array[0..2047] of TPoint;
+    temp: TPoint;
     cnt, cnt2: Longword;
     delta: LongInt;
     ignoreNearObjects, ignoreOverlap, tryAgain: boolean;
@@ -589,7 +590,7 @@ while tryAgain do
                 repeat
                     inc(y, 2);
                 until (y >= cWaterLine) or
-                        (not ignoreOverlap and (CountNonZeroz(x, y, Gear^.Radius - 1, 1, $FFFF) = 0)) or 
+                        ((not ignoreOverlap) and (CountNonZeroz(x, y, Gear^.Radius - 1, 1, $FFFF) = 0)) or 
                         (ignoreOverlap and (CountNonZeroz(x, y, Gear^.Radius - 1, 1, lfLandMask) = 0));
 
                 sy:= y;
@@ -597,7 +598,7 @@ while tryAgain do
                 repeat
                     inc(y);
                 until (y >= cWaterLine) or
-                        (not ignoreOverlap and (CountNonZeroz(x, y, Gear^.Radius - 1, 1, $FFFF) <> 0)) or 
+                        ((not ignoreOverlap) and (CountNonZeroz(x, y, Gear^.Radius - 1, 1, $FFFF) <> 0)) or 
                         (ignoreOverlap and (CountNonZeroz(x, y, Gear^.Radius - 1, 1, lfLandMask) <> 0)); 
 
                 if (y - sy > Gear^.Radius * 2)
@@ -623,12 +624,15 @@ while tryAgain do
                 end;
 
             if cnt > 0 then
-                with ar[GetRandom(cnt)] do
+        begin
+           temp := ar[GetRandom(cnt)];
+               with temp do
                     begin
                     ar2[cnt2].x:= x;
                     ar2[cnt2].y:= y;
                     inc(cnt2)
-                    end
+            end
+           end
         until (x + Delta > Right);
 
         dec(Delta, 60)
@@ -642,12 +646,15 @@ while tryAgain do
     end;
 
 if cnt2 > 0 then
-    with ar2[GetRandom(cnt2)] do
+    begin
+    temp := ar2[GetRandom(cnt2)];
+    with temp do
         begin
         Gear^.X:= int2hwFloat(x);
         Gear^.Y:= int2hwFloat(y);
         AddFileLog('Assigned Gear coordinates (' + inttostr(x) + ',' + inttostr(y) + ')');
         end
+    end
     else
     begin
     OutError('Can''t find place for Gear', false);
@@ -693,7 +700,7 @@ begin
     if TestCollisionX(Gear, hwSign(Gear^.dX))
     or TestCollisionY(Gear, hwSign(Gear^.dY)) then
         Gear^.State := Gear^.State or gstCollision
-    else 
+    else
         Gear^.State := Gear^.State and (not gstCollision)
 end;
 

@@ -96,7 +96,7 @@ if not GameOver then
                             if (Gear <> nil) then
                                 Gear^.State:= gstWinner;
             if Flawless then
-                AddVoice(sndFlawless, Teams[0]^.voicepack) 
+                AddVoice(sndFlawless, Teams[0]^.voicepack)
             else
                 AddVoice(sndVictory, Teams[0]^.voicepack);
 
@@ -591,8 +591,9 @@ begin
 end;
 
 procedure chBind(var id: shortstring);
-var KeyName, Modifier, tmp: shortstring;
-    b: LongInt;
+var KeyName, Modifier, tmp : shortstring;
+    b              : LongInt;
+    i              : Integer;
 begin
 KeyName:= '';
 Modifier:= '';
@@ -600,7 +601,9 @@ Modifier:= '';
 if CurrentTeam = nil then
     exit;
 
-if(Pos('mod:', id) <> 0)then
+i := Pos('mod:', id);
+
+if(i <> 0)then
     begin
     tmp:= '';
     SplitBySpace(id, tmp);

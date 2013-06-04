@@ -23,6 +23,18 @@ unit uGearsRender;
 interface
 uses uTypes, uConsts, GLunit, uFloat, SDLh;
 
+type
+   Tar         = record
+            X, Y: hwFloat;
+            dLen: hwFloat;
+            b : boolean;
+         end;
+   TRopePoints = record
+            Count     : Longword;
+            HookAngle : GLfloat;
+            ar        : array[0..MAXROPEPOINTS] of Tar;
+            rounded   : array[0..MAXROPEPOINTS + 2] of TVertex2f;
+         end;
 procedure RenderGear(Gear: PGear; x, y: LongInt);
 
 var RopePoints: record
@@ -91,6 +103,7 @@ begin
     if (X1 = X2) and (Y1 = Y2) then
         begin
         //OutError('WARNING: zero length rope line!', false);
+    DrawRopeLine := 0;
         exit
         end;
     eX:= 0;
@@ -1232,7 +1245,7 @@ begin
                         begin
                         if isInLag and (Gear^.FlightTime < 256) then
                             inc(Gear^.FlightTime, 8)
-                        else if not isInLag and (Gear^.FlightTime > 0) then
+                        else if (not isInLag) and (Gear^.FlightTime > 0) then
                             dec(Gear^.FlightTime, 8);
                         if Gear^.FlightTime > 0 then
                             Tint($FF, $FF, $FF, $FF-min(255,Gear^.FlightTime));

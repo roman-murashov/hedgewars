@@ -20,7 +20,7 @@ endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.inc.in ${CMAKE_CURRENT_BINARY_DIR}/config.inc)
 
 #SOURCE AND PROGRAMS SECTION
-if(${BUILD_ENGINE_LIBRARY})
+if(${LIBENGINE})
     set(engine_output_name "${CMAKE_SHARED_LIBRARY_PREFIX}hwengine${CMAKE_SHARED_LIBRARY_SUFFIX}")
     set(hwengine_project hwLibrary.pas)
 else()
@@ -74,6 +74,7 @@ set(engine_sources
     uLandTemplates.pas
     uLandTexture.pas
     uLocale.pas
+    uMatrix.pas
     uMisc.pas
     uPhysFSLayer.pas
     uRandom.pas
@@ -101,7 +102,7 @@ set(engine_sources
     ${CMAKE_CURRENT_BINARY_DIR}/config.inc
     )
 
-if(${BUILD_ENGINE_LIBRARY})
+if(${LIBENGINE})
     message(${WARNING} "Engine will be built as library (experimental)")
     list(APPEND pascal_flags "-dHWLIBRARY")
 
@@ -115,12 +116,17 @@ if(${BUILD_ENGINE_LIBRARY})
         list(APPEND pascal_flags "-k-no_order_inits")
     endif()
     set(destination_dir ${target_library_install_dir})
-else(${BUILD_ENGINE_LIBRARY})
+else(${LIBENGINE})
     set(destination_dir ${target_binary_install_dir})
-endif(${BUILD_ENGINE_LIBRARY})
+endif(${LIBENGINE})
 
 
 include(${CMAKE_MODULE_PATH}/utils.cmake)
+#opengl 2
+IF(${GL2})
+    set(pascal_flags "-dGL2" ${pascal_flags})
+    message(STATUS "Building using OpenGL 2")
+ENDIF(${GL2})
 
 find_package_or_fail(FreePascal)
 
@@ -141,7 +147,7 @@ if(APPLE)
     endif()
 
     #on OSX we need to provide the SDL_main() function when building as executable
-    if(NOT ${BUILD_ENGINE_LIBRARY})
+    if(NOT ${LIBENGINE})
         #let's look for the installed sdlmain file; if it is not found, let's build our own
         find_package(SDL REQUIRED)
         #remove the ";-framework Cocoa" from the SDL_LIBRARY variable
@@ -151,7 +157,7 @@ if(APPLE)
 
         if(SDLMAIN_LIB MATCHES "SDLMAIN_LIB-NOTFOUND")
             include_directories(${SDL_INCLUDE_DIR})
-            add_library (SDLmain STATIC SDLMain.m)
+            add_library (SDLmain STATIC sdlmain_osx/SDLMain.m)
             #add a dependency to the hwengine target
             list(APPEND engine_sources SDLmain)
             set(SDLMAIN_LIB "${LIBRARY_OUTPUT_PATH}/libSDLmain.a")
@@ -195,11 +201,12 @@ if(${FFMPEG_FOUND})
     list(APPEND pascal_flags "-dUSE_VIDEO_RECORDING")
     if(WIN32)
         # there are some problems with linking our avwrapper as static lib, so link it as shared
-        add_library(avwrapper SHARED avwrapper.c)
+        add_library(avwrapper SHARED videorec/avwrapper.c)
         target_link_libraries(avwrapper ${FFMPEG_LIBRARIES})
         install(PROGRAMS "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}avwrapper${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION ${target_library_install_dir})
+        list(APPEND pascal_flags "-dUSE_VIDEO_RECORDING")
     else()
-        add_library(avwrapper STATIC avwrapper.c)
+        add_library(avwrapper STATIC videorec/avwrapper.c)
     endif()
 endif()
 

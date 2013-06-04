@@ -771,7 +771,7 @@ begin
     Targ:= Targ; // avoid compiler hint
 
     if Level < 3 then trackFall:= afTrackFall
-    else trackFall:= 0;
+        else trackFall:= 0;
 
     ap.ExplR:= 0;
     ap.Time:= 0;

@@ -55,7 +55,7 @@ procedure KickFlakes(Radius, X, Y: LongInt);
 implementation
 uses uSound, uVariables, uTextures, uRender, Math, uRenderUtils, uStore, uUtils;
 
-const 
+const
     cExplFrameTicks = 110;
     //cSmokeZ = 499;
 var VGCounter: LongWord;
@@ -85,7 +85,7 @@ end;
 // ==================================================================
 
 // ==================================================================
-const doStepHandlers: array[TVisualGearType] of TVGearStepProcedure =
+const vdoStepHandlers: array[TVisualGearType] of TVGearStepProcedure =
         (
             @doStepFlake,
             @doStepCloud,
@@ -154,7 +154,7 @@ if ((cReducedQuality and rqAntiBoom) <> 0) and
     vgtEvilTrace,
     vgtNote,
     vgtSmoothWindBar])) then
-    
+
         exit;
 
 inc(VGCounter);
@@ -163,7 +163,7 @@ FillChar(gear^, sizeof(TVisualGear), 0);
 gear^.X:= real(X);
 gear^.Y:= real(Y);
 gear^.Kind := Kind;
-gear^.doStep:= doStepHandlers[Kind];
+gear^.doStep:= vdoStepHandlers[Kind];
 gear^.State:= 0;
 gear^.Tint:= $FFFFFFFF;
 gear^.uid:= VGCounter;
@@ -368,7 +368,7 @@ vgtBigExplosion:
                 if random(2) = 0 then
                     dx := -dx;
                 end;
-      vgtNote: 
+      vgtNote:
                 begin
                 dx:= 0.005 * (random(15) + 10);
                 dy:= -0.001 * (random(40) + 20);
@@ -385,7 +385,7 @@ vgtBigExplosion:
                 Frame:= 7;
                 Angle:= 0;
                 end;
-vgtSmoothWindBar: 
+vgtSmoothWindBar:
                 begin
                 Angle:= hwFloat2Float(cMaxWindSpeed)*2 / 1440; // seems rate below is supposed to change wind bar at 1px per 10ms. Max time, 1440ms. This tries to match the rate of change
                 Tag:= hwRound(cWindSpeed * 72 / cMaxWindSpeed);
@@ -411,7 +411,7 @@ if State <> 0 then
 case Gear^.Kind of
     vgtFlake: if cFlattenFlakes then
         gear^.Layer:= 0
-              else if random(3) = 0 then 
+              else if random(3) = 0 then
                   begin
                   gear^.Scale:= 0.5;
                   gear^.Layer:= 0   // 33% - far back
@@ -702,9 +702,9 @@ case Layer of
                                     DrawTextureCentered(round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, Gear^.Tex);
                                 end;
                vgtSmallDamageTag: DrawTextureCentered(round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, Gear^.Tex);
-               vgtHealthTag: if Gear^.Tex <> nil then 
+               vgtHealthTag: if Gear^.Tex <> nil then
                                begin
-                               if Gear^.Frame = 0 then 
+                               if Gear^.Frame = 0 then
                                    DrawTextureCentered(round(Gear^.X) + WorldDx, round(Gear^.Y) + WorldDy, Gear^.Tex)
                                else
                                    begin
@@ -712,11 +712,11 @@ case Layer of
                                    if Gear^.Angle = 0 then
                                        DrawTexture(round(Gear^.X), round(Gear^.Y), Gear^.Tex)
                                    else
-                                       DrawTexture(round(Gear^.X), round(Gear^.Y), Gear^.Tex, Gear^.Angle); 
+                                       DrawTexture(round(Gear^.X), round(Gear^.Y), Gear^.Tex, Gear^.Angle);
                                    SetScale(zoom)
                                    end
                                end;
-               vgtStraightShot: begin 
+               vgtStraightShot: begin
                                 if Gear^.dX < 0 then
                                     i:= -1
                                 else

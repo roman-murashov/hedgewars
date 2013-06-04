@@ -480,7 +480,7 @@ processAction (BanIP ip seconds reason) = do
 
 processAction (BanNick n seconds reason) = do
     currentTime <- io getCurrentTime
-    let msg = 
+    let msg =
             if seconds > 60 * 60 * 24 * 365 then
                 B.concat ["Permanent ban (", reason, ")"]
                 else
