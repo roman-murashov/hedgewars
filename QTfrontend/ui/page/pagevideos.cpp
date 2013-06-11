@@ -414,7 +414,7 @@ void PageVideos::cellChanged(int row, int column)
             setName(item, newName);
         }
     }
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
     // there is a bug in qt, QDir::rename() doesn't fail on such names but damages files
     if (newName.contains(QRegExp("[\"*:<>?\\/|]")))
     {
@@ -508,8 +508,8 @@ void PageVideos::updateDescription()
     else
     {
         QString path = item->path();
-        desc += tr("Date: %1\n").arg(QFileInfo(path).created().toString(Qt::DefaultLocaleLongDate));
-        desc += tr("Size: %1\n").arg(FileSizeStr(path));
+        desc += tr("Date: %1").arg(QFileInfo(path).created().toString(Qt::DefaultLocaleLongDate)) + "\n";
+        desc += tr("Size: %1").arg(FileSizeStr(path)) + "\n";
         if (item->desc.isEmpty())
         {
             // Extract description from file;
