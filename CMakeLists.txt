@@ -1,7 +1,7 @@
 project(hedgewars)
 
 #initialise cmake environment
-cmake_minimum_required(VERSION 2.6.0)
+cmake_minimum_required(VERSION 2.6.4)
 foreach(hwpolicy CMP0003 CMP0012 CMP0017 CMP0018)
     if(POLICY ${hwpolicy})
         cmake_policy(SET ${hwpolicy} NEW)
@@ -16,8 +16,16 @@ option(NOSERVER "Disable gameServer build (off)]" OFF)
 option(NOPNG "Disable screenshoot compression (off)" OFF)
 option(NOVIDEOREC "Disable video recording (off)" OFF)
 
+#libraries are built shared unless explicitly added as a static
+option(BUILD_SHARED_LIBS "Build libraries as shared modules (on)" ON)
 #set this to ON when 2.1.0 becomes more widespread (and only for linux)
 option(PHYSFS_SYSTEM "Use system physfs (off)" OFF)
+
+if(WIN32 OR APPLE)
+    option(LUA_SYSTEM "Use system lua (off)" OFF)
+else()
+    option(LUA_SYSTEM "Use system lua (on)" ON)
+endif()
 
 option(BUILD_ENGINE_LIBRARY "Enable hwengine library (off)" OFF)
 option(ANDROID "Enable Android build (off)" OFF)
@@ -46,40 +54,9 @@ include(${CMAKE_MODULE_PATH}/revinfo.cmake)
 message(STATUS "Building ${HEDGEWARS_VERSION}-r${HEDGEWARS_REVISION} (${HEDGEWARS_HASH})")
 
 
-#where to build libs and bins
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-
-#resource paths
-if(UNIX AND NOT APPLE)
-    set(target_binary_install_dir "bin")
-    set(target_library_install_dir "lib")
-
-    string(SUBSTRING "${DATA_INSTALL_DIR}" 0 1 sharepath_start)
-    if (NOT (${sharepath_start} MATCHES "/"))
-        set(HEDGEWARS_DATADIR "${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DIR}/")
-    else()
-        set(HEDGEWARS_DATADIR "${DATA_INSTALL_DIR}/")
-    endif()
-    set(HEDGEWARS_FULL_DATADIR "${HEDGEWARS_DATADIR}")
-else()
-    set(target_binary_install_dir "./")
-
-    if(APPLE)
-        set(target_library_install_dir "../Frameworks/")
-        set(CMAKE_INSTALL_PREFIX "Hedgewars.app/Contents/MacOS/")
-        set(HEDGEWARS_DATADIR "../Resources/")
-        set(HEDGEWARS_FULL_DATADIR "/Applications/${CMAKE_INSTALL_PREFIX}/${HEDGEWARS_DATADIR}")
-    elseif(WIN32)
-        set(target_library_install_dir "./")
-        set(HEDGEWARS_DATADIR "./")
-        set(HEDGEWARS_FULL_DATADIR "${CMAKE_INSTALL_PREFIX}/")
-        link_directories("${EXECUTABLE_OUTPUT_PATH}" "${CMAKE_SOURCE_DIR}/misc/winutils/bin")
-    endif()
-endif()
-
 #platform specific init code
 include(${CMAKE_MODULE_PATH}/platform.cmake)
+include(${CMAKE_MODULE_PATH}/paths.cmake)
 
 
 #when build type is not specified, assume Debug/Release according to build version information
@@ -101,16 +78,16 @@ include(${CMAKE_MODULE_PATH}/compilerchecks.cmake)
 if(NOT ${MINIMAL_FLAGS})
     set(CMAKE_C_FLAGS "-pipe ${CMAKE_C_FLAGS}")
     set(CMAKE_C_FLAGS_RELEASE "-w -Os -fomit-frame-pointer ${CMAKE_C_FLAGS_RELEASE}")
-    set(CMAKE_C_FLAGS_DEBUG "-Wall -O0 -g -DDEBUG ${CMAKE_C_FLAGS_DEBUG}")
-    set(CMAKE_CXX_FLAGS ${CMAKE_C_FLAGS})
-    set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
-    set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+    set(CMAKE_C_FLAGS_DEBUG "-Wall -O0 -g ${CMAKE_C_FLAGS_DEBUG}")
+    set(CMAKE_CXX_FLAGS "-pipe ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS_RELEASE "-w -Os -fomit-frame-pointer ${CMAKE_CXX_FLAGS_RELEASE}")
+    set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g ${CMAKE_CXX_FLAGS_DEBUG}")
 else()
     #CMake adds a lot of additional configuration flags, so let's clear them up
     set(CMAKE_C_FLAGS_RELEASE "")
-    set(CMAKE_C_FLAGS_DEBUG "-Wall -DDEBUG")
+    set(CMAKE_C_FLAGS_DEBUG "-Wall")
     set(CMAKE_CXX_FLAGS_RELEASE "")
-    set(CMAKE_CXX_FLAGS_DEBUG "-Wall -DDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 endif()
 
 #parse additional parameters
@@ -164,14 +141,23 @@ endif()
 include(${CMAKE_MODULE_PATH}/utils.cmake)
 
 #lua discovery
-find_package(Lua)
-if(LUA_FOUND)
-    message(STATUS "Found LUA: ${LUA_DEFAULT}")
+if (${LUA_SYSTEM})
+    if (NOT LUA_LIBRARY OR NOT LUA_INCLUDE_DIR)
+        find_package(Lua)
+    endif()
+
+    if (LUA_LIBRARY AND LUA_INCLUDE_DIR)
+        set(LUA_FOUND TRUE)
+    else()
+        message(FATAL_ERROR "Missing Lua! Rerun cmake with -DLUA_SYSTEM=off to build the internal version")
+    endif()
 else()
-    message(STATUS "LUA will be provided by the bundled sources")
+    if (NOT LUA_LIBRARY OR NOT LUA_INCLUDE_DIR)
+        message(STATUS "LUA will be provided by the bundled sources")
+    endif()
+    set(lua_output_name "hwlua")
     add_subdirectory(misc/liblua)
-    #linking with liblua.a requires system readline
-    list(APPEND pascal_flags "-k${EXECUTABLE_OUTPUT_PATH}/lib${LUA_LIBRARY}.a" "-k-lreadline")
+    list(APPEND pascal_flags "-XLAlua=${lua_output_name}" "-dLUA_INTERNAL")
 endif()
 
 
@@ -201,8 +187,10 @@ if (${PHYSFS_SYSTEM})
         message(FATAL_ERROR "Missing PhysFS! Rerun cmake with -DPHYSFS_SYSTEM=off to build the internal version")
     endif()
 else()
-    message(STATUS "PhysFS will be provided by the bundled sources")
-    set(physfs_output_name "hw_physfs")
+    if (NOT PHYSFS_LIBRARY OR NOT PHYSFS_INCLUDE_DIR)
+        message(STATUS "PhysFS will be provided by the bundled sources")
+    endif()
+    set(physfs_output_name "hwphysfs")
     add_subdirectory(misc/libphysfs)
     #-XLA is a beta fpc flag that renames libraries before passing them to the linker
     #we also have to pass PHYSFS_INTERNAL to satisfy windows runtime requirements
