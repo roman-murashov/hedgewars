@@ -20,7 +20,7 @@
 
 unit uIO;
 interface
-uses SDLh, uTypes;
+uses SDLh, uTypes, uMisc;
 
 procedure initModule;
 procedure freeModule;
@@ -122,6 +122,7 @@ end;
 procedure ParseIPCCommand(s: shortstring);
 var loTicks: Word;
 begin
+
 case s[1] of
      '!': begin AddFileLog('Ping? Pong!'); isPonged:= true; end;
      '?': SendIPC(_S'!');
@@ -177,10 +178,11 @@ begin
 end;
 
 procedure LoadRecordFromFile(fileName: shortstring);
-var f: file;
-    ss: shortstring = '';
-    i: LongInt;
-    s: shortstring;
+var f  : File;
+    ss : shortstring = '';
+    i  : LongInt;
+    s  : shortstring;
+   t, tt   : string;
 begin
 
 // set RDNLY on file open
@@ -188,7 +190,6 @@ filemode:= 0;
 {$I-}
 assign(f, fileName);
 reset(f, 1);
-
 tryDo(IOResult = 0, 'Error opening file ' + fileName, true);
 
 i:= 0; // avoid compiler hints
@@ -196,13 +197,13 @@ s[0]:= #0;
 repeat
     BlockRead(f, s[1], 255 - Length(ss), i);
     if i > 0 then
-        begin
+    begin
         s[0]:= char(i);
         ss:= ss + s;
         while (Length(ss) > 1)and(Length(ss) > byte(ss[1])) do
             begin
             ParseIPCCommand(copy(ss, 2, byte(ss[1])));
-            Delete(ss, 1, Succ(byte(ss[1])))
+           Delete(ss, 1, Succ(byte(ss[1])));
             end
         end
 until i = 0;
@@ -221,7 +222,11 @@ end;
 
 function isSyncedCommand(c: char): boolean;
 begin
-    isSyncedCommand:= (c in ['+', '#', 'L', 'l', 'R', 'r', 'U', 'u', 'D', 'd', 'Z', 'z', 'A', 'a', 'S', 'j', 'J', ',', 'c', 'N', 'p', 'P', 'w', 't', '1', '2', '3', '4', '5']) or ((c >= #128) and (c <= char(128 + cMaxSlotIndex)))
+    case c of
+        '+', '#', 'L', 'l', 'R', 'r', 'U', 'u', 'D', 'd', 'Z', 'z', 'A', 'a', 'S', 'j', 'J', ',', 'c', 'N', 'p', 'P', 'w', 't', '1', '2', '3', '4', '5': isSyncedCommand:= true;
+    else
+        isSyncedCommand:= ((c >= #128) and (c <= char(128 + cMaxSlotIndex)))
+    end
 end;
 
 procedure flushBuffer();
@@ -240,7 +245,7 @@ if IPCSock <> nil then
     begin
     if s[0] > #251 then
         s[0]:= #251;
-        
+
     SDLNet_Write16(GameTicks, @s[Succ(byte(s[0]))]);
     
     AddFileLog('[IPC out] '+ sanitizeCharForLog(s[1]));
@@ -418,7 +423,7 @@ begin
 if CheckNoTeamOrHH or isPaused then
     exit;
 bShowFinger:= false;
-if not CurrentTeam^.ExtDriven and bShowAmmoMenu then
+if (not CurrentTeam^.ExtDriven) and bShowAmmoMenu then
     begin
     bSelected:= true;
     exit
@@ -468,7 +473,7 @@ begin
     lastcmd:= nil;
     isPonged:= false;
     SocketString:= '';
-    
+
     hiTicks:= 0;
     flushDelayTicks:= 0;
     sendBuffer.count:= 0;
@@ -480,6 +485,7 @@ begin
     SDLNet_FreeSocketSet(fds);
     SDLNet_TCP_Close(IPCSock);
     SDLNet_Quit();
+
 end;
 
 end.

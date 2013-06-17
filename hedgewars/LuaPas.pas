@@ -15,7 +15,9 @@ uses uConsts;
 {.$DEFINE LUA_GETHOOK}
 
 type
+{$IFNDEF PAS2C}
     size_t   = Cardinal;
+{$ENDIF}
     Psize_t  = ^size_t;
     PPointer = ^Pointer;
 
@@ -52,12 +54,14 @@ type
 @* of a function in debug information.
 ** CHANGE it if you want a different size.
 *)
+
 const
     LUA_IDSIZE = 60;
 
 (*
 @@ LUAL_BUFFERSIZE is the buffer size used by the lauxlib buffer system.
 *)
+
 const
     LUAL_BUFFERSIZE = 1024;
 
@@ -67,6 +71,7 @@ const
 ** CHANGE them if you want different prompts. (You can also change the
 ** prompts dynamically, assigning to globals _PROMPT/_PROMPT2.)
 *)
+
 const
     LUA_PROMPT  = '> ';
     LUA_PROMPT2 = '>> ';
@@ -110,6 +115,7 @@ const
 ** See Copyright Notice at the end of this file
 *)
 
+
 const
     LUA_VERSION     = 'Lua 5.1';
     LUA_VERSION_NUM = 501;
@@ -129,7 +135,9 @@ const
     LUA_ENVIRONINDEX  = -10001;
     LUA_GLOBALSINDEX  = -10002;
 
+   
 function lua_upvalueindex(idx : LongInt) : LongInt;   // a marco
+
 
 const
    (* thread status; 0 is OK *)
@@ -139,6 +147,7 @@ const
     LUA_ERRMEM    = 4;
     LUA_ERRERR    = 5;
 
+   
 type
    lua_CFunction = function(L : Plua_State) : LongInt; cdecl;
 
@@ -152,6 +161,7 @@ type
   ** prototype for memory-allocation functions
   *)
   lua_Alloc = function (ud, ptr : Pointer; osize, nsize : size_t) : Pointer; cdecl;
+
 
 const
     (*
@@ -178,6 +188,7 @@ type
     (* type for integer functions *)
     lua_Integer = LUA_INTEGER_;
 
+   
 (*
 ** state manipulation
 *)
@@ -238,10 +249,9 @@ function lua_isuserdata(L : Plua_State; idx : LongInt) : LongBool;
     
 function lua_type(L : Plua_State; idx : LongInt) : LongInt;
     cdecl; external LuaLibName;
-    
+
 function lua_typename(L : Plua_State; tp : LongInt) : PChar;
     cdecl; external LuaLibName;
-
     
 function lua_equal(L : Plua_State; idx1, idx2 : LongInt) : LongBool;
     cdecl; external LuaLibName;
@@ -261,10 +271,9 @@ function lua_tointeger(L : Plua_State; idx : LongInt) : lua_Integer;
 function lua_toboolean(L : Plua_State; idx : LongInt) : LongBool;
     cdecl; external LuaLibName;
     
-    
 function lua_tolstring(L : Plua_State; idx : LongInt; len : Psize_t) : PChar;
     cdecl; external LuaLibName;
-    
+
 function lua_objlen(L : Plua_State; idx : LongInt) : size_t;
     cdecl; external LuaLibName;
     
@@ -292,13 +301,12 @@ procedure lua_pushnumber(L : Plua_State; n : lua_Number);
     
 procedure lua_pushinteger(L : Plua_State; n : lua_Integer);
     cdecl; external LuaLibName;
-    
+
 procedure lua_pushlstring(L : Plua_State; const s : PChar; ls : size_t);
     cdecl; external LuaLibName;
     
 procedure lua_pushstring(L : Plua_State; const s : PChar);
     cdecl; external LuaLibName;
-    
     
 function  lua_pushvfstring(L : Plua_State;
     const fmt : PChar; argp : Pointer) : PChar;
@@ -325,10 +333,10 @@ function  lua_pushthread(L : Plua_state) : Cardinal;
 *)
 procedure lua_gettable(L : Plua_State ; idx : LongInt);
     cdecl; external LuaLibName;
-    
+
 procedure lua_getfield(L : Plua_State; idx : LongInt; k : PChar);
     cdecl; external LuaLibName;
-    
+
 procedure lua_rawget(L : Plua_State; idx : LongInt);
     cdecl; external LuaLibName;
     
@@ -353,10 +361,10 @@ procedure lua_getfenv(L : Plua_State; idx : LongInt);
 *)
 procedure lua_settable(L : Plua_State; idx : LongInt);
     cdecl; external LuaLibName;
-    
+
 procedure lua_setfield(L : Plua_State; idx : LongInt; const k : PChar);
     cdecl; external LuaLibName;
-    
+
 procedure lua_rawset(L : Plua_State; idx : LongInt);
     cdecl; external LuaLibName;
     
@@ -404,6 +412,7 @@ function lua_status(L : Plua_State) : LongInt;
 (*
 ** garbage-collection functions and options
 *)
+
 const
     LUA_GCSTOP       = 0;
     LUA_GCRESTART    = 1;
@@ -413,7 +422,7 @@ const
     LUA_GCSTEP       = 5;
     LUA_GCSETPAUSE   = 6;
     LUA_GCSETSTEPMUL = 7;
-
+   
 function lua_gc(L : Plua_State; what, data : LongInt) : LongInt;
     cdecl; external LuaLibName;
 

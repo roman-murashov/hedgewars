@@ -38,12 +38,15 @@ function  physfsReader(L: Plua_State; f: PFSFile; sz: Psize_t) : PChar; cdecl; e
 procedure physfsReaderSetBuffer(buf: pointer); cdecl; external PhyslayerLibName;
 procedure hedgewarsMountPackage(filename: PChar); cdecl; external PhyslayerLibName;
 
+{$IFNDEF PAS2C}
+//apparently pas2c doesn't render the functions below if it finds 'implementation' first
 implementation
 uses uUtils, uVariables, sysutils;
+{$ENDIF}
 
 function PHYSFS_init(argv0: PChar) : LongInt; cdecl; external PhysfsLibName;
 function PHYSFS_deinit() : LongInt; cdecl; external PhysfsLibName;
-function PHYSFSRWOPS_openRead(fname: PChar): PSDL_RWops; cdecl ; external PhyslayerLibName;
+function PHYSFSRWOPS_openRead(fname: PChar): PSDL_RWops; cdecl; external PhyslayerLibName;
 function PHYSFSRWOPS_openWrite(fname: PChar): PSDL_RWops; cdecl; external PhyslayerLibName;
 
 function PHYSFS_mount(newDir, mountPoint: PChar; appendToPath: LongBool) : LongInt; cdecl; external PhysfsLibName;
@@ -54,6 +57,13 @@ function PHYSFS_close(f: PFSFile): LongBool; cdecl; external PhysfsLibName;
 function PHYSFS_exists(fname: PChar): LongBool; cdecl; external PhysfsLibName;
 
 procedure hedgewarsMountPackages(); cdecl; external PhyslayerLibName;
+
+{$IFDEF PAS2C}
+implementation
+uses uUtils, uVariables;
+{$ENDIF}
+
+(*****************************************************************)
 
 function rwopsOpenRead(fname: shortstring): PSDL_RWops;
 begin
@@ -117,7 +127,7 @@ while (PHYSFS_readBytes(f, @c, 1) = 1) and (c <> #10) do
             b[0]:= #0
             end
         end;
-        
+
 s:= s + b
 end;
 
