@@ -26,7 +26,8 @@ procedure DoGameTick(Lag: LongInt);
 ////////////////////
     implementation
 ////////////////////
-uses uInputHandler, uTeams, uIO, uAI, uGears, uSound, uLocale, uCaptions,
+uses uInputHandler, uTeams, uIO, uAI, uGears, uSound,
+    uLocale, uCaptions,
     uVisualGears, uTypes, uVariables, uCommands, uConsts
     {$IFDEF USE_TOUCH_INTERFACE}, uTouch{$ENDIF};
 
@@ -51,7 +52,7 @@ if GameType <> gmtRecord then
     else if (GameType = gmtSave) or (fastUntilLag and (GameType = gmtNet)) then
         Lag:= 2500;
 
-    if (GameType = gmtDemo) then 
+    if (GameType = gmtDemo) then
         if isSpeed then
             begin
             i:= RealTicks-SpeedStart;
@@ -116,9 +117,10 @@ while (GameState <> gsExit) and (i <= Lag) do
                         AddVisualGear(0, 0, vgtTeamHealthSorter);
                         AddVisualGear(0, 0, vgtSmoothWindBar);
                         {$IFDEF IPHONEOS}InitIPC;{$ENDIF}
-                        with mobileRecord do
+                        {$IFNDEF PAS2C}with mobileRecord do
                             if SaveLoadingEnded <> nil then
                                 SaveLoadingEnded();
+                        {$ENDIF}
                         end;
                 end
         else ProcessGears

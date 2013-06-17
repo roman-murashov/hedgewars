@@ -181,6 +181,11 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES "RELEASE")
     set(console_access "WIN32")
 endif(CMAKE_BUILD_TYPE MATCHES "RELEASE")
+if(${LIBENGINE})
+    add_definitions(-DHWLIBRARY)
+    set(HW_LINK_LIBS hwengine ${HW_LINK_LIBS})
+    link_directories(${EXECUTABLE_OUTPUT_PATH})
+endif()
 
 add_executable(hedgewars ${console_access}
     ${hwfr_src}
@@ -189,7 +194,7 @@ add_executable(hedgewars ${console_access}
     ${hwfr_rez_src}
     )
 
-if((UNIX AND NOT APPLE) AND ${BUILD_ENGINE_LIBRARY})
+if((UNIX AND NOT APPLE) AND ${LIBENGINE})
     set_target_properties(hedgewars PROPERTIES LINK_FLAGS "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${target_library_install_dir}")
 endif()
 
