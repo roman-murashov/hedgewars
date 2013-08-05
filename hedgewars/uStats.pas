@@ -34,9 +34,10 @@ procedure Skipped;
 procedure TurnReaction;
 procedure SendStats;
 procedure hedgehogFlight(Gear: PGear; time: Longword);
+procedure declareAchievement(id, teamname: shortstring; value: LongInt);
 
 implementation
-uses uSound, uLocale, uVariables, uUtils, uIO, uCaptions, uDebug, uMisc, uConsole;
+uses uSound, uLocale, uVariables, uUtils, uIO, uCaptions, uDebug, uMisc, uConsole, uScript;
 
 var DamageClan  : Longword = 0;
     DamageTotal : Longword = 0;
@@ -297,15 +298,29 @@ if KilledHHs > 0 then
 if winnersClan <> nil then 
     begin
     WriteLnToConsole('WINNERS');
+    WriteLnToConsole(inttostr(winnersClan^.TeamsNumber));
     for t:= 0 to winnersClan^.TeamsNumber - 1 do
         WriteLnToConsole(winnersClan^.Teams[t]^.TeamName);
     end
 else
     WriteLnToConsole('DRAW');
 
+ScriptCall('onAchievementsDeclaration');
++end;
+
 WriteLnToConsole('');
 end;
 
+procedure declareAchievement(id, teamname: shortstring; value: LongInt);
+begin
+    if (length(id) = 0) or (length(teamname) = 0) then exit;
+    WriteLnToConsole('ACHIEVEMENT');
+    WriteLnToConsole(id);
+    WriteLnToConsole(teamname);
+    WriteLnToConsole(inttostr(value));
+end;
+ 
+ 
 procedure initModule;
 begin
     TotalRounds:= -1;
