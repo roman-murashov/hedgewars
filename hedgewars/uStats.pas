@@ -306,9 +306,6 @@ else
     WriteLnToConsole('DRAW');
 
 ScriptCall('onAchievementsDeclaration');
-+end;
-
-WriteLnToConsole('');
 end;
 
 procedure declareAchievement(id, teamname, location: shortstring; value: LongInt);
