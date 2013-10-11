@@ -61,6 +61,23 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 # - the third one is the full path of the system dir
 #source http://www.cmake.org/pipermail/cmake/2008-January/019290.html
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../${target_library_install_dir}/:$ORIGIN/:${CMAKE_INSTALL_PREFIX}/${target_library_install_dir}/")
+#\\\\ is just \\ which escapes '\' in the final script; same for $$ which escapes '$' in cmake
+set(CMAKE_INSTALL_RPATH_ESCAPED "\\\\$$ORIGIN/../${target_library_install_dir}/:\\\\$$ORIGIN/:${CMAKE_INSTALL_PREFIX}/${target_library_install_dir}/")
+
+if(UNIX AND NOT APPLE)
+    if(CMAKE_COMPILER_IS_GNUCC)
+       #make sure $ORIGIN is respected
+        add_linker_flag("-zorigin")
+    endif()
+    #apply RPATH settings to pascal executables
+    add_flag_append(CMAKE_Pascal_FLAGS "-k-rpath -k'${CMAKE_INSTALL_RPATH_ESCAPED}'")
+    #until we link with external things there is no need to set rpath on haskell
+    #list(APPEND haskell_flags "-optl" "-Wl,-rpath,'${CMAKE_INSTALL_RPATH_ESCAPED}'")
+endif()
+
+#add the automatically determined parts of the RPATH
+#which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
 
 #install_name_tool magic for OS X

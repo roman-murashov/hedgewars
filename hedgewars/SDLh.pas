@@ -235,7 +235,11 @@ const
     SDL_SRCCOLORKEY = $00001000;
     SDL_RLEACCEL    = $00004000;
     SDL_SRCALPHA    = $00010000;
+ {$IFDEF PAS2C}
+    SDL_ANYFORMAT   = $10000000;
+ {$ELSE}
     SDL_ANYFORMAT   = $00100000;
+ {$ENDIF}
     SDL_HWPALETTE   = $20000000;
     SDL_DOUBLEBUF   = $40000000;
     SDL_FULLSCREEN  = $80000000;
@@ -404,6 +408,16 @@ type
         w, h  : LongInt;
         pitch : {$IFDEF SDL2}LongInt{$ELSE}Word{$ENDIF};
         pixels: Pointer;
+{$IFDEF PAS2C}
+        hwdata:Pointer;
+        clip_rect:TSDL_Rect;
+        unsed1:LongWord;
+        locked:LongWord;
+        map:Pointer;
+        format_version:Longword;
+        refcount:LongInt;
+        offset: LongInt;
+{$ELSE}
 {$IFDEF SDL2}
         userdata: Pointer;
         locked: LongInt;
@@ -411,8 +425,7 @@ type
         clip_rect: TSDL_Rect;
         map: Pointer;
         refcount: LongInt;
-{$ELSE}
-        offset: LongInt;
+{$ENDIF}
 {$ENDIF}
         end;
 
@@ -825,6 +838,7 @@ type
 
     TByteArray = array[0..65535] of Byte;
     PByteArray = ^TByteArray;
+
     TLongWordArray = array[0..16383] of LongWord;
     PLongWordArray = ^TLongWordArray;
 
@@ -1180,7 +1194,7 @@ begin
 {$IFDEF SDL2}
         ((surface^.flags and SDL_RLEACCEL) <> 0)
 {$ELSE}
-        ( surface^.offset <> 0 ) or (( surface^.flags and (SDL_HWSURFACE or SDL_ASYNCBLIT or SDL_RLEACCEL)) <> 0)
+        {$IFNDEF WEBGL}( surface^.offset <> 0 ) or {$ENDIF}(( surface^.flags and (SDL_HWSURFACE or SDL_ASYNCBLIT or SDL_RLEACCEL)) <> 0)
 {$ENDIF}
 end;
 

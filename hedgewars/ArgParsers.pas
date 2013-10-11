@@ -112,7 +112,7 @@ begin
         end
 end;
 
-function parseNick(nick: String): String;
+function parseNick(nick: shortstring): shortstring;
 begin
     if isInternal then
         parseNick:= DecodeBase64(nick)
@@ -159,18 +159,22 @@ begin
 {$ENDIF}
 end;
 
-function getLongIntParameter(str:String; var paramIndex:LongInt; var wrongParameter:Boolean): LongInt;
+function getLongIntParameter(str:shortstring; var paramIndex:LongInt; var wrongParameter:Boolean): LongInt;
 var tmpInt, c: LongInt;
 begin
     inc(paramIndex);
+{$IFDEF PAS2C}
+    val(str, tmpInt);
+{$ELSE}
     val(str, tmpInt, c);
     wrongParameter:= c <> 0;
     if wrongParameter then
         WriteLn(stderr, 'ERROR: '+ParamStr(paramIndex-1)+' expects a number, you passed "'+str+'"');
+{$ENDIF}
     getLongIntParameter:= tmpInt;
 end;
 
-function getStringParameter(str:String; var paramIndex:LongInt; var wrongParameter:Boolean): String;
+function getStringParameter(str:shortstring; var paramIndex:LongInt; var wrongParameter:Boolean): shortstring;
 begin
     inc(paramIndex);
     wrongParameter:= (str='') or (Copy(str,1,2) = '--');
@@ -179,16 +183,15 @@ begin
     getStringParameter:= str;
 end;
 
-
-procedure parseClassicParameter(cmdArray: Array of String; size:LongInt; var paramIndex:LongInt); Forward;
+procedure parseClassicParameter(cmdArray: array of String; size:LongInt; var paramIndex:LongInt); forward;
 
 function parseParameter(cmd:String; arg:String; var paramIndex:LongInt): Boolean;
-const videoArray: Array [1..5] of String = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth');
-      audioArray: Array [1..3] of String = ('--volume','--nomusic','--nosound');
-      otherArray: Array [1..3] of String = ('--locale','--fullscreen','--showfps');
-      mediaArray: Array [1..10] of String = ('--fullscreen-width', '--fullscreen-height', '--width', '--height', '--depth', '--volume','--nomusic','--nosound','--locale','--fullscreen');
-      allArray: Array [1..18] of String = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth','--volume','--nomusic','--nosound','--locale','--fullscreen','--showfps','--altdmg','--frame-interval','--low-quality','--no-teamtag','--no-hogtag','--no-healthtag','--translucent-tags');
-      reallyAll: array[0..34] of shortstring = (
+const videoArray: array [0..4] of String = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth');
+      audioArray: array [0..2] of String = ('--volume','--nomusic','--nosound');
+      otherArray: array [0..2] of String = ('--locale','--fullscreen','--showfps');
+      mediaArray: array [0..9] of String = ('--fullscreen-width', '--fullscreen-height', '--width', '--height', '--depth', '--volume','--nomusic','--nosound','--locale','--fullscreen');
+      allArray:   array [0..17] of String = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth','--volume','--nomusic','--nosound','--locale','--fullscreen','--showfps','--altdmg','--frame-interval','--low-quality','--no-teamtag','--no-hogtag','--no-healthtag','--translucent-tags');
+      reallyAll:  array [0..34] of shortstring = (
                 '--prefix', '--user-prefix', '--locale', '--fullscreen-width', '--fullscreen-height', '--width',
                 '--height', '--frame-interval', '--volume','--nomusic', '--nosound',
                 '--fullscreen', '--showfps', '--altdmg', '--low-quality', '--raw-quality', '--stereo', '--nick',
@@ -239,10 +242,10 @@ begin
         {--stats-only}          28 : statsOnlyGame();
         {--gci}                 29 : GciEasterEgg();
         {--help}                30 : DisplayUsage();
-        {--no-teamtag}          31 : cTagsMask := cTagsMask and not htTeamName;
-        {--no-hogtag}           32 : cTagsMask := cTagsMask and not htName;
-        {--no-healthtag}        33 : cTagsMask := cTagsMask and not htHealth;
-        {--translucent-tags}    34 : cTagsMask := cTagsMask or htTransparent 
+        {--no-teamtag}          31 : cTagsMask := cTagsMask and (not htTeamName);
+        {--no-hogtag}           32 : cTagsMask := cTagsMask and (not htName);
+        {--no-healthtag}        33 : cTagsMask := cTagsMask and (not htHealth);
+        {--translucent-tags}    34 : cTagsMask := cTagsMask or htTransparent
     else
         begin
         //Asusme the first "non parameter" is the replay file, anything else is invalid
@@ -257,7 +260,7 @@ begin
     end;
 end;
 
-procedure parseClassicParameter(cmdArray: Array of String; size:LongInt; var paramIndex:LongInt);
+procedure parseClassicParameter(cmdArray: array of String; size:LongInt; var paramIndex:LongInt);
 var index, tmpInt: LongInt;
     isBool, isValid: Boolean;
     cmd, arg, newSyntax: String;
@@ -287,9 +290,9 @@ begin
         if isValid then
             begin
             parseParameter(cmd, arg, tmpInt);
-            newSyntax := newSyntax + cmd + ' ';
+            newSyntax:= newSyntax + cmd + ' ';
             if not isBool then
-                newSyntax := newSyntax + arg + ' ';
+                newSyntax:= newSyntax + arg + ' ';
             end;
         inc(index);
         end;
@@ -340,7 +343,7 @@ procedure GetParams;
 begin
     isInternal:= (ParamStr(1) = '--internal');
 
-    UserPathPrefix := '.';
+    UserPathPrefix := _S'.';
     PathPrefix     := cDefaultPathPrefix;
     recordFileName := '';
     parseCommandLine();

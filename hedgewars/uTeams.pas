@@ -572,7 +572,10 @@ procedure loadTeamBinds(s: shortstring);
 var i: LongInt;
 begin
     for i:= 1 to length(s) do
-        if s[i] in ['\', '/', ':'] then s[i]:= '_';
+        if ((s[i] = '\') or
+            (s[i] = '/') or
+            (s[i] = ':')) then
+            s[i]:= '_';
 
     s:= cPathz[ptTeams] + '/' + s + '.hwt';
 
@@ -621,6 +624,7 @@ begin
 end;
 
 procedure chBind(var id: shortstring);
+var i : Integer;
 begin
     if CurrentTeam = nil then
         exit;
