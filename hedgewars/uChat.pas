@@ -41,7 +41,7 @@ type TChatLine = record
     Width: LongInt;
     s: shortstring;
     end;
-    TChatCmd = (quit, pause, finish, fullscreen);
+    TChatCmd = (quitCmd, pauseCmd, finishCmd, fullscreenCmd);
 
 var Strs: array[0 .. MaxStrIndex] of TChatLine;
     MStrs: array[0 .. MaxStrIndex] of shortstring;
@@ -226,7 +226,7 @@ else if (s[1] = '''') and (s[Length(s)] = '''') then
 else if (s[1] = '-') and (s[Length(s)] = '-') then
     x:= 3;
 
-if not CurrentTeam^.ExtDriven and (x <> 0) then
+if (not CurrentTeam^.ExtDriven) and (x <> 0) then
     for c:= 0 to Pred(TeamsCount) do
         if (TeamsArray[c] = CurrentTeam) then
             t:= c;

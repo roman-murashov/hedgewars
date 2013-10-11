@@ -63,6 +63,7 @@ include_directories(${SDL_INCLUDE_DIR})
 include_directories(${SDLMIXER_INCLUDE_DIR})
 include_directories(${PHYSFS_INCLUDE_DIR})
 include_directories(${PHYSLAYER_INCLUDE_DIR})
+include_directories(${LUA_INCLUDE_DIR}) #brought by physlayer hwpacksmounter.h
 
 
 if(UNIX)
@@ -152,11 +153,6 @@ set(hwfr_hdrs
 
 set(hwfr_rez hedgewars.qrc)
 
-if(${BUILD_ENGINE_LIBRARY})
-    add_definitions(-DHWLIBRARY=1)
-    set(hwlibname "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}hwengine${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    list(APPEND HW_LINK_LIBS ${hwlibname})
-endif()
 
 qt4_add_resources(hwfr_rez_src ${hwfr_rez})
 
@@ -187,6 +183,11 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES "RELEASE")
     set(console_access "WIN32")
 endif(CMAKE_BUILD_TYPE MATCHES "RELEASE")
+if(${BUILD_ENGINE_LIBRARY})
+    add_definitions(-DHWLIBRARY=1)
+    set(hwlibname "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}hwengine${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    list(APPEND HW_LINK_LIBS ${hwlibname})
+endif()
 
 add_executable(hedgewars ${console_access}
     ${hwfr_src}
@@ -214,6 +215,11 @@ if(WIN32 AND NOT UNIX)
         uuid
         )
 endif()
+
+if(CMAKE_CXX_COMPILER MATCHES "clang*")
+    list(APPEND HW_LINK_LIBS stdc++)
+endif()
+
 
 target_link_libraries(hedgewars ${HW_LINK_LIBS})
 
