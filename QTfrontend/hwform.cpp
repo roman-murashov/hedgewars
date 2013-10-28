@@ -1130,7 +1130,7 @@ void HWForm::NetNickTaken(const QString & nick)
         //ForcedDisconnect(tr("No nickname supplied."));
         bool retry = RetryDialog(tr("Hedgewars - Empty nickname"), tr("No nickname supplied."));
         GoBack();
-        if (retry) {
+        if (retry && hwnet) {
             if (hwnet->m_private_game) {
                 QStringList list = hwnet->getHost().split(":");
                 NetConnectServer(list.at(0), list.at(1).toShort());
@@ -1140,7 +1140,8 @@ void HWForm::NetNickTaken(const QString & nick)
         return;
     }
 
-    hwnet->NewNick(newNick);
+    if(hwnet)
+        hwnet->NewNick(newNick);
     config->setValue("net/nick", newNick);
     config->updNetNick();
 
@@ -1162,6 +1163,13 @@ void HWForm::NetAuthFailed()
     if (retry) {
        NetConnectOfficialServer();
     }
+}
+
+void HWForm::askRoomPassword()
+{
+    QString password = QInputDialog::getText(this, tr("Room password"), tr("The room is protected with password.\nPlease, enter the password:"));
+    if(hwnet && !password.isEmpty())
+        hwnet->roomPasswordEntered(password);
 }
 
 bool HWForm::RetryDialog(const QString & title, const QString & label)
@@ -1243,6 +1251,7 @@ void HWForm::_NetConnect(const QString & hostName, quint16 port, QString nick)
     connect(hwnet, SIGNAL(NickTaken(const QString&)), this, SLOT(NetNickTaken(const QString&)), Qt::QueuedConnection);
     connect(hwnet, SIGNAL(AuthFailed()), this, SLOT(NetAuthFailed()), Qt::QueuedConnection);
     //connect(ui.pageNetGame->BtnBack, SIGNAL(clicked()), hwnet, SLOT(partRoom()));
+    connect(hwnet, SIGNAL(askForRoomPassword()), this, SLOT(askRoomPassword()), Qt::QueuedConnection);
 
     ui.pageRoomsList->chatWidget->setUsersModel(hwnet->lobbyPlayersModel());
     ui.pageNetGame->chatWidget->setUsersModel(hwnet->roomPlayersModel());
@@ -1257,10 +1266,10 @@ void HWForm::_NetConnect(const QString & hostName, quint16 port, QString nick)
     connect(hwnet, SIGNAL(serverMessage(const QString&)),
             ui.pageRoomsList->chatWidget, SLOT(onServerMessage(const QString&)), Qt::QueuedConnection);
 
-    connect(ui.pageRoomsList, SIGNAL(askForCreateRoom(const QString &)),
-            hwnet, SLOT(CreateRoom(const QString&)));
-    connect(ui.pageRoomsList, SIGNAL(askForJoinRoom(const QString &)),
-            hwnet, SLOT(JoinRoom(const QString&)));
+    connect(ui.pageRoomsList, SIGNAL(askForCreateRoom(const QString &, const QString &)),
+            hwnet, SLOT(CreateRoom(const QString&, const QString &)));
+    connect(ui.pageRoomsList, SIGNAL(askForJoinRoom(const QString &, const QString &)),
+            hwnet, SLOT(JoinRoom(const QString&, const QString &)));
 //  connect(ui.pageRoomsList, SIGNAL(askForCreateRoom(const QString &)),
 //      this, SLOT(NetGameMaster()));
 //  connect(ui.pageRoomsList, SIGNAL(askForJoinRoom(const QString &)),
