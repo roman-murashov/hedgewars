@@ -531,17 +531,17 @@ void PageRoomsList::setRoomsList(const QStringList & list)
 
 void PageRoomsList::onCreateClick()
 {
-    RoomNamePrompt prompt(parentWidget()->parentWidget(), m_gameSettings->value("frontend/lastroomname", QString()).toString());
-    connect(&prompt, SIGNAL(roomNameChosen(const QString &)), this, SLOT(onRoomNameChosen(const QString &)));
-    prompt.exec();
+    RoomNamePrompt prompt(this, m_gameSettings->value("frontend/lastroomname", QString()).toString());
+    if(prompt.exec())
+        onRoomNameChosen(prompt.getRoomName(), prompt.getPassword());
 }
 
-void PageRoomsList::onRoomNameChosen(const QString & roomName)
+void PageRoomsList::onRoomNameChosen(const QString & roomName, const QString & password)
 {
     if (!roomName.trimmed().isEmpty())
     {
         m_gameSettings->setValue("frontend/lastroomname", roomName);
-        emit askForCreateRoom(roomName);
+        emit askForCreateRoom(roomName, password);
     }
     else
     {
@@ -570,7 +570,7 @@ void PageRoomsList::onJoinClick()
     if (!gameInLobby)
         emit askJoinConfirmation(roomName);
     else
-        emit askForJoinRoom(roomName);
+        emit askForJoinRoom(roomName, QString());
 }
 
 void PageRoomsList::onRefreshClick()
@@ -600,7 +600,7 @@ void PageRoomsList::onJoinConfirmation(const QString & room)
 
     if (reallyJoinMsg.exec() == QMessageBox::Ok)
     {
-        emit askForJoinRoom(room);
+        emit askForJoinRoom(room, QString());
     }
 }
 

@@ -53,12 +53,13 @@ procedure SetAllHHToActive(Ice: boolean);
 function  GetAmmo(Hedgehog: PHedgehog): TAmmoType;
 function  GetUtility(Hedgehog: PHedgehog): TAmmoType;
 
+function WorldWrap(var Gear: PGear): boolean;
+
 
 
 function MakeHedgehogsStep(Gear: PGear) : boolean;
 
 var doStepHandlers: array[TGearType] of TGearStepProcedure;
-
 
 implementation
 uses uSound, uCollisions, uUtils, uConsts, uVisualGears, uAIMisc,
@@ -486,7 +487,10 @@ begin
             CurAmmoGear^.Pos := 1000
         end
     else
-        CheckGearDrowning := false;
+        begin
+        if not (Gear^.Kind in [gtJetpack, gtBee]) then Gear^.State:= Gear^.State and not gstSubmersible;  // making it temporary for most gears is more attractive I think
+        CheckGearDrowning := false
+        end
 end;
 
 
@@ -589,6 +593,11 @@ begin
 ignoreNearObjects:= false; // try not skipping proximity at first
 ignoreOverlap:= false; // this not only skips proximity, but allows overlapping objects (barrels, mines, hogs, crates).  Saving it for a 3rd pass.  With this active, winning AI Survival goes back to virtual impossibility
 tryAgain:= true;
+if WorldEdge <> weNone then 
+    begin
+    Left:= max(Left,leftX+Gear^.Radius);
+    Right:= min(Right,rightX-Gear^.Radius)
+    end;
 while tryAgain do
     begin
     delta:= LAND_WIDTH div 16;
@@ -1198,5 +1207,79 @@ if (t > 0) then
 GetUtility:= i
 end;
 
+(*
+Intended to check Gear X/Y against the map left/right edges and apply one of the world modes
+* Normal - infinite world, do nothing
+* Wrap (entering left edge exits at same height on right edge)
+* Bounce (striking edge is treated as a 100% elasticity bounce)
+* From the depths (same as from sky, but from sea, with submersible flag set)
+
+Trying to make the checks a little broader than on first pass to catch things that don't move normally.
+*)
+function WorldWrap(var Gear: PGear): boolean;
+var tdx: hwFloat;
+begin
+WorldWrap:= false;
+if WorldEdge = weNone then exit(false);
+if (hwRound(Gear^.X)-Gear^.Radius < leftX) or
+   (hwRound(Gear^.X)+Gear^.Radius > rightX) then
+    begin
+    if WorldEdge = weWrap then
+        begin
+        if (hwRound(Gear^.X)-Gear^.Radius < leftX) then
+             Gear^.X:= int2hwfloat(rightX-Gear^.Radius)
+        else Gear^.X:= int2hwfloat(leftX+Gear^.Radius);
+        LeftImpactTimer:= 150;
+        RightImpactTimer:= 150
+        end
+    else if WorldEdge = weBounce then
+        begin
+        if (hwRound(Gear^.X)-Gear^.Radius < leftX) then
+            begin
+            LeftImpactTimer:= 333;
+            Gear^.dX.isNegative:= false;
+            Gear^.X:= int2hwfloat(leftX+Gear^.Radius)
+            end
+        else 
+            begin
+            RightImpactTimer:= 333;
+            Gear^.dX.isNegative:= true;
+            Gear^.X:= int2hwfloat(rightX-Gear^.Radius)
+            end;
+        if (Gear^.Radius > 2) and (Gear^.dX.QWordValue > _0_001.QWordValue) then
+            PlaySound(sndMelonImpact)
+        end
+    else if WorldEdge = weSea then
+        begin
+        if (hwRound(Gear^.Y) > cWaterLine) and (Gear^.State and gstSubmersible <> 0) then
+            Gear^.State:= Gear^.State and not gstSubmersible
+        else
+            begin
+            Gear^.State:= Gear^.State or gstSubmersible;
+            Gear^.X:= int2hwFloat(PlayWidth)*int2hwFloat(min(max(0,hwRound(Gear^.Y)),PlayHeight))/PlayHeight;
+            Gear^.Y:= int2hwFloat(cWaterLine+cVisibleWater+Gear^.Radius*2);
+            tdx:= Gear^.dX;
+            Gear^.dX:= -Gear^.dY;
+            Gear^.dY:= tdx;
+            Gear^.dY.isNegative:= true
+            end
+        end;
+(*
+* Window in the sky (Gear moved high into the sky, Y is used to determine X) [unfortunately, not a safe thing to do. shame, I thought aerial bombardment would be kinda neat
+This one would be really easy to freeze game unless it was flagged unfortunately.
+
+    else 
+        begin
+        Gear^.X:= int2hwFloat(PlayWidth)*int2hwFloat(min(max(0,hwRound(Gear^.Y)),PlayHeight))/PlayHeight;
+        Gear^.Y:= -_2048-_256-_256;
+        tdx:= Gear^.dX;
+        Gear^.dX:= Gear^.dY;
+        Gear^.dY:= tdx;
+        Gear^.dY.isNegative:= false
+        end
+*)
+    WorldWrap:= true
+    end;
+end;
 
 end.

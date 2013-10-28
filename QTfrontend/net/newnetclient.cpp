@@ -94,7 +94,7 @@ void HWNewNet::Disconnect()
     NetSocket.disconnectFromHost();
 }
 
-void HWNewNet::CreateRoom(const QString & room)
+void HWNewNet::CreateRoom(const QString & room, const QString & password)
 {
     if(netClientState != InLobby)
     {
@@ -104,11 +104,15 @@ void HWNewNet::CreateRoom(const QString & room)
 
     myroom = room;
 
-    RawSendNet(QString("CREATE_ROOM%1%2").arg(delimeter).arg(room));
+    if(password.isEmpty())
+        RawSendNet(QString("CREATE_ROOM%1%2").arg(delimeter).arg(room));
+    else
+        RawSendNet(QString("CREATE_ROOM%1%2%1%3").arg(delimeter).arg(room).arg(password));
+
     isChief = true;
 }
 
-void HWNewNet::JoinRoom(const QString & room)
+void HWNewNet::JoinRoom(const QString & room, const QString &password)
 {
     if(netClientState != InLobby)
     {
@@ -118,7 +122,11 @@ void HWNewNet::JoinRoom(const QString & room)
 
     myroom = room;
 
-    RawSendNet(QString("JOIN_ROOM%1%2").arg(delimeter).arg(room));
+    if(password.isEmpty())
+        RawSendNet(QString("JOIN_ROOM%1%2").arg(delimeter).arg(room));
+    else
+        RawSendNet(QString("JOIN_ROOM%1%2%1%3").arg(delimeter).arg(room).arg(password));
+
     isChief = false;
 }
 
@@ -435,6 +443,16 @@ void HWNewNet::ParseCmd(const QStringList & lst)
                 case 'u':
                         foreach(const QString & nick, nicks)
                             m_playersModel->setFlag(nick, PlayersListModel::Registered, setFlag);
+                        break;
+                // flag indicating if a player is in room
+                case 'i':
+                        foreach(const QString & nick, nicks)
+                            m_playersModel->setFlag(nick, PlayersListModel::InRoom, setFlag);
+                        break;
+                // flag indicating if a player is contributor
+                case 'c':
+                        foreach(const QString & nick, nicks)
+                            m_playersModel->setFlag(nick, PlayersListModel::InRoom, setFlag);
                         break;
                 // flag indicating if a player has engine running
                 case 'g':
@@ -1055,10 +1073,11 @@ void HWNewNet::handleNotice(int n)
     switch(n)
     {
         case 0:
-        {
             emit NickTaken(mynick);
             break;
-        }
+        case 2:
+            emit askForRoomPassword();
+            break;
     }
 }
 
@@ -1075,4 +1094,10 @@ QAbstractItemModel *HWNewNet::lobbyPlayersModel()
 QAbstractItemModel *HWNewNet::roomPlayersModel()
 {
     return m_roomPlayersModel;
+}
+
+void HWNewNet::roomPasswordEntered(const QString &password)
+{
+    if(!myroom.isEmpty())
+        JoinRoom(myroom, password);
 }

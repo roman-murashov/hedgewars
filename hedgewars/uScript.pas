@@ -95,6 +95,7 @@ var luaState : Plua_State;
     ScriptAmmoDelay : shortstring;
     ScriptAmmoReinforcement : shortstring;
     ScriptLoaded : boolean;
+    mapDims : boolean;
 
 procedure ScriptPrepareAmmoStore; forward;
 procedure ScriptApplyAmmoStore; forward;
@@ -2065,7 +2066,8 @@ if ScriptExists('onAmmoStoreInit') or ScriptExists('onNewAmmoStore') then
     end;
 
 ScriptSetInteger('ClansCount', ClansCount);
-ScriptSetInteger('TeamsCount', TeamsCount)
+ScriptSetInteger('TeamsCount', TeamsCount);
+mapDims:= false
 end;
 
 
@@ -2088,7 +2090,10 @@ var ret : LongInt;
 begin
 s:= cPathz[ptData] + name;
 if not pfsExists(s) then
+    begin
+    AddFileLog('[LUA] Script not found: ' + name);
     exit;
+    end;
 
 f:= pfsOpenRead(s);
 if f = nil then 
@@ -2119,8 +2124,9 @@ ScriptSetInteger('TurnTimeLeft', TurnTimeLeft);
 ScriptSetInteger('GameTime', GameTicks);
 ScriptSetInteger('TotalRounds', TotalRounds);
 ScriptSetInteger('WaterLine', cWaterLine);
-if GameTicks = 0 then
+if not mapDims then
     begin
+    mapDims:= true;
     ScriptSetInteger('LAND_WIDTH', LAND_WIDTH);
     ScriptSetInteger('LAND_HEIGHT', LAND_HEIGHT);
     ScriptSetInteger('LeftX', leftX);
@@ -2622,6 +2628,7 @@ end;
 
 procedure initModule;
 begin
+mapDims:= false;
 end;
 
 procedure freeModule;

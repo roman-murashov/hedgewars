@@ -116,7 +116,7 @@ with HHGear^.Hedgehog^ do
     // Try again in the next slot
     if CurAmmoType = prevAmmo then
         begin
-        if slot >= cMaxSlotIndex then slot:= 0 else inc(slot);
+        if slot < cMaxSlotIndex then inc(slot);
         HHGear^.MsgParam:= slot;
         ChangeAmmo(HHGear)
         end
@@ -848,10 +848,12 @@ if isFalling then
     if (Gear^.dY.isNegative) and TestCollisionYKick(Gear, -1) then
         Gear^.dY:= _0;
     Gear^.State:= Gear^.State or gstMoving;
-    if (CurrentHedgehog^.Gear = Gear)
-        and (hwSqr(Gear^.dX) + hwSqr(Gear^.dY) > _0_003) then
+    if (CurrentHedgehog^.Gear = Gear) and (CurrentHedgehog^.Gear^.State and gstHHDriven <> 0) and
+       (not CurrentTeam^.ExtDriven) and (hwSqr(Gear^.dX) + hwSqr(Gear^.dY) > _0_003) then
         begin
         // TODO: why so aggressive at setting FollowGear when falling?
+        // because hog was being yanked out of frame by other stuff when doing a complicated jump/chute/saucer/roping.
+        // added a couple more conditions to make it a bit less aggressive, at cost of possibly spectator failing to follow a maneuver
         FollowGear:= Gear;
         end;
     if isUnderwater then
@@ -1273,7 +1275,21 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 procedure doStepHedgehog(Gear: PGear);
+var tX: hwFloat;
 begin
+tX:= Gear^.X;
+if WorldWrap(Gear) then
+    begin
+    if (WorldEdge <> weBounce) and (Gear = CurrentHedgehog^.Gear) and 
+       (CurAmmoGear <> nil) and (CurAmmoGear^.Kind =gtRope) and (CurAmmoGear^.Elasticity <> _0) then
+       CurAmmoGear^.PortalCounter:= 1;
+    if (WorldEdge = weWrap) and (TestCollisionXwithGear(Gear, 1) or TestCollisionXwithGear(Gear, -1))  then
+        begin
+        Gear^.X:= tX;
+        Gear^.dX.isNegative:= (hwRound(tX) > leftX+Gear^.Radius*2)
+        end
+    end;
+
 CheckSum:= CheckSum xor Gear^.Hedgehog^.BotLevel;
 if (Gear^.Message and gmDestroy) <> 0 then
     begin
