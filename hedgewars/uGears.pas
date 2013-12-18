@@ -33,7 +33,7 @@ unit uGears;
  *       effects are called "Visual Gears" and defined in the respective unit!
  *)
 interface
-uses uConsts, uFloat, uTypes;
+uses uConsts, uFloat, uTypes, uChat;
 
 procedure initModule;
 procedure freeModule;
@@ -624,7 +624,7 @@ for i:= (LAND_WIDTH*LAND_HEIGHT) div 524288+2 downto 0 do
 snowRight:= max(LAND_WIDTH,4096)+512;
 snowLeft:= -(snowRight-LAND_WIDTH);
 
-if (not hasBorder) and ((Theme = 'Snow') or (Theme = 'Christmas')) then
+if (not hasBorder) and cSnow then
     for i:= vobCount * Longword(max(LAND_WIDTH,4096)) div 2048 downto 1 do
         AddGear(LongInt(GetRandom(snowRight - snowLeft)) + snowLeft, LAND_HEIGHT + LongInt(GetRandom(750)) - 1300, gtFlake, 0, _0, _0, 0);
 end;
@@ -884,9 +884,10 @@ begin
                 Gear^.Hedgehog:= hh;
                 Gear^.Text:= text;
                 Gear^.FrameTicks:= x
-                end
+                end;
+            //ParseCommand('/say [' + hh^.Name + '] '+text, true)
+            AddChatString(#1+'[' + HH^.Name + '] '+text);
             end
-        //else ParseCommand('say ' + text, true)
         end
     else if (x >= 4) then
         begin
