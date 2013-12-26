@@ -292,7 +292,7 @@ begin
       ((TestCollisionXwithGear(Gear, 1) <> 0) or (TestCollisionXwithGear(Gear, -1) <> 0))  then
         begin
         Gear^.X:= tX;
-        Gear^.dX.isNegative:= (gX > leftX+Gear^.Radius*2)
+        Gear^.dX.isNegative:= (gX > LongInt(leftX) + Gear^.Radius*2)
         end;
 
     // clip velocity at 2 - over 1 per pixel, but really shouldn't cause many actual problems.
@@ -320,8 +320,8 @@ begin
 
     if Gear^.dY.isNegative then
         begin
-        isFalling := true;
         land:= TestCollisionYwithGear(Gear, -1);
+        isFalling := land = 0;
         if land <> 0 then
             begin
             collV := -1;
@@ -423,7 +423,7 @@ begin
         Gear^.dY := Gear^.dY + cGravity;
         if (GameFlags and gfMoreWind) <> 0 then
             Gear^.dX := Gear^.dX + cWindSpeed / Gear^.Density
-            end;
+        end;
 
     Gear^.X := Gear^.X + Gear^.dX;
     Gear^.Y := Gear^.Y + Gear^.dY;
@@ -758,9 +758,9 @@ if gun then
         draw:= true;
     xx:= hwRound(Gear^.X);
     yy:= hwRound(Gear^.Y);
-    if draw and (WorldEdge = weWrap) and ((xx < leftX+3) or (xx > rightX-3)) then
+    if draw and (WorldEdge = weWrap) and ((xx < LongInt(leftX) + 3) or (xx > LongInt(rightX) - 3)) then
         begin
-        if xx < leftX+3 then 
+        if xx < LongInt(leftX) + 3 then 
              xx:= rightX-3
         else xx:= leftX+3;
         Gear^.X:= int2hwFloat(xx)
@@ -934,16 +934,16 @@ begin
 
     if not Gear^.dY.isNegative then
         if TestCollisionY(Gear, 1) <> 0 then
-        begin
+            begin
             Gear^.dY := - Gear^.dY * Gear^.Elasticity;
             if Gear^.dY > - _1div1024 then
-            begin
+                begin
                 Gear^.Active := false;
                 exit
-            end
+                end
             else if Gear^.dY < - _0_03 then
                 PlaySound(Gear^.ImpactSound)
-        end;
+            end;
 
     Gear^.Y := Gear^.Y + Gear^.dY;
     CheckGearDrowning(Gear);
@@ -1999,10 +1999,10 @@ begin
 
         Gear^.dY := Gear^.dY + cGravity;
 
-        if (Gear^.dY.isNegative) and (TestCollisionYwithGear(Gear, -1) <> 0) then
-            Gear^.dY := _0;
-
-        Gear^.Y := Gear^.Y + Gear^.dY;
+        if ((not Gear^.dY.isNegative) and (TestCollisionYwithGear(Gear, 1) <> 0)) or
+           (Gear^.dY.isNegative and (TestCollisionYwithGear(Gear, -1) <> 0)) then
+             Gear^.dY := _0
+        else Gear^.Y := Gear^.Y + Gear^.dY;
 
         if (not Gear^.dY.isNegative) and (Gear^.dY > _0_001) then
             SetAllHHToActive(false);
@@ -2230,7 +2230,7 @@ begin
 
                 if Gear^.Health > 0 then
                     dec(Gear^.Health);
-                Gear^.Timer := 450 - Gear^.Tag * 8 + GetRandom(2)
+                Gear^.Timer := 450 - Gear^.Tag * 8 + LongInt(GetRandom(2))
                 end
             else
                 begin
@@ -2244,7 +2244,7 @@ begin
                     end;
 
 // This one is interesting.  I think I understand the purpose, but I wonder if a bit more fuzzy of kicking could be done with getrandom.
-                Gear^.Timer := 100 - Gear^.Tag * 3 + GetRandom(2);
+                Gear^.Timer := 100 - Gear^.Tag * 3 + LongInt(GetRandom(2));
                 if (Gear^.Damage > 3000+Gear^.Tag*1500) then
                     Gear^.Health := 0
                 end
@@ -2293,7 +2293,8 @@ begin
         end;
 
     HHGear^.dY := HHGear^.dY + cGravity;
-    if not (HHGear^.dY.isNegative) then
+    if Gear^.Timer > 0 then dec(Gear^.Timer);
+    if not (HHGear^.dY.isNegative) or (Gear^.Timer = 0) then
         begin
         HHGear^.State := HHGear^.State or gstMoving;
         DeleteGear(Gear);
@@ -2498,8 +2499,8 @@ begin
     rx:= hwRound(x);
 
     LandFlags:= 0;
-    if cIce then LandFlags:= lfIce
-    else if Gear^.AmmoType = amRubber then LandFlags:= lfBouncy;
+    if Gear^.AmmoType = amRubber then LandFlags:= lfBouncy
+    else if cIce then LandFlags:= lfIce;
 
     if ((Distance(tx - x, ty - y) > _256) and ((WorldEdge <> weWrap) or 
             (
@@ -3006,6 +3007,8 @@ begin
     Gear^.CollisionMask:= lfNotCurrentMask;
 
     FollowGear := Gear;
+
+    Gear^.dY:= cMaxWindSpeed * 100;
 
     Gear^.doStep := @doStepCakeFall
 end;
@@ -4797,7 +4800,8 @@ begin
     Gear^.dY := Gear^.dY + cGravity / 100;
     if (GameTicks and $FF) = 0 then
         doMakeExplosion(hwRound(Gear^.X), hwRound(Gear^.Y), 20, Gear^.Hedgehog, EXPLDontDraw or EXPLNoGfx or EXPLNoDamage or EXPLDoNotTouchAny or EXPLPoisoned);
-    AllInactive:= false;
+    if Gear^.State and gstTmpFlag = 0 then
+        AllInactive:= false;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
