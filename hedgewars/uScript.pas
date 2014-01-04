@@ -85,7 +85,11 @@ uses LuaPas,
     uVisualGearsList,
     uGearsHandlersMess,
     uPhysFSLayer,
+{$IFDEF PAS2C}
+    hwpacksmounter
+{$ELSE},
     typinfo
+{$ENDIF}
     ;
 
 var luaState : Plua_State;
@@ -152,7 +156,7 @@ begin
         lua_pushnil(L);
         end
     else
-        lua_pushinteger(L, not lua_tointeger(L, 1));
+        lua_pushinteger(L, (not lua_tointeger(L, 1)));
     lc_bnot := 1;
 end;
 
@@ -248,7 +252,7 @@ function lc_disablegameflags(L : Plua_State) : LongInt; Cdecl;
 var i : integer;
 begin
     for i:= 1 to lua_gettop(L) do
-        GameFlags := GameFlags and not(LongWord(lua_tointeger(L, i)));
+        GameFlags := (GameFlags and (not (LongWord(lua_tointeger(L, i)))));
     ScriptSetInteger('GameFlags', GameFlags);
     lc_disablegameflags:= 0;
 end;
@@ -2224,7 +2228,7 @@ end;
 
 procedure ScriptCall(fname : shortstring);
 begin
-if not ScriptLoaded or (not ScriptExists(fname)) then
+if (not ScriptLoaded) or (not ScriptExists(fname)) then
     exit;
 SetGlobals;
 lua_getglobal(luaState, Str2PChar(fname));
@@ -2275,7 +2279,7 @@ end;
 
 function ScriptCall(fname : shortstring; par1, par2, par3, par4 : LongInt) : LongInt;
 begin
-if not ScriptLoaded or (not ScriptExists(fname)) then
+if (not ScriptLoaded) or (not ScriptExists(fname)) then
     exit;
 SetGlobals;
 lua_getglobal(luaState, Str2PChar(fname));

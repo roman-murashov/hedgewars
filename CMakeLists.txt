@@ -33,6 +33,10 @@ option(ANDROID "Enable Android build (off)" OFF)
 option(MINIMAL_FLAGS "Respect system flags as much as possible (off)" OFF)
 option(NOAUTOUPDATE "Disable OS X Sparkle update checking (off)" OFF)
 
+option(WEBGL "Enable WebGL build (implies NOPASCAL) [default: off]" OFF)
+option(NOPASCAL "Compile hwengine as native C [default: off]" ${WEBGL})
+option(GL2 "Enable OpenGL 2 rendering [default: off]" OFF)
+
 set(GHFLAGS "" CACHE STRING "Additional Haskell flags")
 if(UNIX AND NOT APPLE)
     set(DATA_INSTALL_DIR "share/hedgewars" CACHE STRING "Resource folder path")
@@ -94,7 +98,7 @@ if(GHFLAGS)
     if(${CMAKE_VERSION} VERSION_GREATER 2.6)
         separate_arguments(ghflags_parsed UNIX_COMMAND ${GHFLAGS})
     else()
-        message(${WARNING} "GHFLAGS are available only when using CMake >= 2.8")
+        message("*** GHFLAGS are available only when using CMake >= 2.8 ***")
     endif()
 endif()
 
@@ -106,10 +110,30 @@ if(CMAKE_BUILD_TYPE MATCHES "DEBUG")
     list(APPEND haskell_flags "-Wall"       # all warnings
                               "-debug"      # debug mode
                               "-dcore-lint" # internal sanity check
+                              "-fno-warn-unused-do-bind"
                               )
 else()
     list(APPEND haskell_flags "-w" # no warnings
                               )
+endif()
+
+
+#build engine without freepascal
+if(${NOPASCAL})
+    find_package(Clang REQUIRED)
+
+    if(CLANG_VERSION VERSION_LESS "3.0")
+        message(FATAL_ERROR "LLVM/Clang compiler required version is 3.0 but version ${CLANG_VERSION} was found!")
+    endif()
+
+    set(CMAKE_C_COMPILER ${CLANG_EXECUTABLE})
+    set(CMAKE_CXX_COMPILER ${CLANG_EXECUTABLE})
+endif(${NOPASCAL})
+
+
+#server
+if(NOT NOSERVER)
+    add_subdirectory(gameServer)
 endif()
 
 
@@ -178,28 +202,34 @@ find_package_or_disable_msg(FFMPEG NOVIDEOREC "Video recording will not be built
 #physfs helper library
 add_subdirectory(misc/libphyslayer)
 
-#server
-if(NOT NOSERVER)
-    add_subdirectory(gameServer)
+if(NOT BUILD_ENGINE_LIBRARY AND APPLE)
+    add_subdirectory(hedgewars/sdlmain)
 endif()
 
-#main engine
-add_subdirectory(hedgewars)
-
-#Android related build scripts
-if(ANDROID)
-    #run cmake -DANDROID=1 to enable this
-    add_subdirectory(project_files/Android-build)
+#TODO: nowadays this could be merged inside hedgewars/CMakeLists.txt
+if(NOPASCAL)
+    #pascal to c converter
+    add_subdirectory(tools/pas2c)
+    add_subdirectory(project_files/hwc)
+else()
+    #main pascal engine
+    add_subdirectory(hedgewars)
 endif()
 
-#TODO: when ANDROID, BUILD_ENGINE_LIBRARY should be set
-if(NOT ANDROID)
-    add_subdirectory(bin)
-    add_subdirectory(QTfrontend)
-    add_subdirectory(share)
-    add_subdirectory(tools)
-endif()
-
+if(WEBGL)
+    #WEBGL deps
+else(WEBGL)
+    #Android related build scripts
+    #TODO: when ANDROID, BUILD_ENGINE_LIBRARY should be set
+    if(ANDROID)
+        add_subdirectory(project_files/Android-build)
+    else(ANDROID)
+        add_subdirectory(bin)
+        add_subdirectory(QTfrontend)
+        add_subdirectory(share)
+        add_subdirectory(tools)
+    endif(ANDROID)
+endif(WEBGL)
 
 include(${CMAKE_MODULE_PATH}/cpackvars.cmake)
 

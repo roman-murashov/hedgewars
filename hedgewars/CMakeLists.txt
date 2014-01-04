@@ -94,6 +94,13 @@ set(engine_sources
     )
 
 
+include(${CMAKE_MODULE_PATH}/utils.cmake)
+#opengl 2
+IF(${GL2})
+    set(pascal_flags "-dGL2" ${pascal_flags})
+    message(STATUS "Building using OpenGL 2")
+ENDIF(${GL2})
+
 if (${CMAKE_Pascal_COMPILER_VERSION} VERSION_LESS 2.2 OR # older versions are just ancient
     (${CMAKE_Pascal_COMPILER_VERSION} VERSION_LESS 2.6 AND APPLE)) # because of 64bit and opengl bindings
     message(FATAL_ERROR "Your FreePascal installation is too old (fpc ${CMAKE_Pascal_COMPILER_VERSION})!")
