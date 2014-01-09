@@ -990,13 +990,22 @@ end;
 
 procedure UpdateProjection;
 var
-    s: GLfloat;
+    l,r,t,b,s: GLfloat;
 begin
     s:=cScaleFactor;
-    mProjection[0,0]:= s/cScreenWidth; mProjection[0,1]:=  0.0;             mProjection[0,2]:=0.0; mProjection[0,3]:=  0.0;
-    mProjection[1,0]:= 0.0;            mProjection[1,1]:= -s/cScreenHeight; mProjection[1,2]:=0.0; mProjection[1,3]:=  0.0;
-    mProjection[2,0]:= 0.0;            mProjection[2,1]:=  0.0;             mProjection[2,2]:=1.0; mProjection[2,3]:=  0.0;
-    mProjection[3,0]:= cStereoDepth;   mProjection[3,1]:=  s/2;             mProjection[3,2]:=0.0; mProjection[3,3]:=  1.0;
+
+    l:= 0.5;
+    r:= cScreenWidth + 0.5;
+    t:= 0.5;
+    b:= cScreenHeight + 0.5;
+
+    l:= l - (cScreenWidth div 2);
+    r:= r - (cScreenWidth div 2);
+
+    mProjection[0,0]:= s/(r-l); mProjection[1,0]:= 0;       mProjection[2,0]:= 0; mProjection[3,0]:= -(r+l)/(r-l) {+ cStereoDepth};
+    mProjection[0,1]:= 0;       mProjection[1,1]:= s/(t-b); mProjection[2,1]:= 0; mProjection[3,1]:= -(t+b)/(t-b);
+    mProjection[0,2]:= 0;       mProjection[1,2]:= 0;       mProjection[2,2]:= 1; mProjection[3,2]:= 0;
+    mProjection[0,3]:= 0;       mProjection[1,3]:= 0;       mProjection[2,3]:= 0; mProjection[3,2]:= 1;
 
     {$IFDEF GL2}
     UpdateModelviewProjection;
