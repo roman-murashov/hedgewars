@@ -402,7 +402,7 @@ for ii:= Low(TSprite) to High(TSprite) do
                     sh:=Trunc(Height*scale);
                     if (sw > imageWidth) or (sh > imageHeight) then
                     begin
-                        if not (ii in [sprPHammer, sprBalls, sprSnow]) then
+                        if not (ii in [sprPHammer, sprBalls, sprSnow, sprSDFlake]) then
                         begin
                             writeln(stdout, 'Dimension error in ' + FileName + ' [' + IntToStr(Integer(ii)) + ']');
                             halt(-1);
