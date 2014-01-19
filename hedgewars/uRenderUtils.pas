@@ -302,7 +302,9 @@ function RenderSpeechBubbleTex(s: ansistring; SpeechType: Longword; font: THWFon
 var textWidth, textHeight, x, y, w, h, i, j, pos, prevpos, line, numLines, edgeWidth, edgeHeight, cornerWidth, cornerHeight: LongInt;
     finalSurface, tmpsurf, rotatedEdge: PSDL_Surface;
     rect: TSDL_Rect;
-    //chars: set of char = [#9,' ',';',':','?','!',','];
+    {$IFNDEF PAS2C}
+    chars: set of char = [#9,' ',';',':','?','!',','];
+    {$ENDIF}
     substr: shortstring;
     edge, corner, tail: TSPrite;
 begin
@@ -346,7 +348,9 @@ begin
         begin
         w:= 0;
         i:= round(Sqrt(length(s)) * 2);
-       // s:= WrapText(s, #1, chars, i);
+        {$IFNDEF PAS2C}
+        s:= WrapText(s, #1, chars, i);
+        {$ENDIF}
         pos:= 1; prevpos:= 0; line:= 0;
     // Find the longest line for the purposes of centring the text.  Font dependant.
         while pos <= length(s) do
