@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ procedure ScriptLoad(name : shortstring);
 procedure ScriptOnGameInit;
 procedure ScriptOnScreenResize;
 procedure ScriptSetInteger(name : shortstring; value : LongInt);
+procedure ScriptSetString(name : shortstring; value : shortstring);
 
 procedure ScriptCall(fname : shortstring);
 function ScriptCall(fname : shortstring; par1: LongInt) : LongInt;
@@ -109,6 +110,8 @@ procedure LuaError(s: shortstring);
 begin
     WriteLnToConsole(s);
     AddChatString(#5 + s);
+    if cTestLua then
+        halt(rtnTestLuaErr);
 end;
 
 procedure LuaParameterCountError(call, paramsyntax: shortstring; wrongcount: LongInt);
@@ -225,7 +228,7 @@ function lc_showmission(L : Plua_State) : LongInt; Cdecl;
 begin
     if lua_gettop(L) = 5 then
         begin
-        ShowMission(lua_tostring(L, 1), lua_tostring(L, 2), lua_tostring(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5));
+        ShowMission(lua_tolstring(L, 1, nil), lua_tolstring(L, 2, nil), lua_tolstring(L, 3, nil), lua_tointeger(L, 4), lua_tointeger(L, 5));
         end
     else
         LuaParameterCountError('ShowMission', 'caption, subcaption, text, icon, time', lua_gettop(L));
@@ -269,10 +272,10 @@ end;
 function lc_addcaption(L : Plua_State) : LongInt; Cdecl;
 begin
     if lua_gettop(L) = 1 then
-        AddCaption(lua_tostring(L, 1), cWhiteColor, capgrpMessage)
+        AddCaption(lua_tolstring(L, 1, nil), cWhiteColor, capgrpMessage)
     else if lua_gettop(L) = 3 then
         begin
-        AddCaption(lua_tostring(L, 1), lua_tointeger(L, 2) shr 8, TCapGroup(lua_tointeger(L, 3)));
+        AddCaption(lua_tolstring(L, 1, nil), lua_tointeger(L, 2) shr 8, TCapGroup(lua_tointeger(L, 3)));
         end
     else
         LuaParameterCountError('AddCaption', 'text[, color, captiongroup]', lua_gettop(L));
@@ -1173,7 +1176,7 @@ begin
                 RecountTeamHealth(gear^.Hedgehog^.Team)
                 end;
             // Why did this do a "setalltoactive" ?
-            //SetAllToActive;  
+            //SetAllToActive;
             Gear^.Active:= true;
             AllInactive:= false
             end
@@ -1200,7 +1203,7 @@ function lc_seteffect(L : Plua_State) : LongInt; Cdecl;
 var gear: PGear;
 begin
     if lua_gettop(L) <> 3 then
-        LuaParameterCountError('SetEffect', 'gearUid, effect, enabled', lua_gettop(L))
+        LuaParameterCountError('SetEffect', 'gearUid, effect, effectState', lua_gettop(L))
     else begin
         gear := GearByUID(lua_tointeger(L, 1));
         if (gear <> nil) and (gear^.Hedgehog <> nil) then
@@ -1986,6 +1989,21 @@ begin
         declareAchievement(lua_tostring(L, 1), lua_tostring(L, 2), lua_tostring(L, 3), lua_tointeger(L, 4));
     lc_declareachievement:= 0
 end;
+
+// stuff for testing the lua API
+function lc_endluatest(L : Plua_State) : LongInt; Cdecl;
+begin
+    if lua_gettop(L) <> 1 then
+        begin
+        LuaParameterCountError('EndLuaAPITest', 'LUA_API_TEST_SUCCESSFUL or LUA_API_TEST_FAILED', lua_gettop(L));
+        lua_pushnil(L);
+        end
+    else
+        begin
+        halt(lua_tointeger(L, 1));
+        lc_endluatest:= 0;
+        end;
+end;
 ///////////////////
 
 procedure ScriptPrintStack;
@@ -2074,7 +2092,6 @@ ScriptSetInteger('GetAwayTime', cGetAwayTime);
 ScriptSetString('Map', cMapName);
 ScriptSetString('Theme', '');
 ScriptSetString('Goals', '');
-ScriptSetString('ScriptParam', cScriptParam);
 
 ScriptCall('onGameInit');
 
@@ -2635,6 +2652,12 @@ lua_register(luaState, _P'SetGearAIHints', @lc_setaihintsongear);
 lua_register(luaState, _P'HedgewarsScriptLoad', @lc_hedgewarsscriptload);
 lua_register(luaState, _P'DeclareAchievement', @lc_declareachievement);
 
+if cTestLua then
+    begin
+    ScriptSetInteger('TEST_SUCCESSFUL'  ,rtnTestSuccess);
+    ScriptSetInteger('TEST_FAILED'      ,rtnTestFailed);
+    lua_register(luaState, _P'EndLuaTest', @lc_endluatest);
+    end;
 
 ScriptClearStack; // just to be sure stack is empty
 ScriptLoaded:= false;

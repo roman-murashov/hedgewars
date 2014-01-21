@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ function  LoadDataImageAltFile(const path: TPathType; const filename, altFile: s
 procedure LoadHedgehogHat(var HH: THedgehog; newHat: shortstring);
 procedure SetupOpenGL;
 procedure SetScale(f: GLfloat);
-function  RenderHelpWindow(caption, subcaption, description, extra: ansistring; extracolor: LongInt; iconsurf: PSDL_Surface; iconrect: PSDL_Rect): PTexture;
+function  RenderHelpWindow(caption, subcaption, description, extra: PChar; extracolor: LongInt; iconsurf: PSDL_Surface; iconrect: PSDL_Rect): PTexture;
 procedure RenderWeaponTooltip(atype: TAmmoType);
 procedure ShowWeaponTooltip(x, y: LongInt);
 procedure FreeWeaponTooltip;
@@ -71,13 +71,11 @@ procedure BeginWater;
 procedure EndWater;
 
 implementation
-uses uMisc, uConsole, uVariables, uUtils, uTextures, uRender, uRenderUtils, uCommands
-    , uPhysFSLayer
-    , uDebug
+uses uMisc, uConsole, uVariables, uUtils, uTextures, uRender, uRenderUtils,
+     uCommands, uPhysFSLayer, uDebug
+    {$IFDEF GL2}, uMatrix{$ENDIF}
     {$IFDEF USE_CONTEXT_RESTORE}, uWorld{$ENDIF}
     {$IF NOT DEFINED(SDL2) AND DEFINED(USE_VIDEO_RECORDING)}, glut {$ENDIF};
-
-//type TGPUVendor = (gvUnknown, gvNVIDIA, gvATI, gvIntel, gvApple);
 
 var MaxTextureSize: LongInt;
 {$IFDEF SDL2}
@@ -95,10 +93,6 @@ var MaxTextureSize: LongInt;
     shaderWater: GLuint;
 
     // attributes
-{$ENDIF}
-
-{$IFDEF WEBGL}
-    OpenGLSetupedBefore : boolean;
 {$ENDIF}
 
 const
@@ -277,7 +271,7 @@ for t:= 0 to Pred(TeamsCount) do
                         else if (month = 10) and (md = 31) then
                             Hat := 'fr_pumpkin'; // Halloween/Hedgewars' birthday
                         end;
-                    
+
                     if Hat <> 'NoHat' then
                         begin
                         if (Length(Hat) > 39) and (Copy(Hat,1,8) = 'Reserved') and (Copy(Hat,9,32) = PlayerHash) then
@@ -348,7 +342,7 @@ var s: shortstring;
     i, imflags: LongInt;
 begin
 AddFileLog('StoreLoad()');
-WriteLnToConsole('Entering StoreLoad');
+
 if not reload then
     for fi:= Low(THWFont) to High(THWFont) do
         with Fontz[fi] do
@@ -479,7 +473,6 @@ if not reload then
     AddProgress;
 IMG_Quit();
 
-WriteLnToConsole('Leaving StoreLoad');
 end;
 
 {$IFNDEF PAS2C}
@@ -884,18 +877,6 @@ begin
         cReducedQuality := cReducedQuality or rqNoBackground;
         AddFileLog('Texture size too small for backgrounds, disabling.');
         end;
-{$IFDEF WEBGL}
-    if OpenGLSetupedBefore then
-        begin
-        glViewport(0, 0, cScreenWidth, cScreenHeight);
-        hglMatrixMode(MATRIX_MODELVIEW);
-        hglLoadIdentity();
-        hglScalef(2.0 / cScreenWidth, -2.0 / cScreenHeight, 1.0);
-        hglTranslatef(0, -cScreenHeight / 2, 0);
-        exit;
-        end
-    OpenGLSetupedBefore := true;
-{$ELSE}
     // everyone loves debugging
     // find out which gpu we are using (for extension compatibility maybe?)
     AddFileLog('OpenGL-- Renderer: ' + shortstring(pchar(glGetString(GL_RENDERER))));
@@ -926,7 +907,6 @@ begin
         tmpint := tmpint + 3;
     end;
     until (tmpint > tmpn);
-{$ENDIF}
 {$ENDIF}
     AddFileLog('');
 
@@ -1060,38 +1040,41 @@ end;
 
 procedure SetTexCoordPointer(p: Pointer; n: Integer);
 begin
-    {$IFDEF GL2}
+{$IFDEF GL2}
     glBindBuffer(GL_ARRAY_BUFFER, tBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * n * 2, p, GL_STATIC_DRAW);
     glEnableVertexAttribArray(aTexCoord);
     glVertexAttribPointer(aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, pointer(0));
-    {$ELSE}
+{$ELSE}
+    n:= n;
     glTexCoordPointer(2, GL_FLOAT, 0, p);
-    {$ENDIF}
+{$ENDIF}
 end;
 
 procedure SetVertexPointer(p: Pointer; n: Integer);
 begin
-    {$IFDEF GL2}
+{$IFDEF GL2}
     glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * n * 2, p, GL_STATIC_DRAW);
     glEnableVertexAttribArray(aVertex);
     glVertexAttribPointer(aVertex, 2, GL_FLOAT, GL_FALSE, 0, pointer(0));
-    {$ELSE}
+{$ELSE}
+    n:= n;
     glVertexPointer(2, GL_FLOAT, 0, p);
-    {$ENDIF}
+{$ENDIF}
 end;
 
 procedure SetColorPointer(p: Pointer; n: Integer);
 begin
-    {$IFDEF GL2}
+{$IFDEF GL2}
     glBindBuffer(GL_ARRAY_BUFFER, cBuffer);
     glBufferData(GL_ARRAY_BUFFER, n * 4, p, GL_STATIC_DRAW);
     glEnableVertexAttribArray(aColor);
     glVertexAttribPointer(aColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, pointer(0));
-    {$ELSE}
+{$ELSE}
+    n:= n;
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, p);
-    {$ENDIF}
+{$ENDIF}
 end;
 
 {$IFDEF GL2}
@@ -1100,7 +1083,9 @@ var
     mvp: TMatrix4x4f;
 begin
     //MatrixMultiply(mvp, mProjection, mModelview);
+{$HINTS OFF}
     hglMVP(mvp);
+{$HINTS ON}
     glUniformMatrix4fv(uCurrentMVPLocation, 1, GL_FALSE, @mvp[0, 0]);
 end;
 {$ENDIF}
@@ -1116,13 +1101,13 @@ begin
     mProjection[2,0]:= 0.0;            mProjection[2,1]:=  0.0;             mProjection[2,2]:=1.0; mProjection[2,3]:=  0.0;
     mProjection[3,0]:= cStereoDepth;   mProjection[3,1]:=  s/2;             mProjection[3,2]:=0.0; mProjection[3,3]:=  1.0;
 
-    {$IFDEF GL2}
+{$IFDEF GL2}
     UpdateModelviewProjection;
-    {$ELSE}
+{$ELSE}
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(@mProjection[0, 0]);
     glMatrixMode(GL_MODELVIEW);
-    {$ENDIF}
+{$ENDIF}
 end;
 *)
 
@@ -1162,30 +1147,30 @@ end;
 
 procedure BeginWater;
 begin
-    {$IFDEF GL2}
+{$IFDEF GL2}
     glUseProgram(shaderWater);
     uCurrentMVPLocation:=uWaterMVPLocation;
     UpdateModelviewProjection;
     glDisableVertexAttribArray(aTexCoord);
     glEnableVertexAttribArray(aColor);
-    {$ELSE}
+{$ELSE}
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-    {$ENDIF}
+{$ENDIF}
 end;
 
 procedure EndWater;
 begin
-    {$IFDEF GL2}
+{$IFDEF GL2}
     glUseProgram(shaderMain);
     uCurrentMVPLocation:=uMainMVPLocation;
     UpdateModelviewProjection;
     glDisableVertexAttribArray(aColor);
     glEnableVertexAttribArray(aTexCoord);
-    {$ELSE}
+{$ELSE}
     glDisableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    {$ENDIF}
+{$ENDIF}
 end;
 
 
@@ -1244,7 +1229,7 @@ begin
     Step:= 0
 end;
 
-function RenderHelpWindow(caption, subcaption, description, extra: ansistring; extracolor: LongInt; iconsurf: PSDL_Surface; iconrect: PSDL_Rect): PTexture;
+function RenderHelpWindow(caption, subcaption, description, extra: PChar; extracolor: LongInt; iconsurf: PSDL_Surface; iconrect: PSDL_Rect): PTexture;
 var tmpsurf: PSDL_SURFACE;
     w, h, i, j: LongInt;
     font: THWFont;
@@ -1364,7 +1349,7 @@ end;
 procedure RenderWeaponTooltip(atype: TAmmoType);
 var r: TSDL_Rect;
     i: LongInt;
-    extra: ansistring;
+    extra: PChar;
     extracolor: LongInt;
 begin
 // don't do anything if the window shouldn't be shown
@@ -1527,10 +1512,8 @@ begin
     {$ENDIF}
         AddFileLog('Freeing old primary surface...');
     {$IFNDEF SDL2}
-    {$IFNDEF WEBGL}
         SDL_FreeSurface(SDLPrimSurface);
         SDLPrimSurface:= nil;
-    {$ENDIF}
     {$ENDIF}
 {$ENDIF}
         end;
@@ -1643,10 +1626,6 @@ begin
     Step:= 0;
     ProgrTex:= nil;
     SupportNPOTT:= false;
-
-{$IFDEF WEBGL}
-    OpenGLSetupedBefore := false;
-{$ENDIF}
 
     // init all ammo name texture pointers
     for ai:= Low(TAmmoType) to High(TAmmoType) do

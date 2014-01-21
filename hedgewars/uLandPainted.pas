@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ procedure initModule;
 procedure freeModule;
 
 implementation
-uses uLandGraphics, uConsts, uVariables, uUtils, SDLh, uCommands, uDebug, uScript;
+uses uLandGraphics, uConsts, uVariables, uUtils, SDLh, uCommands, uScript;
 
 type PointRec = packed record
     X, Y: SmallInt;

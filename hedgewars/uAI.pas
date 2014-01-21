@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,11 +32,6 @@ implementation
 uses uConsts, SDLh, uAIMisc, uAIAmmoTests, uAIActions,
     uAmmos, SysUtils, uTypes,
     uVariables, uCommands, uUtils, uDebug, uAILandMarks;
-
-{$IFDEF AI_MAINTHREAD}
-const
-    mainThreadMaxThinkTime:Integer = 1500;
-{$ENDIF}
 
 var BestActions: TActions;
     CanUseAmmo: array [TAmmoType] of boolean;
@@ -365,13 +360,8 @@ if ((CurrentHedgehog^.MultiShootAttacks = 0) or ((Ammoz[Me^.Hedgehog^.CurAmmoTyp
             if GoInfo.FallPix >= FallPixForBranching then
                 Push(ticks, Actions, Me^, Me^.Message xor 3); // aia_Left xor 3 = aia_Right
 
-{$IFDEF AI_MAINTHREAD}
-            if StartTicks < (SDL_GetTicks() - mainThreadMaxThinkTime) then
-                StopThinking := true;
-{$ELSE}
             if (StartTicks > GameTicks - 1500) and (not StopThinking) then
                 SDL_Delay(1000);
-{$ENDIF}
 
             end {while};
 
@@ -436,13 +426,8 @@ if ((Me^.State and gstAttacked) = 0) or isInMultiShoot then
             or (itHedgehog = currHedgehogIndex)
             or BestActions.isWalkingToABetterPlace;
 
-            {$IFDEF AI_MAINTHREAD}
-                if StartTicks < (SDL_GetTicks() - mainThreadMaxThinkTime) then
-                    StopThinking := true;
-            {$ELSE}
-                if (StartTicks > GameTicks - 1500) and (not StopThinking) then
-                    SDL_Delay(1000);
-            {$ENDIF}
+            if (StartTicks > GameTicks - 1500) and (not StopThinking) then
+                SDL_Delay(1000);
 
         if (BestActions.Score < -1023) and (not BestActions.isWalkingToABetterPlace) then
             begin

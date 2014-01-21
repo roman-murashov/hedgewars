@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ procedure ResetWorldTex;
 
 procedure DrawWorld(Lag: LongInt);
 procedure DrawWorldStereo(Lag: LongInt; RM: TRenderMode);
-procedure ShowMission(caption, subcaption, text: ansistring; icon, time : LongInt);
+procedure ShowMission(caption, subcaption, mtext: PChar; icon, time : LongInt);
 procedure HideMission;
 procedure ShakeCamera(amount: LongInt);
 procedure InitCameraBorders;
@@ -216,7 +216,7 @@ if cMinesTime <> 3000 then
 
 // if the string has been set, show it for (default timeframe) seconds
 if g <> '' then
-    ShowMission(trgoal[gidCaption], trgoal[gidSubCaption], g, 1, 0);
+    ShowMission(trgoal[gidCaption], trgoal[gidSubCaption], PChar(g), 1, 0);
 
 cWaveWidth:= SpritesData[sprWater].Width;
 //cWaveHeight:= SpritesData[sprWater].Height;
@@ -412,6 +412,9 @@ begin
     missionTex:= nil;
     FreeTexture(recTexture);
     recTexture:= nil;
+    FreeTexture(AmmoMenuTex);
+    AmmoMenuInvalidated:= true;
+    AmmoMenuTex:= nil;
 end;
 
 function GetAmmoMenuTexture(Ammo: PHHAmmo): PTexture;
@@ -855,12 +858,11 @@ if WorldDy < trunc(cScreenHeight / cScaleFactor) + cScreenHeight div 2 - cWaterL
         EndWater;
 {$ENDIF}
 
-        {$IFNDEF GL2}
-        glColor4ub($FF, $FF, $FF, $FF); // must not be Tint() as color array seems to stay active and color reset is required
-        {$ENDIF}
-        {$IFNDEF WEBGL}
+{$IFNDEF GL2}
+        // must not be Tint() as color array seems to stay active and color reset is required
+        glColor4ub($FF, $FF, $FF, $FF);
+{$ENDIF}
         glEnable(GL_TEXTURE_2D);
-        {$ENDIF}
     end;
 end;
 
@@ -1133,15 +1135,15 @@ begin
         d:= -d;
     stereoDepth:= stereoDepth + d;
 
-    {$IFDEF GL2}
+{$IFDEF GL2}
     hglMatrixMode(MATRIX_PROJECTION);
     hglTranslatef(d, 0, 0);
     hglMatrixMode(MATRIX_MODELVIEW);
-    {$ELSE}
+{$ELSE}
     glMatrixMode(GL_PROJECTION);
     glTranslatef(d, 0, 0);
     glMatrixMode(GL_MODELVIEW);
-    {$ENDIF}
+{$ENDIF}
 {$ENDIF}
 end;
 
@@ -1153,15 +1155,15 @@ begin
 {$ELSE}
     if rm = rmDefault then
         exit;
-    {$IFDEF GL2}
+{$IFDEF GL2}
     hglMatrixMode(MATRIX_PROJECTION);
     hglTranslatef(-stereoDepth, 0, 0);
     hglMatrixMode(MATRIX_MODELVIEW);
-    {$ELSE}
+{$ELSE}
     glMatrixMode(GL_PROJECTION);
     glTranslatef(-stereoDepth, 0, 0);
     glMatrixMode(GL_MODELVIEW);
-    {$ENDIF}
+{$ENDIF}
     cStereoDepth:= 0;
 {$ENDIF}
 end;
@@ -1228,7 +1230,7 @@ if WorldEdge <> weNone then
     glColor4ub($FF, $FF, $FF, $FF); // must not be Tint() as color array seems to stay active and color reset is required
     glEnable(GL_TEXTURE_2D);
 
-    // I'd still like to have things happen to the border when a wrap or bounce just occurred, based on a timer 
+    // I'd still like to have things happen to the border when a wrap or bounce just occurred, based on a timer
     if WorldEdge = weBounce then
         begin
         // could maybe alternate order of these on a bounce, or maybe drop the outer ones.
@@ -1330,7 +1332,7 @@ for t:= 0 to Pred(TeamsCount) do
             for i:= 0 to cMaxHHIndex do
                 begin
                 inc(h, Hedgehogs[i].HealthBarHealth);
-                if (h < TeamHealthBarHealth) and (Hedgehogs[i].HealthBarHealth > 0) then 
+                if (h < TeamHealthBarHealth) and (Hedgehogs[i].HealthBarHealth > 0) then
                     DrawTexture(15 + h * TeamHealthBarWidth div TeamHealthBarHealth, cScreenHeight + DrawHealthY + smallScreenOffset + 1, SpritesData[sprSlider].Texture);
                 end;
 
@@ -1534,7 +1536,7 @@ if UIDisplay <> uiNone then
             i:= Succ(Pred(ReadyTimeLeft) div 1000)
         else
             i:= Succ(Pred(TurnTimeLeft) div 1000);
-       
+
         if i>99 then
             t:= 112
         else if i>9 then
@@ -1962,7 +1964,7 @@ if WorldDx > 1024 then
     WorldDx:= 1024;
 end;
 
-procedure ShowMission(caption, subcaption, text: ansistring; icon, time : LongInt);
+procedure ShowMission(caption, subcaption, mtext: PChar; icon, time : LongInt);
 var r: TSDL_Rect;
 begin
 r.w:= 32;
@@ -1977,13 +1979,13 @@ if icon > -1 then
     begin
     r.x:= 0;
     r.y:= icon * 32;
-    missionTex:= RenderHelpWindow(caption, subcaption, text, '', 0, MissionIcons, @r)
+    missionTex:= RenderHelpWindow(caption, subcaption, mtext, '', 0, MissionIcons, @r)
     end
 else
     begin
     r.x:= ((-icon - 1) shr 4) * 32;
     r.y:= ((-icon - 1) mod 16) * 32;
-    missionTex:= RenderHelpWindow(caption, subcaption, text, '', 0, SpritesData[sprAMAmmos].Surface, @r)
+    missionTex:= RenderHelpWindow(caption, subcaption, mtext, '', 0, SpritesData[sprAMAmmos].Surface, @r)
     end;
 end;
 
@@ -2110,6 +2112,8 @@ begin
     WorldEnd[2].a:= 255;
     WorldEnd[3].a:= 255;
 
+    AmmoMenuTex:= nil;
+    AmmoMenuInvalidated:= true
 end;
 
 procedure freeModule;

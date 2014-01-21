@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,12 +53,12 @@ TBonus = record
     X, Y: LongInt;
     Radius: LongInt;
     Score: LongInt;
-	 end;
+     end;
 
 Tbonuses = record
-	      Count : Longword;
-	      ar    : array[0..Pred(MAXBONUS)] of TBonus;
-	   end;
+          Count : Longword;
+          ar    : array[0..Pred(MAXBONUS)] of TBonus;
+       end;
 
 Twalkbonuses =  record
         Count: Longword;
@@ -101,7 +101,7 @@ var friendlyfactor: LongInt = 300;
 var dmgMod: real = 1.0;
 
 implementation
-uses uCollisions, uVariables, uUtils, uLandTexture, uGearsUtils;
+uses uCollisions, uVariables, uUtils, uGearsUtils;
 
 var
     KnownExplosion: record
@@ -137,7 +137,7 @@ while Gear <> nil do
         ((Gear^.Kind = gtMine) and
             (Gear^.Health = 0) and
              (Gear^.Damage < 35))
-             )  and 
+             )  and
         (Targets.Count < 256) then
         begin
         with Targets.ar[Targets.Count] do
@@ -159,7 +159,7 @@ while Gear <> nil do
                     Score:= Gear^.Damage - Gear^.Health;
                     inc(f)
                     end
-                else 
+                else
                     begin
                     Score:= Gear^.Health - Gear^.Damage;
                     inc(e)
@@ -167,7 +167,7 @@ while Gear <> nil do
                 end
             else if Gear^.Kind = gtExplosives then
                 Score:= Gear^.Health - Gear^.Damage
-            else if Gear^.Kind = gtMine then 
+            else if Gear^.Kind = gtMine then
                 Score:= max(0,35-Gear^.Damage);
             end;
         inc(Targets.Count)
@@ -388,14 +388,14 @@ begin
                     dmg := 1 + trunc((dY - 0.4) * 70);
                     exit(dmg)
                     end
-                else 
+                else
                     begin
                     dxdy:= abs(dX)+abs(dY);
-                    if ((Kind = gtMine) and (dxdy > 0.35)) or 
-                       ((Kind = gtExplosives) and 
+                    if ((Kind = gtMine) and (dxdy > 0.35)) or
+                       ((Kind = gtExplosives) and
                             (((State and gstTmpFlag <> 0) and (dxdy > 0.35)) or
-                             ((State and gstTmpFlag = 0) and 
-                                ((abs(odX) > 0.15) or ((abs(odY) > 0.15) and 
+                             ((State and gstTmpFlag = 0) and
+                                ((abs(odX) > 0.15) or ((abs(odY) > 0.15) and
                                 (abs(odX) > 0.02))) and (dxdy > 0.35)))) then
                         begin
                         dmg := trunc(dxdy * 25);
@@ -440,14 +440,14 @@ begin
                     dmg := trunc((dY - 0.4) * 70);
                     exit(dmg);
                     end
-                else 
+                else
                     begin
                     dxdy:= abs(dX)+abs(dY);
-                    if ((Kind = gtMine) and (dxdy > 0.4)) or 
-                       ((Kind = gtExplosives) and 
+                    if ((Kind = gtMine) and (dxdy > 0.4)) or
+                       ((Kind = gtExplosives) and
                             (((State and gstTmpFlag <> 0) and (dxdy > 0.4)) or
-                             ((State and gstTmpFlag = 0) and 
-                                ((abs(odX) > 0.15) or ((abs(odY) > 0.15) and 
+                             ((State and gstTmpFlag = 0) and
+                                ((abs(odX) > 0.15) or ((abs(odY) > 0.15) and
                                 (abs(odX) > 0.02))) and (dxdy > 0.35)))) then
                         begin
                         dmg := trunc(dxdy * 50);
@@ -524,7 +524,7 @@ for i:= 0 to Targets.Count do
                     begin
                     dX:= (0.005 * dmg + 0.01) / Density;
                     dY:= dX;
-                    if (Kind = gtExplosives) and (State and gstTmpFlag = 0) and 
+                    if (Kind = gtExplosives) and (State and gstTmpFlag = 0) and
                        (((abs(dY) > 0.15) and (abs(dX) < 0.02)) or
                         ((abs(dY) < 0.15) and (abs(dX) < 0.15))) then
                         dX:= 0;
@@ -611,7 +611,7 @@ for i:= 0 to Pred(Targets.Count) do
                 fallDmg:= 0;
                 if (Flags and afSetSkip <> 0) then skip:= true;
                 if (not dead) and (Flags and afTrackFall <> 0) and (Score > 0) and (power < Score) then
-                    if (Kind = gtExplosives) and (State and gstTmpFlag = 0) and 
+                    if (Kind = gtExplosives) and (State and gstTmpFlag = 0) and
                        (((abs(dY) > 0.15) and (abs(dX) < 0.02)) or
                         ((abs(dY) < 0.15) and (abs(dX) < 0.15))) then
                         fallDmg:= trunc(TraceShoveFall(pX, pY, 0, dY, Targets.ar[i]) * dmgMod)
@@ -713,9 +713,9 @@ for i:= 0 to Targets.Count do
                     dY:= gdY * dmg / Density;
                     if dX < 0 then dX:= dX - 0.01
                     else dX:= dX + 0.01;
-                    if (Kind = gtExplosives) and (State and gstTmpFlag = 0) and 
+                    if (Kind = gtExplosives) and (State and gstTmpFlag = 0) and
                        (((abs(dY) > 0.15) and (abs(dX) < 0.02)) or
-                        ((abs(dY) < 0.15) and (abs(dX) < 0.15))) then 
+                        ((abs(dY) < 0.15) and (abs(dX) < 0.15))) then
                        dX:= 0;
                     if (x and LAND_WIDTH_MASK = 0) and ((y+cHHRadius+2) and LAND_HEIGHT_MASK = 0) and
                        (Land[y+cHHRadius+2, x] and lfIndestructible <> 0) then

@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -121,7 +121,8 @@ end;
 
 procedure chScriptParam(var s: shortstring);
 begin
-    cScriptParam:= s;
+    ScriptSetString('ScriptParam', s);
+    ScriptCall('onParameters');
 end;
 
 procedure chCurU_p(var s: shortstring);
@@ -144,37 +145,37 @@ end;
 
 procedure chCurD_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 CursorMovementY:= 0;
 end;
 
 procedure chCurL_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 CursorMovementX:= -1;
 end;
 
 procedure chCurL_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 CursorMovementX:= 0;
 end;
 
 procedure chCurR_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 CursorMovementX:= 1;
 end;
 
 procedure chCurR_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 CursorMovementX:= 0;
 end;
 
 procedure chLeft_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -187,7 +188,7 @@ end;
 
 procedure chLeft_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH then
     exit;
 if not isExternalSource then
@@ -199,7 +200,7 @@ end;
 
 procedure chRight_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -212,7 +213,7 @@ end;
 
 procedure chRight_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH then
     exit;
 if not isExternalSource then
@@ -224,7 +225,7 @@ end;
 
 procedure chUp_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -237,7 +238,7 @@ end;
 
 procedure chUp_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH then
     exit;
 if not isExternalSource then
@@ -249,7 +250,7 @@ end;
 
 procedure chDown_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -262,7 +263,7 @@ end;
 
 procedure chDown_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH then
     exit;
 if not isExternalSource then
@@ -274,7 +275,7 @@ end;
 
 procedure chPrecise_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -287,7 +288,7 @@ end;
 
 procedure chPrecise_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH then
     exit;
 if not isExternalSource then
@@ -299,7 +300,7 @@ end;
 
 procedure chLJump(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -312,7 +313,7 @@ end;
 
 procedure chHJump(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -325,7 +326,7 @@ end;
 
 procedure chAttack_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 bShowFinger:= false;
@@ -345,7 +346,7 @@ end;
 
 procedure chAttack_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH then
     exit;
 with CurrentHedgehog^.Gear^ do
@@ -360,7 +361,7 @@ end;
 
 procedure chSwitch(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 if not isExternalSource then
@@ -372,10 +373,9 @@ with CurrentHedgehog^.Gear^ do
 end;
 
 procedure chNextTurn(var s: shortstring);
-var i  : Longword;
-    gi : PGear;
+var gi: PGear;
 begin
-    s:=s; // avoid compiler hint
+    s:= s; // avoid compiler hint
 
     TryDo(AllInactive, '/nextturn called when not all gears are inactive', true);
 
@@ -482,13 +482,13 @@ end;
 
 procedure chPut(var s: shortstring);
 begin
-    s:=s; // avoid compiler hint
+    s:= s; // avoid compiler hint
     doPut(0, 0, false);
 end;
 
 procedure chCapture(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 flagMakeCapture:= true
 end;
 
@@ -539,7 +539,7 @@ if isDeveloperMode then
 
 procedure chAmmoMenu(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH then
     bShowAmmoMenu:= true
 else
@@ -563,19 +563,19 @@ end;
 
 procedure chVol_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 inc(cVolumeDelta, 3)
 end;
 
 procedure chVol_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 dec(cVolumeDelta, 3)
 end;
 
 procedure chFindhh(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if CheckNoTeamOrHH or isPaused then
     exit;
 
@@ -597,7 +597,7 @@ end;
 
 procedure chPause(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 if gameType <> gmtNet then
     isPaused:= not isPaused
     else
@@ -639,34 +639,34 @@ end;
 
 procedure chSpeedup_p(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 SpeedStart:= RealTicks;
 isSpeed:= true
 end;
 
 procedure chSpeedup_m(var s: shortstring);
 begin
-s:=s; // avoid compiler hint
+s:= s; // avoid compiler hint
 isSpeed:= false
 end;
 
 procedure chZoomIn(var s: shortstring);
 begin
-    s:=s; // avoid compiler hint
+    s:= s; // avoid compiler hint
     if ZoomValue < cMinZoomLevel then
         ZoomValue:= ZoomValue + cZoomDelta;
 end;
 
 procedure chZoomOut(var s: shortstring);
 begin
-    s:=s; // avoid compiler hint
+    s:= s; // avoid compiler hint
     if ZoomValue > cMaxZoomLevel then
         ZoomValue:= ZoomValue - cZoomDelta;
 end;
 
 procedure chZoomReset(var s: shortstring);
 begin
-    s:=s; // avoid compiler hint
+    s:= s; // avoid compiler hint
     ZoomValue:= cDefaultZoomLevel;
 end;
 

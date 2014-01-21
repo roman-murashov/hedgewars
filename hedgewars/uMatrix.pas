@@ -27,7 +27,7 @@ uses uTypes {$IFNDEF PAS2C}, gl{$ENDIF};
 const
     MATRIX_MODELVIEW:Integer = 0;
     MATRIX_PROJECTION:Integer = 1;
-  
+
 procedure MatrixLoadIdentity(out Result: TMatrix4x4f);
 procedure MatrixMultiply(out Result: TMatrix4x4f; const lhs, rhs: TMatrix4x4f);
 
@@ -85,7 +85,7 @@ begin
     m[0,3]:=0;m[1,3]:=0;m[2,3]:=0;m[3,3]:=1;
 
     MatrixMultiply(t, MatrixStacks[CurMatrix].stack[MatrixStacks[CurMatrix].top], m);
-    MatrixStacks[CurMatrix].stack[MatrixStacks[CurMatrix].top] := t; 
+    MatrixStacks[CurMatrix].stack[MatrixStacks[CurMatrix].top] := t;
 end;
 
 procedure hglTranslatef(x: GLfloat; y: GLfloat; z: GLfloat);
@@ -114,7 +114,7 @@ begin
     a:=a * 3.14159265368 / 180;
     c:=cos(a);
     s:=sin(a);
-    
+
     l := 1.0 / sqrt(x * x + y * y + z * z);
     xn := x * l;
     yn := y * l;
@@ -144,8 +144,8 @@ end;
 
 procedure hglMVP(var res: TMatrix4x4f);
 begin
-    MatrixMultiply(res, 
-                   MatrixStacks[MATRIX_PROJECTION].stack[MatrixStacks[MATRIX_PROJECTION].top], 
+    MatrixMultiply(res,
+                   MatrixStacks[MATRIX_PROJECTION].stack[MatrixStacks[MATRIX_PROJECTION].top],
                    MatrixStacks[MATRIX_MODELVIEW].stack[MatrixStacks[MATRIX_MODELVIEW].top]);
 end;
 
@@ -211,7 +211,7 @@ begin
     Result[0,1]:=lhs[0,0]*rhs[1,0] + lhs[1,0]*rhs[1,1] + lhs[2,0]*rhs[1,2] + lhs[3,0]*rhs[1,3];
     Result[0,2]:=lhs[0,0]*rhs[2,0] + lhs[1,0]*rhs[2,1] + lhs[2,0]*rhs[2,2] + lhs[3,0]*rhs[2,3];
     Result[0,3]:=lhs[0,0]*rhs[3,0] + lhs[1,0]*rhs[3,1] + lhs[2,0]*rhs[3,2] + lhs[3,0]*rhs[3,3];
-  
+
     Result[1,0]:=lhs[0,1]*rhs[0,0] + lhs[1,1]*rhs[0,1] + lhs[2,1]*rhs[0,2] + lhs[3,1]*rhs[0,3];
     Result[1,1]:=lhs[0,1]*rhs[1,0] + lhs[1,1]*rhs[1,1] + lhs[2,1]*rhs[1,2] + lhs[3,1]*rhs[1,3];
     Result[1,2]:=lhs[0,1]*rhs[2,0] + lhs[1,1]*rhs[2,1] + lhs[2,1]*rhs[2,2] + lhs[3,1]*rhs[2,3];

@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -271,7 +271,6 @@ function doSurfaceConversion(tmpsurf: PSDL_Surface): PSDL_Surface;
 var convertedSurf: PSDL_Surface;
 begin
     doSurfaceConversion:= tmpsurf;
-{$IFNDEF WEBGL}
     if ((tmpsurf^.format^.bitsperpixel = 32) and (tmpsurf^.format^.rshift > tmpsurf^.format^.bshift)) or
        (tmpsurf^.format^.bitsperpixel = 24) then
     begin
@@ -279,7 +278,6 @@ begin
         SDL_FreeSurface(tmpsurf);
         doSurfaceConversion:= convertedSurf;
     end;
-{$ENDIF}
 end;
 
 {$IFDEF SDL2}
@@ -328,4 +326,4 @@ begin
 {$ENDIF}
 end;
 
-end.		
+end.

@@ -55,5 +55,5 @@ TResourceList readThemeCfg_0()
 
 int main(int argc, char** argv)
 {
-	readThemeCfg_0();
+    readThemeCfg_0();
 }

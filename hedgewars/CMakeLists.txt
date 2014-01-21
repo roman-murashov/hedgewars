@@ -20,6 +20,14 @@ if(UNIX)
     endif()
 endif(UNIX)
 
+# convert list into pascal array
+list(LENGTH FONTS_DIRS ndirs)
+set(FONTS_DIRS_ARRAY "array [0..${ndirs}] of PChar = (")
+foreach(fontdir ${FONTS_DIRS})
+    set(FONTS_DIRS_ARRAY "${FONTS_DIRS_ARRAY}\n'${fontdir}',")
+endforeach(fontdir)
+set(FONTS_DIRS_ARRAY "${FONTS_DIRS_ARRAY}\nnil);\n")
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.inc.in ${CMAKE_CURRENT_BINARY_DIR}/config.inc)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -94,17 +102,10 @@ set(engine_sources
     )
 
 
-include(${CMAKE_MODULE_PATH}/utils.cmake)
-#opengl 2
-IF(${GL2})
-    set(pascal_flags "-dGL2" ${pascal_flags})
-    message(STATUS "Building using OpenGL 2")
-ENDIF(${GL2})
-
-if (${CMAKE_Pascal_COMPILER_VERSION} VERSION_LESS 2.2 OR # older versions are just ancient
-    (${CMAKE_Pascal_COMPILER_VERSION} VERSION_LESS 2.6 AND APPLE)) # because of 64bit and opengl bindings
+if(${CMAKE_Pascal_COMPILER_VERSION} VERSION_LESS 2.2 OR # older versions are just ancient
+   (${CMAKE_Pascal_COMPILER_VERSION} VERSION_LESS 2.6 AND APPLE)) # because of 64bit and opengl bindings
     message(FATAL_ERROR "Your FreePascal installation is too old (fpc ${CMAKE_Pascal_COMPILER_VERSION})!")
-elseif(CMAKE_Pascal_COMPILER_VERSION VERSION_GREATER 2.4)
+elseif(${CMAKE_Pascal_COMPILER_VERSION} VERSION_GREATER 2.4)
     #enable INLINE only with a recent version of fpc
     add_flag_prepend(CMAKE_Pascal_FLAGS_RELEASE -Si)
 endif()
@@ -113,13 +114,13 @@ endif()
 add_flag_append(CMAKE_Pascal_FLAGS "-Fl${LIBRARY_OUTPUT_PATH}")
 
 #DEPENDECIES AND EXECUTABLES SECTION
-if(NOT ${BUILD_ENGINE_LIBRARY} AND APPLE)
+if(APPLE AND (NOT BUILD_ENGINE_LIBRARY))
     #on OSX we need to provide the SDL_main() function when building as executable
     add_subdirectory(sdlmain)
     list(APPEND HW_LINK_LIBS SDLmain)
 endif()
 
-if(FFMPEG_FOUND)
+if(LIBAV_FOUND)
     add_subdirectory(avwrapper)
     list(APPEND HW_LINK_LIBS avwrapper)
     add_definitions(-dUSE_VIDEO_RECORDING)
@@ -136,7 +137,7 @@ if(PNG_FOUND)
     add_definitions(-dPNG_SCREENSHOTS)
 endif()
 
-if(LUA_FOUND AND LUA_SYSTEM)
+if(LUA_SYSTEM)
     get_filename_component(LUA_LIBRARY_DIR ${LUA_LIBRARY} PATH)
     get_filename_component(LUA_LIBRARY_NAME ${LUA_LIBRARY} NAME)
     #NAME_WE would strip the .1 (or .2) next to the ".so"
@@ -148,7 +149,7 @@ else()
     add_flag_append(CMAKE_Pascal_FLAGS "-XLAlua=${lua_output_name}")
 endif()
 
-if(PHYSFS_FOUND)
+if(PHYSFS_SYSTEM)
     get_filename_component(PHYSFS_LIBRARY_DIR ${PHYSFS_LIBRARY} PATH)
     add_flag_append(CMAKE_Pascal_FLAGS "-Fl${PHYSFS_LIBRARY}")
 else()
@@ -174,9 +175,14 @@ if(HAVE_IMGINIT)
     add_definitions(-dSDL_IMAGE_NEWER)
 endif(HAVE_IMGINIT)
 
-if(NOT (SDL_VERSION VERSION_LESS 2.0))
+if(${SDL_VERSION} VERSION_GREATER 1.3)
     add_definitions(-dSDL2)
 endif()
+
+#opengl 2
+IF(GL2)
+    add_definitions(-dGL2)
+ENDIF(GL2)
 
 #needs to be last
 add_definitions(-dDEBUGFILE)
@@ -192,7 +198,7 @@ endforeach(loop_var)
 #SOURCE AND PROGRAMS SECTION
 if(BUILD_ENGINE_LIBRARY)
     message("***Engine will be built as library (experimental)***")
-    if(APPLE AND current_macosx_version VERSION_GREATER "10.5")
+    if(APPLE AND ${current_macosx_version} VERSION_GREATER "10.5")
         # due to compiler/linker issues on Max OS X 10.6 -k-no_order_inits is needed to avoid linking fail
         add_flag_prepend(CMAKE_Pascal_FLAGS "-k-no_order_inits")
     endif()

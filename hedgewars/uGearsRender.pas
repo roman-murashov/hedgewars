@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ interface
 uses uTypes, uConsts, GLunit, uFloat, SDLh;
 
 type
-   Tar         = record
+   Tar = record
             X, Y: hwFloat;
             dLen: hwFloat;
             b : boolean;
@@ -95,7 +95,7 @@ begin
     if (X1 = X2) and (Y1 = Y2) then
         begin
         //OutError('WARNING: zero length rope line!', false);
-    DrawRopeLine := 0;
+        DrawRopeLine:= 0;
         exit
         end;
     eX:= 0;
@@ -156,7 +156,7 @@ begin
                 DrawSprite(sprRopeNode, x - 2, y - 2, 0)
             end
     end;
-DrawRopeLine:= roplen;
+    DrawRopeLine:= roplen;
 end;
 
 procedure DrawRope(Gear: PGear);
@@ -942,8 +942,28 @@ begin
                 DrawTextureCentered(ox, sy - cHHRadius - 7 - HealthTagTex^.h, HealthTagTex);
 
             if bShowFinger and ((Gear^.State and gstHHDriven) <> 0) then
-                DrawSprite(sprFinger, ox - 16, oy - 64,
-                            GameTicks div 32 mod 16);
+                begin
+                ty := oy - 32;
+                // move finger higher up if tags are above hog
+                if (cTagsMask and htTeamName) <> 0 then
+                    ty := ty - Team^.NameTagTex^.h - 2;
+                if (cTagsMask and htName) <> 0 then
+                    ty := ty - NameTagTex^.h - 2;
+                if (cTagsMask and htHealth) <> 0 then
+                    ty := ty - HealthTagTex^.h - 2;
+                tx := ox;
+                tx := round(max(((-cScreenWidth + 16) / zoom) + SpritesData[sprFinger].Width div 2, min(((cScreenWidth - 16) / zoom) - SpritesData[sprFinger].Width div 2, tx)));
+                ty := round(max(cScreenHeight div 2 - ((cScreenHeight - 16) / (zoom)) + SpritesData[sprFinger].Height div 2, min(cScreenHeight div 2 - ((-cScreenHeight + SpritesData[sprFinger].Height) / (zoom)) - SpritesData[sprFinger].Width div 2 - 96, ty)));
+                t := tx-ox;
+                if t <> 0 then
+                    dAngle := radtodeg(-arctan2(-(ty-oy),t)) + 90
+                else if ty > oy then
+                    dAngle := 180
+                else
+                    dAngle := 0;
+                DrawSpriteRotatedF(sprFinger, tx, ty, GameTicks div 32 mod 16, 1, dAngle);
+                end;
+
 
             if (Gear^.State and gstDrowning) = 0 then
                 if (Gear^.State and gstHHThinking) <> 0 then

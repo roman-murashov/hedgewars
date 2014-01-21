@@ -1,7 +1,7 @@
 redo;
 {This file contains functions that are re-implemented}
 {pas2c will add prefix fpcrtl_ to all these functions}
-type 
+type
     uinteger = uinteger;
     Integer = integer;
     LongInt = integer;
@@ -39,12 +39,12 @@ type
     char = char;
     PChar = ^char;
     PPChar = ^Pchar;
-    
+
     PByte = ^Byte;
     PLongInt = ^LongInt;
     PLongWord = ^LongWord;
     PInteger = ^Integer;
-    
+
     Handle = integer;
 
 var
@@ -83,7 +83,7 @@ var
     assign, rewrite, rewrite_2, reset, reset_2, flush, BlockWrite, BlockRead, close : procedure;
     FileExists, DirectoryExists, eof : function : boolean;
     ExtractFileName : function : string;
-    
+
     ParamCount : function : integer;
     ParamStr : function : string;
 
@@ -101,13 +101,13 @@ var
 
     random : function : integer;
     randomize : procedure;
-    
+
     Assigned : function : boolean;
 
     //EnumToStr : function : string;
 
     initParams : procedure;
-    
+
     Load_GL_VERSION_2_0 : procedure;
 
 

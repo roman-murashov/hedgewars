@@ -36,7 +36,7 @@ main = do
                       | otherwise ->  error $ usageInfo header options
           (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
           (_,     _,       msgs)   -> error $ usageInfo header options
-    where 
+    where
         header = "Freepascal to C conversion! Please specify -n -i -o options.\n"
         enoughFlags f = and $ map (isJust . flip find f) [isName, isInput, isOutput]
         flag f = extractString . fromJust . flip find f

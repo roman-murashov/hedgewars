@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ procedure ControllerHatEvent(joy, hat, value: Byte);
 procedure ControllerButtonEvent(joy, button: Byte; pressed: Boolean);
 
 implementation
-uses uConsole, uCommands, uMisc, uVariables, uConsts, uUtils, uDebug, uPhysFSLayer;
+uses uConsole, uCommands, uVariables, uConsts, uUtils, uDebug, uPhysFSLayer;
 
 const
     LSHIFT = $0200;
@@ -100,7 +100,7 @@ begin
 end;
 *)
 procedure MaskModifier(Modifier: shortstring; var code: LongInt);
-var mod_ : shortstring;
+var mod_ : shortstring = '';
     ModifierCount, i: LongInt;
 begin
 if Modifier = '' then exit;
@@ -175,7 +175,7 @@ if CurrentBinds[code][0] <> #0 then
             LocalMessage:= LocalMessage or gmSwitch
         else if CurrentBinds[code] = '+precise' then
             LocalMessage:= LocalMessage or gmPrecise;
-            
+
         ParseCommand(CurrentBinds[code], Trusted);
         if (CurrentTeam <> nil) and (not CurrentTeam^.ExtDriven) and (ReadyTimeLeft > 1) then
             ParseCommand('gencmd R', true)
@@ -486,16 +486,17 @@ begin
             i:= 1;
             while (i <= length(l)) and (l[i] <> '=') do
                 begin
-                if l[i] <> '%' then
-                    begin
-                    p:= p + l[i];
-                    inc(i)
-                    end else
+                if l[i] = '%' then
                     begin
                     l[i]:= '$';
                     val(copy(l, i, 3), b);
                     p:= p + char(b);
                     inc(i, 3)
+                    end
+                else
+                    begin
+                    p:= p + l[i];
+                    inc(i)
                     end;
                 end;
 
@@ -504,6 +505,11 @@ begin
                 l:= copy(l, i + 1, length(l) - i);
                 if l <> 'default' then
                     begin
+                    if (length(l) = 2) and (l[1] = '\') then
+                        l:= l[1]
+                    else if (l[1] = '"') and (l[length(l)] = '"') then
+                        l:= copy(l, 2, length(l) - 2);
+
                     p:= cmd + ' ' + l + ' ' + p;
                     ParseCommand(p, true)
                     end
@@ -511,7 +517,7 @@ begin
             end;
 
         pfsClose(f)
-        end 
+        end
         else
             AddFileLog('[BINDS] file not found');
 end;
@@ -541,7 +547,7 @@ b:= KeyNameToCode(id, Modifier);
 if b = 0 then
     OutError(errmsgUnknownVariable + ' "' + id + '"', false)
 else
-    begin 
+    begin
     // add bind: first check if this cmd is already bound, and remove old bind
     i:= cKbdMaxIndex;
     repeat

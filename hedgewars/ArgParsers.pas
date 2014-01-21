@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  *)
- 
+
 {$INCLUDE "options.inc"}
 
 unit ArgParsers;
@@ -45,7 +45,6 @@ begin
     WriteLn(stdout, '          \/////////////          \/////////  \///////////      ');
     WriteLn(stdout, '                                                                ');
     WriteLn(stdout, ' Command Line Parser Implementation by a Google Code-In Student ');
-    WriteLn(stdout, '             ASCII Art easter egg idea by @sheepluva            ');
     WriteLn(stdout, '                                                                ');
 end;
 
@@ -186,18 +185,18 @@ end;
 procedure parseClassicParameter(cmdArray: array of string; size:LongInt; var paramIndex:LongInt); forward;
 
 function parseParameter(cmd:string; arg:string; var paramIndex:LongInt): Boolean;
-const videoArray: array [0..4] of string = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth');
-      audioArray: array [0..2] of string = ('--volume','--nomusic','--nosound');
-      otherArray: array [0..2] of string = ('--locale','--fullscreen','--showfps');
-      mediaArray: array [0..9] of string = ('--fullscreen-width', '--fullscreen-height', '--width', '--height', '--depth', '--volume','--nomusic','--nosound','--locale','--fullscreen');
-      allArray:   array [0..17] of string = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth','--volume','--nomusic','--nosound','--locale','--fullscreen','--showfps','--altdmg','--frame-interval','--low-quality','--no-teamtag','--no-hogtag','--no-healthtag','--translucent-tags');
-      reallyAll:  array [0..34] of shortstring = (
+const videoArray: Array [1..5] of string = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth');
+      audioArray: Array [1..3] of string = ('--volume','--nomusic','--nosound');
+      otherArray: Array [1..3] of string = ('--locale','--fullscreen','--showfps');
+      mediaArray: Array [1..10] of string = ('--fullscreen-width', '--fullscreen-height', '--width', '--height', '--depth', '--volume','--nomusic','--nosound','--locale','--fullscreen');
+      allArray: Array [1..18] of string = ('--fullscreen-width','--fullscreen-height', '--width', '--height', '--depth','--volume','--nomusic','--nosound','--locale','--fullscreen','--showfps','--altdmg','--frame-interval','--low-quality','--no-teamtag','--no-hogtag','--no-healthtag','--translucent-tags');
+      reallyAll: array[0..35] of shortstring = (
                 '--prefix', '--user-prefix', '--locale', '--fullscreen-width', '--fullscreen-height', '--width',
                 '--height', '--frame-interval', '--volume','--nomusic', '--nosound',
                 '--fullscreen', '--showfps', '--altdmg', '--low-quality', '--raw-quality', '--stereo', '--nick',
   {deprecated}  '--depth', '--set-video', '--set-audio', '--set-other', '--set-multimedia', '--set-everything',
   {internal}    '--internal', '--port', '--recorder', '--landpreview',
-  {misc}        '--stats-only', '--gci', '--help','--no-teamtag','--no-hogtag','--no-healthtag','--translucent-tags');
+  {misc}        '--stats-only', '--gci', '--help','--no-teamtag','--no-hogtag','--no-healthtag','--translucent-tags','--lua-test');
 var cmdIndex: byte;
 begin
     parseParameter:= false;
@@ -242,13 +241,14 @@ begin
         {--stats-only}          28 : statsOnlyGame();
         {--gci}                 29 : GciEasterEgg();
         {--help}                30 : DisplayUsage();
-        {--no-teamtag}          31 : cTagsMask := cTagsMask and (not htTeamName);
-        {--no-hogtag}           32 : cTagsMask := cTagsMask and (not htName);
-        {--no-healthtag}        33 : cTagsMask := cTagsMask and (not htHealth);
-        {--translucent-tags}    34 : cTagsMask := cTagsMask or htTransparent
+        {--no-teamtag}          31 : cTagsMask := cTagsMask and not htTeamName;
+        {--no-hogtag}           32 : cTagsMask := cTagsMask and not htName;
+        {--no-healthtag}        33 : cTagsMask := cTagsMask and not htHealth;
+        {--translucent-tags}    34 : cTagsMask := cTagsMask or htTransparent;
+        {--lua-test}            35 : begin cTestLua := true; cScriptName := getstringParameter(arg, paramIndex, parseParameter); WriteLn(stdout, 'Lua test file specified: ' + cScriptName);end;
     else
         begin
-        //Asusme the first "non parameter" is the replay file, anything else is invalid
+        //Assume the first "non parameter" is the replay file, anything else is invalid
         if (recordFileName = '') and (Copy(cmd,1,2) <> '--') then
             recordFileName := cmd
         else
@@ -354,7 +354,7 @@ begin
         GameType := gmtSyntax;
         end;
 
-    if (not isInternal) and (recordFileName = '') then
+    if (not cTestLua) and (not isInternal) and (recordFileName = '') then
         begin
         WriteLn(stderr, 'You must specify a replay file');
         GameType := gmtSyntax;

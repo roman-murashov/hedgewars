@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ unit uRender;
 
 interface
 
-uses SDLh, uTypes, GLunit, uConsts, uStore, uMatrix;
+uses SDLh, uTypes, GLunit, uConsts, uStore{$IFDEF GL2}, uMatrix{$ENDIF};
 
 procedure DrawSprite            (Sprite: TSprite; X, Y, Frame: LongInt);
 procedure DrawSprite            (Sprite: TSprite; X, Y, FrameX, FrameY: LongInt);
@@ -415,7 +415,7 @@ if (Y + SpritesData[Sprite].Height > BottomY) then
 if (X + SpritesData[Sprite].Width > RightX) then
     r.w:= RightX - X + 1;
 
-if (r.h < r.y) or (r.w < r.x) then 
+if (r.h < r.y) or (r.w < r.x) then
     exit;
 
 dec(r.h, r.y);
@@ -459,7 +459,7 @@ begin
     SetVertexPointer(@VertexBuffer[0], Length(VertexBuffer));
     glDrawArrays(GL_LINES, 0, Length(VertexBuffer));
     untint;
-    
+
     glPopMatrix;
 
     glEnable(GL_TEXTURE_2D);
@@ -532,7 +532,7 @@ end;
 procedure DrawCircle(X, Y, Radius, Width: LongInt; r, g, b, a: Byte);
 begin
     Tint(r, g, b, a);
-    DrawCircle(X, Y, Radius, Width); 
+    DrawCircle(X, Y, Radius, Width);
     untint;
 end;
 
@@ -681,14 +681,16 @@ with widget^ do
     end;
 {$ELSE}
 begin
-{widget:= widget; // avoid hint}
+widget:= widget; // avoid hint
 {$ENDIF}
 end;
 
 procedure Tint(r, g, b, a: Byte); inline;
 var
     nc, tw: Longword;
+    {$IFDEF GL2}
     scale:Real = 1.0/255.0;
+    {$ENDIF}
 begin
     nc:= (r shl 24) or (g shl 16) or (b shl 8) or a;
 

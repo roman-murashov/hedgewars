@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@
  * => The usage of safe functions or data types (e.g. GetRandom() or hwFloat)
  * is usually not necessary and therefore undesirable.
  *)
- 
-{$INCLUDE "options.inc"} 
- 
+
+{$INCLUDE "options.inc"}
+
 unit uVisualGearsHandlers;
 
 interface

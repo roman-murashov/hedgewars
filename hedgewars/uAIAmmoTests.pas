@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1241,7 +1241,7 @@ repeat
     x:= x + dx;
     dy:= dy + cGravityf;
     y:= y + dy;
-    
+
     if TestColl(trunc(x), trunc(y), 3) then
         t:= 0;
 until t = 0;
@@ -1251,7 +1251,7 @@ EY:= trunc(y);
 
 if Level = 1 then
     valueResult:= RateExplosion(Me, EX, EY, 76, afTrackFall or afErasesLand)
-else 
+else
     valueResult:= RateExplosion(Me, EX, EY, 76);
 
 if (valueResult > 0) then
