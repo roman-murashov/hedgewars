@@ -1,6 +1,6 @@
  (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 unit uTeams;
 interface
-uses uConsts, uInputHandler, uRandom, uFloat, uStats, 
+uses uConsts, uInputHandler, uRandom, uFloat, uStats,
      uCollisions, uSound, uStore, uTypes, uScript
      {$IFDEF USE_TOUCH_INTERFACE}, uWorld{$ENDIF};
 
@@ -596,7 +596,7 @@ if isDeveloperMode then
     CurrentTeam^.TeamName:= ts;
     CurrentTeam^.PlayerHash:= s;
     loadTeamBinds(ts);
-    
+
     if GameType in [gmtDemo, gmtSave, gmtRecord] then
         CurrentTeam^.ExtDriven:= true;
 
@@ -619,7 +619,6 @@ begin
 end;
 
 procedure chBind(var id: shortstring);
-var i : Integer;
 begin
     if CurrentTeam = nil then
         exit;

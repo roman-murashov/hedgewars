@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,11 +46,12 @@ procedure FreeGearsList;
 procedure AddMiscGears;
 procedure AssignHHCoords;
 function  GearByUID(uid : Longword) : PGear;
+
 implementation
 uses uStore, uSound, uTeams, uRandom, uIO, uLandGraphics,
     {$IFDEF USE_TOUCH_INTERFACE}uTouch,{$ENDIF}
     uLocale, uAmmos, uStats, uVisualGears, uScript, uVariables,
-    uCommands, uUtils, uTextures, uRenderUtils, uGearsRender, uCaptions, uDebug, uLandTexture,
+    uCommands, uUtils, uTextures, uRenderUtils, uGearsRender, uCaptions, uDebug,
     uGearsHedgehog, uGearsUtils, uGearsList, uGearsHandlersRope
     , uVisualGearsList, uGearsHandlersMess, uAI;
 
@@ -126,7 +127,7 @@ begin
             tmp:= 0;
             if Gear^.Hedgehog^.Effects[hePoisoned] <> 0 then
                 begin
-                inc(tmp, ModifyDamage(5, Gear));
+                inc(tmp, ModifyDamage(Gear^.Hedgehog^.Effects[hePoisoned], Gear));
                 if (GameFlags and gfResetHealth) <> 0 then
                     dec(Gear^.Hedgehog^.InitialHealth)  // does not need a minimum check since <= 1 basically disables it
                 end;
@@ -144,7 +145,7 @@ begin
                     if (team^.Hedgehogs[i].Gear <> nil) and (not team^.Hedgehogs[i].King)
                     and (team^.Hedgehogs[i].Gear^.Health > team^.Hedgehogs[i].Gear^.Damage) then
                         flag:= true;
-                if (not flag) then
+                if not flag then
                     begin
                     inc(tmp, 5);
                     if (GameFlags and gfResetHealth) <> 0 then
@@ -208,7 +209,7 @@ while t <> nil do
             RemoveGearFromList(curHandledGear);
             // since I can't think of any good reason this would ever be separate from a remove from list, going to keep it inside this block
             if curHandledGear^.Message and gmAddToList <> 0 then InsertGearToList(curHandledGear);
-            curHandledGear^.Message:= (curHandledGear^.Message and (not (gmRemoveFromList or gmAddToList)))
+            curHandledGear^.Message:= curHandledGear^.Message and (not (gmRemoveFromList or gmAddToList))
             end;
         if curHandledGear^.Active then
             begin
@@ -323,7 +324,7 @@ case step of
                 StopMusic //No SDMusic for now
                     //ChangeMusic(SDMusic)
                     end
-                else if ((TotalRounds < cSuddenDTurns) and (not isInMultiShoot)) then
+                else if (TotalRounds < cSuddenDTurns) and (not isInMultiShoot) then
                     begin
                     i:= cSuddenDTurns - TotalRounds;
                     s:= inttostr(i);
@@ -346,7 +347,7 @@ case step of
             end;
     stSpawn:
         begin
-        if (not isInMultiShoot) then
+        if not isInMultiShoot then
             SpawnBoxOfSmth;
         inc(step)
         end;
@@ -396,7 +397,7 @@ else if ((GameFlags and gfInfAttack) <> 0) then
                 CurrentHedgehog^.Gear^.State:= CurrentHedgehog^.Gear^.State or gstHHChooseTarget;
                 isCursorVisible := true
                 end;
-            CurrentHedgehog^.Gear^.State:= (CurrentHedgehog^.Gear^.State and (not gstAttacked));
+            CurrentHedgehog^.Gear^.State:= CurrentHedgehog^.Gear^.State and (not gstAttacked);
             end;
         if delay2 = 0 then
             begin
@@ -424,7 +425,7 @@ if TurnTimeLeft > 0 then
     if CurrentHedgehog^.Gear <> nil then
         if (((CurrentHedgehog^.Gear^.State and gstAttacking) = 0)
             or (Ammoz[CurrentHedgehog^.CurAmmoType].Ammo.Propz and ammoprop_DoesntStopTimerWhileAttacking <> 0))
-            and (not(isInMultiShoot and ((Ammoz[CurrentHedgehog^.CurAmmoType].Ammo.Propz and ammoprop_DoesntStopTimerInMultiShoot) <> 0))) then
+            and not(isInMultiShoot and ((Ammoz[CurrentHedgehog^.CurAmmoType].Ammo.Propz and ammoprop_DoesntStopTimerInMultiShoot) <> 0)) then
             //(CurrentHedgehog^.CurAmmoType in [amShotgun, amDEagle, amSniperRifle])
                 begin
                 if (TurnTimeLeft = 5000)
@@ -566,7 +567,6 @@ procedure AddMiscGears;
 var p,i,j,rx, ry: Longword;
     rdx, rdy: hwFloat;
     Gear: PGear;
-    temp: Longword;
 begin
 AddGear(0, 0, gtATStartGame, 0, _0, _0, 2000);
 
@@ -627,9 +627,9 @@ snowLeft:= -(snowRight-LAND_WIDTH);
 if (not hasBorder) and cSnow then
     for i:= vobCount * Longword(max(LAND_WIDTH,4096)) div 2048 downto 1 do
         begin
-        ry:= LAND_HEIGHT + LongInt(GetRandom(750)) - 1300;
-        rx:= LongInt(GetRandom(snowRight - snowLeft)) + snowLeft;
-        AddGear(rx, ry, gtFlake, 0, _0, _0, 0);
+        rx:=GetRandom(snowRight - snowLeft);
+        ry:=GetRandom(750);
+        AddGear(rx + snowLeft, LAND_HEIGHT + ry - 1300, gtFlake, 0, _0, _0, 0)
         end
 end;
 
@@ -705,7 +705,7 @@ t:= GearsList;
 while t <> nil do
     begin
     if (t^.Kind = gtHedgehog) and (t^.Y < Ammo^.Y) then
-        if (not (hwSqr(Ammo^.X - t^.X) + hwSqr(Ammo^.Y - t^.Y - int2hwFloat(cHHRadius)) * 2 > _2)) then
+        if not (hwSqr(Ammo^.X - t^.X) + hwSqr(Ammo^.Y - t^.Y - int2hwFloat(cHHRadius)) * 2 > _2) then
             begin
             ApplyDamage(t, 5);
             t^.dX:= t^.dX + (t^.X - Ammo^.X) * _0_02;
@@ -819,7 +819,7 @@ end;
 procedure chSkip(var s: shortstring);
 begin
 s:= s; // avoid compiler hint
-if (not isExternalSource) then
+if not isExternalSource then
     SendIPC(_S',');
 uStats.Skipped;
 skipFlag:= true

@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,8 +103,8 @@ const
     lfNotCurrentMask = $FF7F;  // inverse of above. frequently used
     lfObjMask        = $007F;  // lower 7 bits used for hogs
     lfNotObjMask     = $FF80;  // inverse of above.
-    // lower byte is for objects. 
-    // consists of 0-127 counted for object checkins and $80 as a bit flag for current hog. 
+    // lower byte is for objects.
+    // consists of 0-127 counted for object checkins and $80 as a bit flag for current hog.
     lfAllObjMask     = $00FF;  // lfCurrentHog or lfObjMask
 
 
@@ -301,6 +301,10 @@ const
     cTargetPointRef : TPoint = (x: NoPointX; y: 0);
 
     kSystemSoundID_Vibrate = $00000FFF;
+
+    rtnTestSuccess = $00000000;
+    rtnTestFailed  = $00000001;
+    rtnTestLuaErr  = $00000002;
 
 implementation
 

@@ -1,4 +1,4 @@
-if (NOT APPLE)
+if(NOT APPLE)
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
                    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
                     IMMEDIATE @ONLY)
@@ -6,7 +6,7 @@ if (NOT APPLE)
     add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 endif()
 
-if (APPLE)
+if(APPLE)
     find_package(Qt4 REQUIRED QUIET)
     find_package(SDL REQUIRED)
     find_package(SDL_image REQUIRED)
@@ -17,7 +17,7 @@ if (APPLE)
     if(NOT NOAUTOUPDATE)
         find_package(Sparkle) #needed for SPARKLE_FOUND variable
         #needed because the 'if' clause in the script prints silly policy warnings
-        if(${SPARKLE_FOUND})
+        if(SPARKLE_FOUND)
             set(SPARKLE_FOUND 1)
         else()
             set(SPARKLE_FOUND 0)

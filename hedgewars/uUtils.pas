@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -331,7 +331,6 @@ end;
 procedure AddFileLog(s: shortstring);
 begin
 // s:= s;
-{$IFNDEF WEBGL}
 {$IFDEF DEBUGFILE}
 
 {$IFDEF USE_VIDEO_RECORDING}
@@ -344,7 +343,6 @@ flush(f);
 LeaveCriticalSection(logMutex);
 {$ENDIF}
 
-{$ENDIF}
 {$ENDIF}
 end;
 
@@ -395,7 +393,7 @@ while i < l do
        ((#$F900  <= u) and (u <= #$FAFF))  or // CJK Compatibility Ideographs
        ((#$FE30  <= u) and (u <= #$FE4F))  or // CJK Compatibility Forms
        ((#$FF66  <= u) and (u <= #$FF9D)))    // halfwidth katakana
-       then 
+       then
         begin
             CheckCJKFont:=  THWFont( ord(font) + ((ord(High(THWFont))+1) div 2) );
             exit;
@@ -470,7 +468,7 @@ begin
             r[i]:= '?'
             else
             r[i]:= s[i];
-            
+
     sanitizeForLog:= r
 end;
 

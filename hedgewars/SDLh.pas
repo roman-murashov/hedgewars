@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -235,11 +235,7 @@ const
     SDL_SRCCOLORKEY = $00001000;
     SDL_RLEACCEL    = $00004000;
     SDL_SRCALPHA    = $00010000;
- {$IFDEF PAS2C}
-    SDL_ANYFORMAT   = $10000000;
- {$ELSE}
     SDL_ANYFORMAT   = $00100000;
- {$ENDIF}
     SDL_HWPALETTE   = $20000000;
     SDL_DOUBLEBUF   = $40000000;
     SDL_FULLSCREEN  = $80000000;
@@ -409,24 +405,24 @@ type
         pitch : {$IFDEF SDL2}LongInt{$ELSE}Word{$ENDIF};
         pixels: Pointer;
 {$IFDEF PAS2C}
-        hwdata:Pointer;
-        clip_rect:TSDL_Rect;
-        unsed1:LongWord;
-        locked:LongWord;
-        map:Pointer;
-        format_version:Longword;
-        refcount:LongInt;
-        offset: LongInt;
+        hwdata   : Pointer;
+        clip_rect: TSDL_Rect;
+        unsed1   : LongWord;
+        locked   : LongWord;
+        map      : Pointer;
+        format_version: Longword;
+        refcount : LongInt;
+        offset   : LongInt;
 {$ELSE}
 {$IFDEF SDL2}
-        userdata: Pointer;
-        locked: LongInt;
-        lock_data: Pointer;
-        clip_rect: TSDL_Rect;
-        map: Pointer;
-        refcount: LongInt;
+        userdata  : Pointer;
+        locked    : LongInt;
+        lock_data : Pointer;
+        clip_rect : TSDL_Rect;
+        map       : Pointer;
+        refcount  : LongInt;
 {$ELSE}
-        offset: LongInt;
+        offset : LongInt;
 {$ENDIF}
 {$ENDIF}
         end;
@@ -1196,7 +1192,7 @@ begin
 {$IFDEF SDL2}
         ((surface^.flags and SDL_RLEACCEL) <> 0)
 {$ELSE}
-        {$IFNDEF WEBGL}( surface^.offset <> 0 ) or {$ENDIF}(( surface^.flags and (SDL_HWSURFACE or SDL_ASYNCBLIT or SDL_RLEACCEL)) <> 0)
+        ( surface^.offset <> 0 ) or (( surface^.flags and (SDL_HWSURFACE or SDL_ASYNCBLIT or SDL_RLEACCEL)) <> 0)
 {$ENDIF}
 end;
 

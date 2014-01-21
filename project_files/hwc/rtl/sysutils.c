@@ -21,7 +21,7 @@ TDateTime fpcrtl_date()
     double day_time_frac; //fraction that represents the time in one day
     int num_seconds;
     int numDays;
-    
+
     // unix epoch doesn't work, choose Jan 1st 1980 instead
     ref_date.tm_year = 80;
     ref_date.tm_mon = 0;
@@ -51,7 +51,7 @@ TDateTime fpcrtl_date()
     fpcrtl_printf("[date] current date: %s\n", asctime(&cur_date));
     fpcrtl_printf("[date] reference date: %s\n", asctime(&ref_date));
     fpcrtl_printf("[date] num days: %d\n", numDays);
-    
+
     return numDays;
 }
 
@@ -63,7 +63,7 @@ TDateTime fpcrtl_time()
 
     double day_time_frac; //fraction that represents the time in one day
     int num_seconds;
-    
+
     local_time = time(NULL);
     cur_date = *localtime(&local_time);
 

@@ -454,8 +454,14 @@ processAction (ProcessAccountInfo info) = do
     checkerLogin _ False _ = processAction $ ByeClient $ loc "No checker rights"
     checkerLogin p True _ = do
         wp <- client's webPassword
-        processAction $
-            if wp == p then ModifyClient $ \c -> c{logonPassed = True} else ByeClient $ loc "Authentication failed"
+        chan <- client's sendChan
+        mapM_ processAction $
+            if wp == p then 
+                [ModifyClient $ \c -> c{logonPassed = True}
+                , AnswerClients [chan] ["LOGONPASSED"]
+                ]
+                else 
+                [ByeClient $ loc "Authentication failed"]
     playerLogin p a contr = do
         chan <- client's sendChan
         mapM_ processAction [
@@ -524,7 +530,7 @@ processAction (BanIP ip seconds reason) = do
 
 processAction (BanNick n seconds reason) = do
     currentTime <- io getCurrentTime
-    let msg =
+    let msg = 
             if seconds > 60 * 60 * 24 * 365 then
                 B.concat ["Permanent ban (", reason, ")"]
                 else
@@ -569,13 +575,18 @@ processAction (AddClient cl) = do
         return ci
 
     modify (\s -> s{clientIndex = Just newClId})
-    mapM_ processAction
-        [
-            AnswerClients [sendChan cl] ["CONNECTED", "Hedgewars server http://www.hedgewars.org/", serverVersion]
-            , CheckBanned True
-            , AddIP2Bans (host cl) "Reconnected too fast" (addUTCTime 10 $ connectTime cl)
-        ]
 
+    jm <- gets joinsMonitor
+    pass <- io $ joinsSentry jm (host cl) (connectTime cl)
+
+    if pass then
+        mapM_ processAction
+            [
+                CheckBanned True
+                , AnswerClients [sendChan cl] ["CONNECTED", "Hedgewars server http://www.hedgewars.org/", serverVersion]
+            ]
+        else
+        processAction $ ByeClient $ loc "Reconnected too fast"
 
 processAction (AddNick2Bans n reason expiring) = do
     processAction $ ModifyServerInfo (\s -> s{bans = BanByNick n reason expiring : bans s})
@@ -760,3 +771,11 @@ processAction (ShowReplay rname) = do
             , [AnswerClients [c] $ "EM" : roundMsgs']
             , [AnswerClients [c] ["KICKED"]]
             ]
+
+
+processAction Cleanup = do
+    jm <- gets joinsMonitor
+    
+    io $ do
+        t <- getCurrentTime
+        cleanup jm t

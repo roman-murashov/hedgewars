@@ -3,6 +3,8 @@ unit uPhysFSLayer;
 interface
 uses SDLh, LuaPas;
 
+{$INCLUDE "config.inc"}
+
 const PhysfsLibName = {$IFDEF PHYSFS_INTERNAL}'libhwphysfs'{$ELSE}'libphysfs'{$ENDIF};
 const PhyslayerLibName = 'libphyslayer';
 
@@ -23,38 +25,33 @@ function pfsOpenRead(fname: shortstring): PFSFile;
 function pfsClose(f: PFSFile): boolean;
 
 procedure pfsReadLn(f: PFSFile; var s: shortstring);
-procedure pfsReadLnA(f: PFSFile; var s: ansistring);
+procedure pfsReadLnA(f: PFSFile; var s: PChar);
 function pfsBlockRead(f: PFSFile; buf: pointer; size: Int64): Int64;
 function pfsEOF(f: PFSFile): boolean;
 
 function pfsExists(fname: shortstring): boolean;
 
-{$IFNDEF PAS2C}
 function  physfsReader(L: Plua_State; f: PFSFile; sz: Psize_t) : PChar; cdecl; external PhyslayerLibName;
 procedure physfsReaderSetBuffer(buf: pointer); cdecl; external PhyslayerLibName;
 procedure hedgewarsMountPackage(filename: PChar); cdecl; external PhyslayerLibName;
-{$ENDIF}
 
 implementation
-uses uUtils, uVariables;
+uses uUtils, uVariables, sysutils;
 
-{$IFNDEF PAS2C}
 function PHYSFS_init(argv0: PChar) : LongInt; cdecl; external PhysfsLibName;
 function PHYSFS_deinit() : LongInt; cdecl; external PhysfsLibName;
 function PHYSFSRWOPS_openRead(fname: PChar): PSDL_RWops; cdecl; external PhyslayerLibName;
 function PHYSFSRWOPS_openWrite(fname: PChar): PSDL_RWops; cdecl; external PhyslayerLibName;
 
-function PHYSFS_mount(newDir, mountPoint: PChar; appendToPath: LongBool) : LongInt; cdecl; external PhysfsLibName;
+function PHYSFS_mount(newDir, mountPoint: PChar; appendToPath: LongBool) : LongBool; cdecl; external PhysfsLibName;
 function PHYSFS_openRead(fname: PChar): PFSFile; cdecl; external PhysfsLibName;
 function PHYSFS_eof(f: PFSFile): LongBool; cdecl; external PhysfsLibName;
 function PHYSFS_readBytes(f: PFSFile; buffer: pointer; len: Int64): Int64; cdecl; external PhysfsLibName;
 function PHYSFS_close(f: PFSFile): LongBool; cdecl; external PhysfsLibName;
 function PHYSFS_exists(fname: PChar): LongBool; cdecl; external PhysfsLibName;
+function PHYSFS_getLastError(): PChar; cdecl; external PhysfsLibName;
 
 procedure hedgewarsMountPackages(); cdecl; external PhyslayerLibName;
-{$ENDIF}
-
-(*****************************************************************)
 
 function rwopsOpenRead(fname: shortstring): PSDL_RWops;
 begin
@@ -100,26 +97,34 @@ while (PHYSFS_readBytes(f, @c, 1) = 1) and (c <> #10) do
         end
 end;
 
-procedure pfsReadLnA(f: PFSFile; var s: ansistring);
-var c: char;
-    b: shortstring;
+procedure pfsReadLnA(f: PFSFile; var s: PChar);
+var l, bufsize: Longword;
+    r: Int64;
+    b: PChar;
 begin
-s:= '';
-b[0]:= #0;
+bufsize:= 256;
+s:= StrAlloc(bufsize);
+l:= 0;
 
-while (PHYSFS_readBytes(f, @c, 1) = 1) and (c <> #10) do
-    if (c <> #13) then
+repeat
+    r:= PHYSFS_readBytes(f, @s[l], 1);
+
+    if (r = 1) and (s[l] <> #13) then
         begin
-        inc(b[0]);
-        b[byte(b[0])]:= c;
-        if b[0] = #255 then
+        inc(l);
+        if l = bufsize then
             begin
-            s:= s + b;
-            b[0]:= #0
+            b:= s;
+            inc(bufsize, 256);
+            s:= StrAlloc(bufsize);
+            StrCopy(s, b);
+            StrDispose(b)
             end
         end;
 
-s:= s + b
+until (r = 0) or (s[l - 1] = #10);
+
+if (r = 0) then s[l]:= #0 else s[l - 1]:= #0
 end;
 
 function pfsBlockRead(f: PFSFile; buf: pointer; size: Int64): Int64;
@@ -133,9 +138,23 @@ begin
         pfsBlockRead:= r
 end;
 
+procedure pfsMount(path: AnsiString; mountpoint: PChar);
+begin
+    if PHYSFS_mount(Str2PChar(path), mountpoint, false) then
+        AddFileLog('[PhysFS] mount ' + path + ' at ' + mountpoint + ' : ok')
+    else
+        AddFileLog('[PhysFS] mount ' + path + ' at ' + mountpoint + ' : FAILED ("' + PHYSFS_getLastError() + '")');
+end;
+
+procedure pfsMountAtRoot(path: AnsiString);
+begin
+    pfsMount(path, '/');
+end;
+
 procedure initModule;
 var i: LongInt;
     cPhysfsId: shortstring;
+    fp: PChar;
 begin
 {$IFDEF HWLIBRARY}
     //TODO: http://icculus.org/pipermail/physfs/2011-August/001006.html
@@ -147,16 +166,27 @@ begin
     i:= PHYSFS_init(Str2PChar(cPhysfsId));
     AddFileLog('[PhysFS] init: ' + inttostr(i));
 
-    i:= PHYSFS_mount(Str2PChar(PathPrefix), nil, false);
-    AddFileLog('[PhysFS] mount ' + PathPrefix + ': ' + inttostr(i));
-    i:= PHYSFS_mount(Str2PChar(UserPathPrefix + '/Data'), nil, false);
-    AddFileLog('[PhysFS] mount ' + UserPathPrefix + '/Data: ' + inttostr(i));
+    // mount system fonts paths first
+    for i:= low(cFontsPaths) to high(cFontsPaths) do
+        begin
+            fp := cFontsPaths[i];
+            if fp <> nil then
+                pfsMount(fp, '/Fonts');
+        end;
+
+    pfsMountAtRoot(PathPrefix);
+    pfsMountAtRoot(UserPathPrefix + '/Data');
 
     hedgewarsMountPackages;
 
-    i:= PHYSFS_mount(Str2PChar(UserPathPrefix), nil, false);
     // need access to teams and frontend configs (for bindings)
-    AddFileLog('[PhysFS] mount ' + UserPathPrefix + ': ' + inttostr(i)); 
+    pfsMountAtRoot(UserPathPrefix);
+
+    if cTestLua then
+        begin
+            pfsMountAtRoot(ExtractFileDir(cScriptName));
+            cScriptName := ExtractFileName(cScriptName);
+        end;
 end;
 
 procedure freeModule;

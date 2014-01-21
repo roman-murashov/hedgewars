@@ -1,6 +1,6 @@
 system;
-
-type 
+{This file contains functions that are external}
+type
     uinteger = uinteger;
     Integer = integer;
     LongInt = integer;
@@ -40,21 +40,21 @@ type
     char = char;
     PChar = ^char;
     PPChar = ^Pchar;
-    
+
     PByte = ^Byte;
     PWord = ^Word;
     PLongInt = ^LongInt;
     PLongWord = ^LongWord;
     PInteger = ^Integer;
-    
+
     Handle = integer;
 
     png_structp = pointer;
     png_size_t = integer;
 
-var 
+var
     false, true: boolean;
-    
+
     ord, Succ, Pred : function : integer;
     inc, dec, Low, High, Lo, Hi : function : integer;
 
@@ -72,7 +72,7 @@ var
     sizeof : function : integer;
 
     glGetString : function : pchar;
- 
+
     glBegin, glBindTexture, glBlendFunc, glClear, glClearColor,
     glColor4ub, glColorMask, glColorPointer, glDeleteTextures,
     glDisable, glDisableClientState, glDrawArrays, glEnable,
@@ -83,7 +83,7 @@ var
     glTexParameteri, glTranslatef, glVertex2d, glVertexPointer,
     glViewport, glext_LoadExtension, glDeleteRenderbuffersEXT,
     glDeleteFramebuffersEXT, glGenFramebuffersEXT,
-    glGenRenderbuffersEXT, glBindFramebufferEXT, 
+    glGenRenderbuffersEXT, glBindFramebufferEXT,
     glBindRenderbufferEXT, glRenderbufferStorageEXT,
     glFramebufferRenderbufferEXT, glFramebufferTexture2DEXT,
     glUniformMatrix4fv, glVertexAttribPointer, glCreateShader,
@@ -113,7 +113,7 @@ var
     GL_AUX_BUFFERS, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE, GL_ADD: integer;
 
     TThreadId : function : integer;
-    
+
     _strconcat, _strappend, _strprepend, _chrconcat : function : string;
     _strcompare, _strncompare, _strcomparec : function : boolean;
 

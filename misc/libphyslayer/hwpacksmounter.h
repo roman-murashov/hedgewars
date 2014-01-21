@@ -2,10 +2,8 @@
 #define HEDGEWARS_PACKAGES_MOUNTER_H
 
 #include "physfs.h"
-
-#ifndef STRINIT
+#include "physfscompat.h"
 #include "lua.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {

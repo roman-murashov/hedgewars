@@ -3,7 +3,6 @@ unit Adler32;
 {ZLib - Adler32 checksum function}
 
 interface
-uses uTypes;
 
 (*************************************************************************
 

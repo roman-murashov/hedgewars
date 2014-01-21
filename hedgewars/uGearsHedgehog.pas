@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 unit uGearsHedgehog;
 interface
-uses uTypes, uGearsHandlersMess; 
+uses uTypes, uGearsHandlersMess;
 
 procedure doStepHedgehog(Gear: PGear);
 procedure AfterAttack;
@@ -126,7 +126,7 @@ with HHGear^.Hedgehog^ do
             LoadHedgehogHat(HHGear^.Hedgehog^, Hat);
         end;
     // Try again in the next slot
-    if (CurAmmoType = prevAmmo) and (slot < cMaxSlotIndex) then 
+    if (CurAmmoType = prevAmmo) and (slot < cMaxSlotIndex) then
         begin
         inc(slot);
         HHGear^.MsgParam:= slot;
@@ -416,7 +416,7 @@ with Gear^,
                        amTardis: newGear:= AddGear(hwRound(X), hwRound(Y), gtTardis, 0, _0, _0, 0);
                        amIceGun: newGear:= AddGear(hwRound(X), hwRound(Y), gtIceGun, 0, _0, _0, 0);
             end;
-            if altUse and (newGear <> nil) and 
+            if altUse and (newGear <> nil) and
                ((CurAmmoGear = nil) or (CurAmmoGear^.AmmoType <> amJetpack) or (Gear^.Message and gmPrecise = 0)) then
                begin
                newGear^.dX:= newDx / newGear^.Density;
@@ -830,7 +830,7 @@ procedure HedgehogChAngle(HHGear: PGear);
 var da: LongWord;
 begin
 with HHGear^.Hedgehog^ do
-    if (((CurAmmoType = amRope) or ((CurAmmoGear <> nil) and (CurAmmoGear^.AmmoType = amRope))) and 
+    if (((CurAmmoType = amRope) or ((CurAmmoGear <> nil) and (CurAmmoGear^.AmmoType = amRope))) and
             ((HHGear^.State and (gstMoving or gstHHJumping)) = gstMoving))
     or ((CurAmmoType = amPortalGun) and ((HHGear^.State and gstMoving) <> 0)) then
         da:= 2
@@ -880,7 +880,7 @@ if isFalling then
         Gear^.State:= Gear^.State and (not gstCollision)
         end;
     Gear^.State:= Gear^.State or gstMoving;
-    if (CurrentHedgehog^.Gear = Gear) and (CurrentHedgehog^.Gear^.State and gstHHDriven <> 0) and
+    if (Gear^.State and gstHHDriven <> 0) and
        (not CurrentTeam^.ExtDriven) and (hwSqr(Gear^.dX) + hwSqr(Gear^.dY) > _0_003) then
         begin
         // TODO: why so aggressive at setting FollowGear when falling?
@@ -903,8 +903,8 @@ if isFalling then
 else
     begin
     land:= TestCollisionYwithGear(Gear, 1);
-    if ((Gear^.dX.QWordValue + Gear^.dY.QWordValue) < _0_55.QWordValue) and ((land and lfIce) = 0) 
-    and ((land and lfBouncy = 0) or (Gear^.State and gstCollision <> 0)) 
+    if ((Gear^.dX.QWordValue + Gear^.dY.QWordValue) < _0_55.QWordValue) and ((land and lfIce) = 0)
+    and ((land and lfBouncy = 0) or (Gear^.State and gstCollision <> 0))
     and ((Gear^.State and gstHHJumping) <> 0) then
         SetLittle(Gear^.dX);
 
@@ -1348,7 +1348,7 @@ if Gear = nil then exit;
 tX:= Gear^.X;
 if WorldWrap(Gear) then
     begin
-    if (WorldEdge <> weBounce) and (Gear = CurrentHedgehog^.Gear) and 
+    if (WorldEdge <> weBounce) and (Gear = CurrentHedgehog^.Gear) and
        (CurAmmoGear <> nil) and (CurAmmoGear^.Kind =gtRope) and (CurAmmoGear^.Elasticity <> _0) then
        CurAmmoGear^.PortalCounter:= 1;
     if (WorldEdge = weWrap) and ((TestCollisionXwithGear(Gear, 1) <> 0) or (TestCollisionXwithGear(Gear, -1) <> 0))  then

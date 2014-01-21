@@ -6,6 +6,7 @@ include_directories(${LUA_INCLUDE_DIR})
 
 
 set(PHYSLAYER_SRCS
+    physfscompat.c
     physfsrwops.c
     physfslualoader.c
     hwpacksmounter.c

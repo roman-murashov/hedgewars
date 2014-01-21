@@ -1,9 +1,9 @@
 # Find GLEW
 #
 # Once done this will define
-#  GLEW_FOUND - system has Sparkle
-#  GLEW_INCLUDE_DIR - the Sparkle include directory
-#  GLEW_LIBRARY - The library needed to use Sparkle
+#  GLEW_FOUND - system has GLEW
+#  GLEW_INCLUDE_DIR - the GLEW include directory
+#  GLEW_LIBRARY - The library needed to use GLEW
 # Copyright (c) 2013, Vittorio Giovara <vittorio.giovara@gmail.com>
 #
 # Distributed under the OSI-approved BSD License (the "License");

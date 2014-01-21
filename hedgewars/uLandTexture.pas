@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,11 +39,10 @@ type TLandRecord = record
             tex: PTexture;
             end;
 
-var
-    LandTextures : array of array of TLandRecord;
-    tmpPixels	 : array [0..TEXSIZE - 1, 0..TEXSIZE - 1] of LongWord;
-    LANDTEXARW	 : LongWord;
-    LANDTEXARH	 : LongWord;
+var LandTextures: array of array of TLandRecord;
+    tmpPixels: array [0..TEXSIZE - 1, 0..TEXSIZE - 1] of LongWord;
+    LANDTEXARW: LongWord;
+    LANDTEXARH: LongWord;
 
 function Pixels(x, y: Longword): Pointer;
 var ty: Longword;
@@ -199,6 +198,7 @@ begin
         LANDTEXARW:= (LAND_WIDTH div TEXSIZE) div 2;
         LANDTEXARH:= (LAND_HEIGHT div TEXSIZE) div 2;
         end;
+
     SetLength(LandTextures, LANDTEXARW, LANDTEXARH);
 end;
 

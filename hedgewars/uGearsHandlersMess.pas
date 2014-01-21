@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
  *            should NOT occur!
  *            Use safe functions and data types! (e.g. GetRandom() and hwFloat)
  *)
- 
+
  {$INCLUDE "options.inc"}
 
 unit uGearsHandlersMess;
@@ -208,7 +208,7 @@ begin
         if (gi^.Kind = gtHedgehog) then
             begin
             d := r - hwRound(Distance(gi^.X - x, gi^.Y - y));
-            if (d > 1) and ((gi^.Hedgehog^.Effects[heInvulnerable] = 0)) and (GetRandom(2) = 0) then
+            if (d > 1) and (gi^.Hedgehog^.Effects[heInvulnerable] = 0) and (GetRandom(2) = 0) then
                 begin
                 if (CurrentHedgehog^.Gear = gi) then
                     PlaySoundV(sndOops, gi^.Hedgehog^.Team^.voicepack)
@@ -296,9 +296,9 @@ begin
         end;
 
     // clip velocity at 2 - over 1 per pixel, but really shouldn't cause many actual problems.
-    if Gear^.dX.Round > 2 then
+    if Gear^.dX.Round > 1 then
         Gear^.dX.QWordValue:= 8589934592;
-    if Gear^.dY.Round > 2 then
+    if Gear^.dY.Round > 1 then
         Gear^.dY.QWordValue:= 8589934592;
 
     if (Gear^.State and gstSubmersible <> 0) and (gY > cWaterLine) then
@@ -394,7 +394,7 @@ begin
         if xland <> 0 then collH := -hwSign(Gear^.dX)
         end;
     //if Gear^.AdvBounce and (collV <>0) and (collH <> 0) and (hwSqr(tdX) + hwSqr(tdY) > _0_08) then
-    if (collV <> 0) and (collH <> 0) and 
+    if (collV <> 0) and (collH <> 0) and
        (((Gear^.AdvBounce=1) and ((collV=-1) or ((tdX.QWordValue + tdY.QWordValue) > _0_2.QWordValue)))) then
  //or ((xland or land) and lfBouncy <> 0)) then
         begin
@@ -436,7 +436,7 @@ begin
 
     if ((xland or land) and lfBouncy <> 0) and (Gear^.dX.QWordValue < _0_15.QWordValue) and (Gear^.dY.QWordValue < _0_15.QWordValue) then
         Gear^.State := Gear^.State or gstCollision;
-    
+
     if ((xland or land) and lfBouncy <> 0) and (Gear^.Radius >= 3) and
        ((Gear^.dX.QWordValue > _0_15.QWordValue) or (Gear^.dY.QWordValue > _0_15.QWordValue)) then
         begin
@@ -760,7 +760,7 @@ if gun then
     yy:= hwRound(Gear^.Y);
     if draw and (WorldEdge = weWrap) and ((xx < LongInt(leftX) + 3) or (xx > LongInt(rightX) - 3)) then
         begin
-        if xx < LongInt(leftX) + 3 then 
+        if xx < LongInt(leftX) + 3 then
              xx:= rightX-3
         else xx:= leftX+3;
         Gear^.X:= int2hwFloat(xx)
@@ -1772,7 +1772,7 @@ begin
                 end
             end
     else // gsttmpFlag = 0
-        if ((GameFlags and gfInfAttack = 0) and ((TurnTimeLeft = 0) or (Gear^.Hedgehog^.Gear = nil))) 
+        if ((GameFlags and gfInfAttack = 0) and ((TurnTimeLeft = 0) or (Gear^.Hedgehog^.Gear = nil)))
         or ((GameFlags and gfInfAttack <> 0) and (GameTicks > Gear^.FlightTime)) then
             Gear^.State := Gear^.State or gsttmpFlag;
 end;
@@ -2163,7 +2163,7 @@ begin
             exit
             end
         end
-    else 
+    else
         begin
         if (Gear^.Timer = 1) and (GameTicks and $3 = 0) then
             begin
@@ -2504,7 +2504,7 @@ begin
     if Gear^.AmmoType = amRubber then LandFlags:= lfBouncy
     else if cIce then LandFlags:= lfIce;
 
-    if ((Distance(tx - x, ty - y) > _256) and ((WorldEdge <> weWrap) or 
+    if ((Distance(tx - x, ty - y) > _256) and ((WorldEdge <> weWrap) or
             (
             (Distance(tx - int2hwFloat(rightX+(rx-leftX)), ty - y) > _256) and
             (Distance(tx - int2hwFloat(leftX-(rightX-rx)), ty - y) > _256)
@@ -2907,7 +2907,7 @@ begin
                     dmg:= dmgBase - max(hwRound(Distance(tdX, tdY)),gi^.Radius);
                 if (dmg > 1) then dmg:= ModifyDamage(min(dmg div 2, cakeDmg), gi);
                 if (dmg > 1) then
-                    if (CurrentHedgehog^.Gear = gi) and ((gi^.Hedgehog^.Effects[heInvulnerable] = 0)) then
+                    if (CurrentHedgehog^.Gear = gi) and (gi^.Hedgehog^.Effects[heInvulnerable] = 0) then
                         gi^.State := gi^.State or gstLoser
                     else
                         gi^.State := gi^.State or gstWinner;
@@ -2945,7 +2945,7 @@ begin
         exit
         end;
 
-    cakeStep(Gear);
+    if not cakeStep(Gear) then Gear^.doStep:= @doStepCakeFall;
 
     if Gear^.Tag = 0 then
         begin
@@ -4830,7 +4830,7 @@ while i > 0 do
         if (tmp^.Kind = gtHedgehog) or (tmp^.Kind = gtMine) or (tmp^.Kind = gtExplosives) then
             begin
             //tmp^.State:= tmp^.State or gstFlatened;
-            if (tmp^.Hedgehog^.Effects[heInvulnerable] = 0) then
+            if (tmp^.Kind <> gtHedgehog) or (tmp^.Hedgehog^.Effects[heInvulnerable] = 0) then
                 ApplyDamage(tmp, CurrentHedgehog, tmp^.Health div 3, dsUnknown);
             //DrawTunnel(tmp^.X, tmp^.Y - _1, _0, _0_5, cHHRadius * 6, cHHRadius * 3);
             tmp2:= AddGear(hwRound(tmp^.X), hwRound(tmp^.Y), gtHammerHit, 0, _0, _0, 0);
@@ -5384,7 +5384,7 @@ begin
         Gear^.SoundChannel:= -1;
         if GameTicks mod 40 = 0 then dec(Gear^.Health)
         end
-    else 
+    else
         begin
         if Gear^.SoundChannel = -1 then
             Gear^.SoundChannel := LoopSound(sndIceBeam);
@@ -5491,14 +5491,14 @@ begin
                     landRect.w := min(2*iceRadius, LAND_WIDTH - landRect.x - 1);
                     landRect.h := min(2*iceRadius, LAND_HEIGHT - landRect.y - 1);
                     UpdateLandTexture(landRect.x, landRect.w, landRect.y, landRect.h, true);
-                    
+
                     // Freeze nearby mines/explosives/cases too
                     iter := GearsList;
                     while iter <> nil do
                         begin
                         if (iter^.State and gstFrozen = 0) and
-                           ((iter^.Kind = gtExplosives) or (iter^.Kind = gtCase) or (iter^.Kind = gtMine)) and 
-                           (abs(LongInt(iter^.X.Round) - target.x) + abs(LongInt(iter^.Y.Round) - target.y) + 2 < 2 * iceRadius) 
+                           ((iter^.Kind = gtExplosives) or (iter^.Kind = gtCase) or (iter^.Kind = gtMine)) and
+                           (abs(LongInt(iter^.X.Round) - target.x) + abs(LongInt(iter^.Y.Round) - target.y) + 2 < 2 * iceRadius)
                            and (Distance(iter^.X - int2hwFloat(target.x), iter^.Y - int2hwFloat(target.y)) < int2hwFloat(iceRadius * 2)) then
                             begin
                             for t:= 0 to 5 do

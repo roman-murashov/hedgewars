@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -191,12 +191,12 @@ begin
     numFramesFirstCol:= SpritesData[sprite].imageHeight div SpritesData[sprite].Height;
     row:= Frame mod numFramesFirstCol;
     col:= Frame div numFramesFirstCol;
-    
-    copyToXYFromRect(SpritesData[sprite].Surface, dest, 
-             col*SpritesData[sprite].Width, 
-             row*SpritesData[sprite].Height, 
-             SpritesData[sprite].Width, 
-             spritesData[sprite].Height, 
+
+    copyToXYFromRect(SpritesData[sprite].Surface, dest,
+             col*SpritesData[sprite].Width,
+             row*SpritesData[sprite].Height,
+             SpritesData[sprite].Width,
+             spritesData[sprite].Height,
              x,y);
 end;
 
@@ -217,7 +217,7 @@ begin
     dy:= abs(y1-y0);
     if x0 < x1 then sx:= 1 else sx:= -1;
     if y0 < y1 then sy:= 1 else sy:= -1;
-    err:= dx-dy; 
+    err:= dx-dy;
 
     while(true) do
         begin
@@ -346,7 +346,7 @@ begin
         begin
         w:= 0;
         i:= round(Sqrt(length(s)) * 2);
-       // s:= WrapText(s, #1, chars, i);
+        s:= WrapText(s, #1, chars, i);
         pos:= 1; prevpos:= 0; line:= 0;
     // Find the longest line for the purposes of centring the text.  Font dependant.
         while pos <= length(s) do

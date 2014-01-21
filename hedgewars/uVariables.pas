@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ var
 
     CheckSum        : LongWord;
     CampaignVariable: shortstring;
-    GameTicks       : LongInt; {xymeng:originally LongWord}
+    GameTicks       : LongWord;
     GameState       : TGameState;
     GameType        : TGameType;
     InputMask       : LongWord;
@@ -213,7 +213,7 @@ var
 
     LuaGoals        : shortstring;
 
-    LuaTemplateNumber : LongInt; {org: LongWord}
+    LuaTemplateNumber : LongWord;
 
     LastVoice : TVoice = ( snd: sndNone; voicepack: nil );
 
@@ -720,7 +720,7 @@ var
             TimeAfterTurn: Longword;
             minAngle, maxAngle: Longword;
             isDamaging: boolean;
-            SkipTurns: LongInt; {xymeng, orinally: LongWord}
+            SkipTurns: LongWord;
             PosCount: Longword;
             PosSprite: TSprite;
             ejectX, ejectY: Longint;
@@ -2385,20 +2385,19 @@ var
     aTexCoord: GLint;
     aColor: GLint;
 
-var trammo:  array[TAmmoStrId] of ansistring;   // name of the weapon
-    trammoc: array[TAmmoStrId] of ansistring;   // caption of the weapon
-    trammod: array[TAmmoStrId] of ansistring;   // description of the weapon
-    trmsg:   array[TMsgStrId]  of ansistring;   // message of the event
-    trgoal:  array[TGoalStrId] of ansistring;   // message of the goal
+var trammo:  array[TAmmoStrId] of PChar;   // name of the weapon
+    trammoc: array[TAmmoStrId] of PChar;   // caption of the weapon
+    trammod: array[TAmmoStrId] of PChar;   // description of the weapon
+    trmsg:   array[TMsgStrId]  of PChar;   // message of the event
+    trgoal:  array[TGoalStrId] of PChar;   // message of the goal
+    cTestLua : Boolean;
 
 procedure preInitModule;
 procedure initModule;
 procedure freeModule;
 
 implementation
-{$IFNDEF PAS2C}
-uses strutils;
-{$ENDIF}
+uses strutils, sysutils;
 
 procedure preInitModule;
 begin
@@ -2427,6 +2426,9 @@ begin
     PathPrefix      := './';
     GameType        := gmtLocal;
     cOnlyStats      := False;
+    cScriptName     := '';
+    cScriptParam    := '';
+    cTestLua        := False;
 
 {$IFDEF USE_VIDEO_RECORDING}
     RecPrefix          := '';
@@ -2440,7 +2442,22 @@ begin
 end;
 
 procedure initModule;
+var asid: TAmmoStrId;
+    msid: TMsgStrId;
+    gsid: TGoalStrId;
 begin
+    for asid:= Low(TAmmoStrId) to High(TAmmoStrId) do
+        begin
+        trammo[asid]:= nil;
+        trammoc[asid]:= nil;
+        trammod[asid]:= nil;
+        end;
+    for msid:= Low(TMsgStrId) to High(TMsgStrId) do
+        trmsg[msid]:= nil;
+    for gsid:= Low(TGoalStrId) to High(TGoalStrId) do
+        trgoal[gsid]:= nil;
+
+// TODO: fixme
 {$IFDEF PAS2C}
     cLocale:= 'en';
 {$ELSE}
@@ -2577,8 +2594,6 @@ begin
     fastUntilLag    := false;
     fastScrolling   := false;
     autoCameraOn    := true;
-    cScriptName     := '';
-    cScriptParam    := '';
     cSeed           := '';
     cVolumeDelta    := 0;
     cHasFocus       := true;
@@ -2629,7 +2644,20 @@ begin
 end;
 
 procedure freeModule;
+var asid: TAmmoStrId;
+    msid: TMsgStrId;
+    gsid: TGoalStrId;
 begin
+    for asid:= Low(TAmmoStrId) to High(TAmmoStrId) do
+        begin
+        if trammo[asid] <> nil then StrDispose(trammo[asid]);
+        if trammoc[asid] <> nil then StrDispose(trammoc[asid]);
+        if trammod[asid] <> nil then StrDispose(trammod[asid]);
+        end;
+    for msid:= Low(TMsgStrId) to High(TMsgStrId) do
+        if trmsg[msid] <> nil then StrDispose(trmsg[msid]);
+    for gsid:= Low(TGoalStrId) to High(TGoalStrId) do
+        if trgoal[gsid] <> nil then StrDispose(trgoal[gsid]);
 end;
 
 end.

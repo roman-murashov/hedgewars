@@ -205,8 +205,8 @@ renderEnum2Strs :: [(String, [String])] -> Bool -> String
 renderEnum2Strs enums implement =
     render $ foldl ($+$) empty $ map (\en -> let d = decl (fst en) in if implement then d $+$ enum2strBlock (snd en) else d <> semi) enums
     where
-    decl id = text "string255 __attribute__((overloadable)) fpcrtl_GetEnumName" <> parens (text "int dummy, const" <+> text id <+> text "enumvar") 
-    enum2strBlock en = 
+    decl id = text "string255 __attribute__((overloadable)) fpcrtl_GetEnumName" <> parens (text "int dummy, const" <+> text id <+> text "enumvar")
+    enum2strBlock en =
             text "{"
             $+$
             (nest 4 $
@@ -382,7 +382,7 @@ typeVarDecl2BaseType d = do
         resolveTypeHelper' st b = do
             bt <- st
             return (b, bt)
-	
+
 resolveType :: TypeDecl -> State RenderState BaseType
 resolveType st@(SimpleType (Identifier i _)) = do
     let i' = map toLower i
@@ -410,8 +410,8 @@ resolveType (ArrayDecl (Just i) t) = do
     return $ BTArray i (BTInt True) t'
 resolveType (ArrayDecl Nothing t) = liftM (BTArray RangeInfinite (BTInt True)) $ resolveType t
 resolveType (FunctionType t a) = do
-	bts <- typeVarDecl2BaseType a
-	liftM (BTFunction False bts) $ resolveType t
+    bts <- typeVarDecl2BaseType a
+    liftM (BTFunction False bts) $ resolveType t
 resolveType (DeriveType (InitHexNumber _)) = return (BTInt True)
 resolveType (DeriveType (InitNumber _)) = return (BTInt True)
 resolveType (DeriveType (InitFloat _)) = return BTFloat
@@ -645,8 +645,8 @@ initExpr2C' (InitBinOp op expr1 expr2) = do
     e2 <- initExpr2C' expr2
     return $ parens $ e1 <+> text (op2C op) <+> e2
 initExpr2C' (InitNumber s) = do
-								modify(\s -> s{lastType = (BTInt True)})
-								return $ text s
+                                modify(\s -> s{lastType = (BTInt True)})
+                                return $ text s
 initExpr2C' (InitFloat s) = return $ text s
 initExpr2C' (InitHexNumber s) = return $ text "0x" <> (text . map toLower $ s)
 initExpr2C' (InitString [a]) = return . quotes $ text [a]
@@ -872,7 +872,7 @@ phrase2C (ForCycle i' e1' e2' p up) = do
         i <+> text "=" <+> e1 <> semi
         $$
         iType <+> iEnd <+> text "=" <+> e2 <> semi
-        $$ 
+        $$
         text "if" <+> (parens $ i <+> text (if up then "<=" else ">=") <+> iEnd) <+> text "do" <+> ph <+>
         text "while" <> parens (i <+> text "!=" <+> iEnd <+> text add) <> semi
     where
@@ -1062,7 +1062,7 @@ ref2CF r@(RecordField (SimpleReference _) (SimpleReference _)) addParens = do
     case t of
          BTFunction _ _ rt -> do
              modify(\s -> s{lastType = rt})
-             return $ if addParens then i <> parens empty else i 
+             return $ if addParens then i <> parens empty else i
          _ -> return $ i
 ref2CF r _ = ref2C r
 
@@ -1121,9 +1121,9 @@ ref2C f@(FunCall params ref) = do
     t <- gets lastType
     case t of
         BTFunction _ bts t' -> do
-            ps <- liftM (parens . hsep . punctuate (char ',')) $ 
+            ps <- liftM (parens . hsep . punctuate (char ',')) $
                     if (length params) == (length bts) -- hot fix for pas2cSystem and pas2cRedo functions since they don't have params
-                    then 
+                    then
                         mapM expr2CHelper (zip params bts)
                     else mapM expr2C params
             modify (\s -> s{lastType = t'})

@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ function  AddVisualGear(X, Y: LongInt; Kind: TVisualGearType; State: LongWord; C
 procedure DeleteVisualGear(Gear: PVisualGear);
 function  VisualGearByUID(uid : Longword) : PVisualGear;
 
-const 
+const
     cExplFrameTicks = 110;
 
 var VGCounter: LongWord;
@@ -75,7 +75,7 @@ if ((cReducedQuality and rqAntiBoom) <> 0) and
     vgtEvilTrace,
     vgtNote,
     vgtSmoothWindBar])) then
-    
+
         exit;
 
 inc(VGCounter);
@@ -289,7 +289,7 @@ vgtBigExplosion:
                 if random(2) = 0 then
                     dx := -dx;
                 end;
-      vgtNote: 
+      vgtNote:
                 begin
                 dx:= 0.005 * (random(15) + 10);
                 dy:= -0.001 * (random(40) + 20);
@@ -306,7 +306,7 @@ vgtBigExplosion:
                 Frame:= 7;
                 Angle:= 0;
                 end;
-vgtSmoothWindBar: 
+vgtSmoothWindBar:
                 begin
                 Angle:= hwFloat2Float(cMaxWindSpeed)*2 / 1440; // seems rate below is supposed to change wind bar at 1px per 10ms. Max time, 1440ms. This tries to match the rate of change
                 Tag:= hwRound(cWindSpeed * 72 / cMaxWindSpeed);
@@ -332,7 +332,7 @@ if State <> 0 then
 case Gear^.Kind of
     vgtFlake: if cFlattenFlakes then
         gear^.Layer:= 0
-              else if random(3) = 0 then 
+              else if random(3) = 0 then
                   begin
                   gear^.Scale:= 0.5;
                   gear^.Layer:= 0   // 33% - far back

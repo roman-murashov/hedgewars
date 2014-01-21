@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -268,7 +268,7 @@ type
 // These are frequently overridden to serve some other purpose
             Pos: Longword;           // Commonly overridden.  Example use is posCase values in uConsts.
             Angle, Power : Longword; // Used for hog aiming/firing.  Angle is rarely used as an Angle otherwise.
-            Timer : LongWord;        // Typically used for some sort of gear timer. Time to explosion, remaining fuel...
+            Timer, WDTimer : LongWord;        // Typically used for some sort of gear timer. Time to explosion, remaining fuel...
             Tag: LongInt;            // Quite generic. Variety of uses.
             FlightTime: Longword;    // Initially added for batting of hogs to determine homerun. Used for some firing delays
             MsgParam: LongWord;      // Initially stored a set of messages. So usually gm values like Message. Frequently overriden
@@ -413,7 +413,7 @@ type
             CurrTeam: LongWord;
             ClanHealth: LongInt;
             ClanIndex: LongInt;
-            TurnNumber: LongInt;{xymeng, org:LongWord}
+            TurnNumber: LongWord;
             Flawless: boolean;
             end;
 

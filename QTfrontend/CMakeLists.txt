@@ -22,10 +22,10 @@ endif()
 find_package(SDL1or2)            #video in SDLInteraction
 find_package(SDL_mixer REQUIRED) #audio in SDLInteraction
 
-if(${FFMPEG_FOUND})
+if(LIBAV_FOUND)
     add_definitions(-DVIDEOREC -D__STDC_CONSTANT_MACROS)
-    include_directories(${FFMPEG_INCLUDE_DIR})
-    list(APPEND HW_LINK_LIBS ${FFMPEG_LIBRARIES})
+    include_directories(${LIBAV_INCLUDE_DIR})
+    list(APPEND HW_LINK_LIBS ${LIBAV_LIBRARIES})
 endif()
 
 # server messages localization
@@ -152,7 +152,7 @@ set(hwfr_hdrs
 
 set(hwfr_rez hedgewars.qrc)
 
-if(${BUILD_ENGINE_LIBRARY})
+if(BUILD_ENGINE_LIBRARY)
     add_definitions(-DHWLIBRARY=1)
     set(hwlibname "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}hwengine${CMAKE_SHARED_LIBRARY_SUFFIX}")
     list(APPEND HW_LINK_LIBS ${hwlibname})

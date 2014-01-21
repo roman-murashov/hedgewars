@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ procedure BlitImageAndGenerateCollisionInfo(cpX, cpY, Width: Longword; Image: PS
 begin
     BlitImageAndGenerateCollisionInfo(cpX, cpY, Width, Image, 0);
 end;
-    
+
 procedure BlitImageAndGenerateCollisionInfo(cpX, cpY, Width: Longword; Image: PSDL_Surface; LandFlags: Word);
 var p: PLongwordArray;
     x, y: Longword;
@@ -164,7 +164,7 @@ for y:= 0 to Pred(Image^.h) do
                 LandPixels[cpY + y, cpX + x]:= p^[x];
             end
         else
-            if LandPixels[(cpY + y) div 2, (cpX + x) div 2] = 0 then 
+            if LandPixels[(cpY + y) div 2, (cpX + x) div 2] = 0 then
                 LandPixels[(cpY + y) div 2, (cpX + x) div 2]:= p^[x];
 
         if (Land[cpY + y, cpX + x] <= lfAllObjMask) or (Land[cpY + y, cpX + x] and lfObject <> 0)  then
@@ -277,7 +277,7 @@ begin
     rr.x:= x1;
     while rr.x < x2 do
         begin
-        if cIce then 
+        if cIce then
             BlitImageAndGenerateCollisionInfo(rr.x, y, min(x2 - rr.x, tmpsurf^.w), tmpsurf, lfIce)
         else
             BlitImageAndGenerateCollisionInfo(rr.x, y, min(x2 - rr.x, tmpsurf^.w), tmpsurf);

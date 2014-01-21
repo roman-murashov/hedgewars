@@ -1,6 +1,6 @@
 (*
  * Hedgewars, a free turn based strategy game
- * Copyright (c) 2004-2013 Andrey Korotaev <unC0Rr@gmail.com>
+ * Copyright (c) 2004-2014 Andrey Korotaev <unC0Rr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 unit uIO;
 interface
-uses SDLh, uTypes, uMisc;
+uses SDLh, uTypes;
 
 procedure initModule;
 procedure freeModule;
@@ -181,7 +181,6 @@ var f  : File;
     ss : shortstring = '';
     i  : LongInt;
     s  : shortstring;
-   t, tt   : string;
 begin
 
 // set RDNLY on file open
@@ -202,7 +201,7 @@ repeat
         while (Length(ss) > 1)and(Length(ss) > byte(ss[1])) do
             begin
             ParseIPCCommand(copy(ss, 2, byte(ss[1])));
-           Delete(ss, 1, Succ(byte(ss[1])));
+            Delete(ss, 1, Succ(byte(ss[1])));
             end
         end
 until i = 0;
@@ -246,18 +245,18 @@ if IPCSock <> nil then
         s[0]:= #251;
 
     SDLNet_Write16(GameTicks, @s[Succ(byte(s[0]))]);
-    
+
     AddFileLog('[IPC out] '+ sanitizeCharForLog(s[1]));
     inc(s[0], 2);
-    
+
     if isSyncedCommand(s[1]) then
         begin
         if sendBuffer.count + byte(s[0]) >= cSendBufferSize then
             flushBuffer();
-            
+
         Move(s, sendBuffer.buf[sendBuffer.count], byte(s[0]) + 1);
         inc(sendBuffer.count, byte(s[0]) + 1);
-        
+
         if (s[1] = 'N') or (s[1] = '#') then
             flushBuffer();
         end else
@@ -306,8 +305,8 @@ if (flushDelayTicks >= cSendEmptyPacketTime) then
     begin
     if sendBuffer.count = 0 then
         SendIPC(_S'+');
-        
-     flushBuffer()    
+
+     flushBuffer()
     end
 end;
 
