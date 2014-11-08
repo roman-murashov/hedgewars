@@ -16,27 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <QPushButton>
-#include <QBuffer>
-#include <QUuid>
 #include <QBitmap>
-#include <QPainter>
-#include <QLinearGradient>
+#include <QBuffer>
 #include <QColor>
-#include <QTextStream>
-#include <QLabel>
-#include <QListView>
-#include <QVBoxLayout>
-#include <QIcon>
-#include <QLineEdit>
-#include <QStringListModel>
-#include <QListWidget>
-#include <QListWidgetItem>
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
+#include <QIcon>
 #include <QInputDialog>
+#include <QLabel>
+#include <QLinearGradient>
+#include <QLineEdit>
+#include <QListView>
+#include <QListWidget>
+#include <QListWidgetItem>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPushButton>
+#include <QSlider>
+#include <QStringListModel>
+#include <QTextStream>
+#include <QUuid>
+#include <QVBoxLayout>
 
 #include "hwconsts.h"
 #include "mapContainer.h"
@@ -151,6 +152,15 @@ HWMapContainer::HWMapContainer(QWidget * parent) :
     mapPreview->setContentsMargins(0, 0, 0, 0);
     leftLayout->addWidget(mapPreview, 0);
     connect(mapPreview, SIGNAL(clicked()), this, SLOT(previewClicked()));
+
+    mapFeatureSize = new QSlider(Qt::Horizontal, this);
+    mapFeatureSize->setObjectName("mapFeatureSize");
+    //mapFeatureSize->setTickPosition(QSlider::TicksBelow);
+    mapFeatureSize->setMaximum(100);
+    mapFeatureSize->setMinimum(1);
+    mapFeatureSize->setFixedWidth(259);
+    mapFeatureSize->setValue(50);
+    leftLayout->addWidget(mapFeatureSize, 0);
 
     /* Bottom-Left layout */
 
@@ -544,19 +554,24 @@ void HWMapContainer::intSetMapgen(MapGenerator m)
     {
         mapgen = m;
 
+        bool f = false;
         switch (m)
         {
             case MAPGEN_REGULAR:
                 m_mapInfo.type = MapModel::GeneratedMap;
+                f = true;
                 break;
             case MAPGEN_MAZE:
                 m_mapInfo.type = MapModel::GeneratedMaze;
+                f = true;
                 break;
             case MAPGEN_PERLIN:
                 m_mapInfo.type = MapModel::GeneratedPerlin;
+                f = true;
                 break;
             case MAPGEN_DRAWN:
                 m_mapInfo.type = MapModel::HandDrawnMap;
+                f = true;
                 break;
             case MAPGEN_MAP:
                 switch (m_mapInfo.type)
@@ -572,7 +587,8 @@ void HWMapContainer::intSetMapgen(MapGenerator m)
                 break;
         }
 
-        emit mapgenChanged(m);
+        if(f)
+            changeMapType(m_mapInfo.type, QModelIndex());
     }
 }
 
@@ -873,11 +889,8 @@ void HWMapContainer::mapChanged(const QModelIndex & map, int type, const QModelI
         mapList->scrollTo(map);
     }
 
-    if (map.data(Qt::UserRole + 1).canConvert<MapModel::MapInfo>())
-        setMapInfo(map.data(Qt::UserRole + 1).value<MapModel::MapInfo>());
-    else
-        Q_ASSERT(false); // Houston, we have a problem.
-
+    Q_ASSERT(map.data(Qt::UserRole + 1).canConvert<MapModel::MapInfo>()); // Houston, we have a problem.
+    setMapInfo(map.data(Qt::UserRole + 1).value<MapModel::MapInfo>());
 }
 
 void HWMapContainer::setMapInfo(MapModel::MapInfo mapInfo)
