@@ -37,6 +37,7 @@ function  EnumToStr(const en : TCapGroup) : shortstring; overload;
 function  EnumToStr(const en : TSprite) : shortstring; overload;
 
 function  Min(a, b: LongInt): LongInt; inline;
+function  MinD(a, b: double) : double; inline;
 function  Max(a, b: LongInt): LongInt; inline;
 
 function  IntToStr(n: LongInt): shortstring;
@@ -95,7 +96,7 @@ implementation
 uses {$IFNDEF PAS2C}typinfo, {$ENDIF}Math, uConsts, uVariables, SysUtils;
 
 {$IFDEF DEBUGFILE}
-var f: textfile;
+var logFile: textfile;
 {$IFDEF USE_VIDEO_RECORDING}
     logMutex: TRTLCriticalSection; // mutex for debug file
 {$ENDIF}
@@ -194,6 +195,14 @@ else
     Min:= b
 end;
 
+function MinD(a, b: double): double;
+begin
+if a < b then
+    MinD:= a
+else
+    MinD:= b
+end;
+
 function Max(a, b: LongInt): LongInt;
 begin
 if a > b then
@@ -217,7 +226,7 @@ val(s, StrToInt);
 val(s, StrToInt, c);
 {$IFDEF DEBUGFILE}
 if c <> 0 then
-    writeln(f, 'Error at position ' + IntToStr(c) + ' : ' + s[c])
+    writeln(logFile, 'Error at position ' + IntToStr(c) + ' : ' + s[c])
 {$ENDIF}
 {$ENDIF}
 end;
@@ -280,7 +289,7 @@ end;
 
 function DecodeBase64(s: shortstring): shortstring;
 const table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-var i, t, c: Longword;
+var i, t, c: LongInt;
 begin
 c:= 0;
 for i:= 1 to Length(s) do
@@ -345,8 +354,8 @@ begin
 {$IFDEF USE_VIDEO_RECORDING}
 EnterCriticalSection(logMutex);
 {$ENDIF}
-writeln(f, inttostr(GameTicks)  + ': ' + s);
-flush(f);
+writeln(logFile, inttostr(GameTicks)  + ': ' + s);
+flush(logFile);
 
 {$IFDEF USE_VIDEO_RECORDING}
 LeaveCriticalSection(logMutex);
@@ -363,8 +372,8 @@ s:= s;
 {$IFDEF USE_VIDEO_RECORDING}
 EnterCriticalSection(logMutex);
 {$ENDIF}
-write(f, s);
-flush(f);
+write(logFile, s);
+flush(logFile);
 {$IFDEF USE_VIDEO_RECORDING}
 LeaveCriticalSection(logMutex);
 {$ENDIF}
@@ -529,9 +538,6 @@ begin
     InitCriticalSection(logMutex);
 {$ENDIF}
 {$I-}
-{$IFNDEF PAS2C}
-    f:= stderr; // if everything fails, write to stderr
-{$ENDIF}
     if (length(UserPathPrefix) > 0) then
         begin
         {$IFNDEF PAS2C}
@@ -543,13 +549,19 @@ begin
         i:= 0;
         while(i < 7) do
             begin
-            assign(f, shortstring(UserPathPrefix) + '/Logs/' + logfileBase + inttostr(i) + '.log');
+            assign(logFile, shortstring(UserPathPrefix) + '/Logs/' + logfileBase + inttostr(i) + '.log');
+            Rewrite(logFile);
             if IOResult = 0 then
                 break;
             inc(i)
             end;
         end;
-    Rewrite(f);
+
+{$IFNDEF PAS2C}
+    // if everything fails, write to stderr
+    if (length(UserPathPrefix) = 0) or (IOResult = 0) then
+        logFile:= stderr;
+{$ENDIF}
 {$I+}
 {$ENDIF}
 
@@ -571,9 +583,9 @@ end;
 procedure freeModule;
 begin
 {$IFDEF DEBUGFILE}
-    writeln(f, 'halt at ' + inttostr(GameTicks) + ' ticks. TurnTimeLeft = ' + inttostr(TurnTimeLeft));
-    flush(f);
-    close(f);
+    writeln(logFile, 'halt at ' + inttostr(GameTicks) + ' ticks. TurnTimeLeft = ' + inttostr(TurnTimeLeft));
+    flush(logFile);
+    close(logFile);
 {$IFDEF USE_VIDEO_RECORDING}
     DoneCriticalSection(logMutex);
 {$ENDIF}
