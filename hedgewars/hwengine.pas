@@ -22,12 +22,8 @@
 {$R res/hwengine.rc}
 {$ENDIF}
 
-{$IFDEF HWLIBRARY}
 unit hwengine;
 interface
-{$ELSE}
-program hwengine;
-{$ENDIF}
 
 uses SDLh, uMisc, uConsole, uGame, uConsts, uLand, uAmmos, uVisualGears, uGears, uStore, uWorld, uInputHandler
      , uSound, uScript, uTeams, uStats, uIO, uLocale, uChat, uAI, uAIMisc, uAILandMarks, uLandTexture, uCollisions
@@ -38,19 +34,12 @@ uses SDLh, uMisc, uConsole, uGame, uConsts, uLand, uAmmos, uVisualGears, uGears,
      {$IFDEF ANDROID}, GLUnit{$ENDIF}
      ;
 
-{$IFDEF HWLIBRARY}
-procedure RunEngine(argc: LongInt; argv: PPChar); cdecl; export;
-
+function  RunEngine(argc: LongInt; argv: PPChar): Longint; cdecl; export;
 procedure preInitEverything();
 procedure initEverything(complete:boolean);
 procedure freeEverything(complete:boolean);
 
 implementation
-{$ELSE}
-procedure preInitEverything(); forward;
-procedure initEverything(complete:boolean); forward;
-procedure freeEverything(complete:boolean); forward;
-{$ENDIF}
 
 ///////////////////////////////////////////////////////////////////////////////
 function DoTimer(Lag: LongInt): boolean;
@@ -340,8 +329,8 @@ begin
     initEverything(true);
     WriteLnToConsole('Hedgewars engine ' + cVersionString + '-r' + cRevisionString +
                      ' (' + cHashString + ') with protocol #' + inttostr(cNetProtoVersion));
-    AddFileLog('Prefix: "' + shortstring(PathPrefix) +'"');
-    AddFileLog('UserPrefix: "' + shortstring(UserPathPrefix) +'"');
+    //AddFileLog('Prefix: "' + shortstring(PathPrefix) +'"');
+    //AddFileLog('UserPrefix: "' + shortstring(UserPathPrefix) +'"');
 
     for i:= 0 to ParamCount do
         AddFileLog(inttostr(i) + ': ' + ParamStr(i));
@@ -403,7 +392,6 @@ begin
         begin
         if recordFileName = '' then
             begin
-            InitIPC;
             SendIPCAndWaitReply(_S'C');        // ask for game config
             end
         else
@@ -462,8 +450,8 @@ begin
     uLand.initModule;               // computes land
     uLandPainted.initModule;        // computes drawn land
     uIO.initModule;                 // sets up sockets
-    uPhysFSLayer.initModule;
     uScript.initModule;
+    uTeams.initModule;              // clear CurrentTeam variable
 
     if complete then
     begin
@@ -487,7 +475,6 @@ begin
         uStats.initModule;
         uStore.initModule;
         uRender.initModule;
-        uTeams.initModule;
         uVisualGears.initModule;
         uVisualGearsHandlers.initModule;
         uWorld.initModule;
@@ -531,7 +518,6 @@ begin
     uCommands.freeModule;
     uVariables.freeModule;
     uUtils.freeModule;              // closes debug file
-    uPhysFSLayer.freeModule;
     uScript.freeModule;
 end;
 
@@ -541,7 +527,6 @@ var Preview: TPreviewAlpha;
 begin
     initEverything(false);
 
-    InitIPC;
     IPCWaitPongEvent;
     TryDo(InitStepsFlags = cifRandomize, 'Some parameters not set (flags = ' + inttostr(InitStepsFlags) + ')', true);
 
@@ -554,18 +539,21 @@ begin
     freeEverything(false);
 end;
 
-{$IFDEF HWLIBRARY}
-procedure RunEngine(argc: LongInt; argv: PPChar); cdecl; export;
+function EngineThread(p: pointer): Longint; cdecl; export;
+begin
+    if GameType = gmtLandPreview then
+        GenLandPreview()
+    else Game();
+
+    EngineThread:= 0
+end;
+
+
+function RunEngine(argc: LongInt; argv: PPChar): Longint; cdecl; export;
 begin
     operatingsystem_parameter_argc:= argc;
     operatingsystem_parameter_argv:= argv;
-{$ELSE}
-begin
-{$ENDIF}
 
-///////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////// m a i n ///////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 {$IFDEF PAS2C}
     // workaround for pascal's ParamStr and ParamCount
     init(argc, argv);
@@ -574,21 +562,13 @@ begin
 
     GetParams();
 
-    if GameType = gmtLandPreview then
-        GenLandPreview()
-    else if GameType <> gmtSyntax then
-        Game();
-
-    // return 1 when engine is not called correctly
     if GameType = gmtSyntax then
-        {$IFDEF PAS2C}
-        exit(HaltUsageError);
-        {$ELSE}
-        halt(HaltUsageError);
-        {$ENDIF}
-
-{$IFDEF HWLIBRARY}
+        RunEngine:= HaltUsageError
+    else
+    begin
+        SDL_CreateThread(@EngineThread{$IFDEF SDL2}, 'engine'{$ENDIF}, nil);
+        RunEngine:= 0
+    end
 end;
-{$ENDIF}
 
 end.
