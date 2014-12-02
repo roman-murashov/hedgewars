@@ -842,6 +842,8 @@ type
 
     PSDL_Thread = Pointer;
     PSDL_mutex = Pointer;
+    PSDL_sem = Pointer;
+    PSDL_cond = Pointer;
 
     TSDL_GLattr = (
         SDL_GL_RED_SIZE,
@@ -1063,6 +1065,23 @@ function  SDL_CreateMutex: PSDL_mutex; cdecl; external SDLLibName;
 procedure SDL_DestroyMutex(mutex: PSDL_mutex); cdecl; external SDLLibName;
 function  SDL_LockMutex(mutex: PSDL_mutex): LongInt; cdecl; external SDLLibName {$IFNDEF SDL2}name 'SDL_mutexP'{$ENDIF};
 function  SDL_UnlockMutex(mutex: PSDL_mutex): LongInt; cdecl; external SDLLibName {$IFNDEF SDL2}name 'SDL_mutexV'{$ENDIF};
+
+function  SDL_CreateCond: PSDL_cond; cdecl; external SDLLibName;
+procedure SDL_DestroyCond(cond: PSDL_cond); cdecl; external SDLLibName;
+function  SDL_CondSignal(cond: PSDL_cond): LongInt; cdecl; external SDLLibName;
+function  SDL_CondBroadcast(cond: PSDL_cond): LongInt; cdecl; external SDLLibName;
+function  SDL_CondWait(cond: PSDL_cond; mut: PSDL_mutex): LongInt; cdecl; external SDLLibName;
+function  SDL_CondWaitTimeout(cond: PSDL_cond; mut: PSDL_mutex; ms: Longword): LongInt; cdecl; external SDLLibName;
+
+
+function SDL_CreateSemaphore(initial_value: Longword): PSDL_sem; cdecl; external SDLLibName;
+procedure SDL_DestroySemaphore(sem: PSDL_sem); cdecl; external SDLLibName;
+function SDL_SemWait(sem: PSDL_sem): LongInt; cdecl; external SDLLibName;
+function SDL_SemTryWait(sem: PSDL_sem): LongInt; cdecl; external SDLLibName;
+function SDL_SemWaitTimeout(sem: PSDL_sem; ms: Longword): LongInt; cdecl; external SDLLibName;
+function SDL_SemPost(sem: PSDL_sem): LongInt; cdecl; external SDLLibName;
+function SDL_SemValue(sem: PSDL_sem): Longword; cdecl; external SDLLibName;
+
 
 function  SDL_GL_SetAttribute(attr: TSDL_GLattr; value: LongInt): LongInt; cdecl; external SDLLibName;
 procedure SDL_GL_SwapBuffers; cdecl; external SDLLibName;
