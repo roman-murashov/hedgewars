@@ -100,6 +100,15 @@ set(engine_sources
     uGearsUtils.pas
     uTeams.pas
 
+    uFLData.pas
+    uFLGameConfig.pas
+    uFLIPC.pas
+    uFLScripts.pas
+    uFLSchemes.pas
+    uFLTeams.pas
+    uFLTypes.pas
+    uFLUtils.pas
+
     #these interact with everything, so compile last
     uScript.pas
     )
