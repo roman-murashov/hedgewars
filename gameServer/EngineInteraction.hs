@@ -102,7 +102,9 @@ replayToDemo ti mParams prms msgs = if not sane then [] else concat [
         , [eml ["eseed ", mParams Map.! "SEED"]]
         , [eml ["e$gmflags ", showB gameFlags]]
         , schemeFlags
+        , schemeAdditional
         , [eml ["e$template_filter ", mParams Map.! "TEMPLATE"]]
+        , [eml ["e$feature_size ", mParams Map.! "FEATURE_SIZE"]]
         , [eml ["e$mapgen ", mapgen]]
         , mapgenSpecific
         , concatMap teamSetup ti
@@ -111,11 +113,11 @@ replayToDemo ti mParams prms msgs = if not sane then [] else concat [
         ]
     where
         keys1, keys2 :: Set.Set B.ByteString
-        keys1 = Set.fromList ["MAP", "MAPGEN", "MAZE_SIZE", "SEED", "TEMPLATE"]
+        keys1 = Set.fromList ["FEATURE_SIZE", "MAP", "MAPGEN", "MAZE_SIZE", "SEED", "TEMPLATE"]
         keys2 = Set.fromList ["AMMO", "SCHEME", "SCRIPT", "THEME"]
         sane = Set.null (keys1 Set.\\ Map.keysSet mParams)
             && Set.null (keys2 Set.\\ Map.keysSet prms)
-            && (not . null . drop 27 $ scheme)
+            && (not . null . drop 40 $ scheme)
             && (not . null . tail $ prms Map.! "AMMO")
         mapGenTypes = ["+rnd+", "+maze+", "+drawn+"]
         maybeScript = let s = head . fromMaybe ["Normal"] $ Map.lookup "SCRIPT" prms in if s == "Normal" then [] else [eml ["escript Scripts/Multiplayer/", s, ".lua"]]
@@ -131,6 +133,7 @@ replayToDemo ti mParams prms msgs = if not sane then [] else concat [
         schemeFlags = map (\(v, (n, m)) -> eml [n, " ", showB $ (readInt_ v) * m])
             $ filter (\(_, (n, _)) -> not $ B.null n)
             $ zip (drop (length gameFlagConsts) scheme) schemeParams
+        schemeAdditional = let scriptParam = B.tail $ scheme !! 41 in [eml ["e$scriptparam ", scriptParam] | not $ B.null scriptParam]
         ammoStr :: B.ByteString
         ammoStr = head . tail $ prms Map.! "AMMO"
         ammo = let l = B.length ammoStr `div` 4; ((a, b), (c, d)) = (B.splitAt l . fst &&& B.splitAt l . snd) . B.splitAt (l * 2) $ ammoStr in
@@ -184,6 +187,7 @@ schemeParams = [
     , ("e$healthdec", 1)
     , ("e$ropepct", 1)
     , ("e$getawaytime", 1)
+    , ("e$worldedge", 1)
     ]
 
 
