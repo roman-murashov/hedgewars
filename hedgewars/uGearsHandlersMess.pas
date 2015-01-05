@@ -804,6 +804,8 @@ We aren't using frametick right now, so just a waste of cycles.
             move:= true
         else if (xx > snowRight) or (xx < snowLeft) then
             move:=true
+        else if (cGravity < _0) and (yy < LAND_HEIGHT-1200) then
+            move:=true
         // Solid pixel encountered
         else if ((yy and LAND_HEIGHT_MASK) = 0) and ((xx and LAND_WIDTH_MASK) = 0) and (Land[yy, xx] <> 0) then
             begin
@@ -920,7 +922,9 @@ if move then
         end;
     Gear^.Pos:= 0;
     Gear^.X:= int2hwFloat(LongInt(GetRandom(snowRight - snowLeft)) + snowLeft);
-    Gear^.Y:= int2hwFloat(LAND_HEIGHT + LongInt(GetRandom(50)) - 1325);
+    if (cGravity < _0) and (yy < LAND_HEIGHT-1200) then
+         Gear^.Y:= int2hwFloat(LAND_HEIGHT - 50 - LongInt(GetRandom(50)))
+    else Gear^.Y:= int2hwFloat(LAND_HEIGHT + LongInt(GetRandom(50)) - 1250);
     Gear^.State:= Gear^.State or gstInvisible;
     end
 end;
@@ -1661,6 +1665,7 @@ end;
 procedure doStepMine(Gear: PGear);
 var vg: PVisualGear;
     dxdy: hwFloat;
+    dmg: LongWord;
 begin
     if Gear^.Health = 0 then dxdy:= hwAbs(Gear^.dX)+hwAbs(Gear^.dY);
     if (Gear^.State and gstMoving) <> 0 then
@@ -1681,7 +1686,11 @@ begin
     if (Gear^.Health = 0) then
         begin
         if (dxdy > _0_4) and (Gear^.State and gstCollision <> 0) then
-            inc(Gear^.Damage, hwRound(dxdy * _50));
+            begin
+            dmg:= hwRound(dxdy * _50);
+            inc(Gear^.Damage, dmg);
+            ScriptCall('onGearDamage', Gear^.UID, dmg)
+            end;
 
         if ((GameTicks and $FF) = 0) and (Gear^.Damage > random(30)) then
             begin
@@ -1820,7 +1829,7 @@ end;
 
 procedure doStepRollingBarrel(Gear: PGear);
 var
-    i: LongInt;
+    i, dmg: LongInt;
     particle: PVisualGear;
     dxdy: hwFloat;
 begin
@@ -1848,7 +1857,9 @@ begin
                         particle^.dX := particle^.dX + (Gear^.dX.QWordValue / 21474836480)
                     end
                 end;
-            inc(Gear^.Damage, hwRound(dxdy * _50))
+            dmg:= hwRound(dxdy * _50);
+            inc(Gear^.Damage, dmg);
+            ScriptCall('onGearDamage', Gear^.UID, dmg)
             end;
         CalcRotationDirAngle(Gear);
         //CheckGearDrowning(Gear)
@@ -2660,12 +2671,13 @@ begin
         HHGear^.Message := HHGear^.Message and (not gmAttack);
         HHGear^.State := HHGear^.State and (not gstAttacking);
         HHGear^.State := HHGear^.State or gstHHChooseTarget;
-        DeleteGear(Gear);
         isCursorVisible := true;
         warn:= AddVisualGear(Gear^.Target.X, oy, vgtNoPlaceWarn, 0, true);
         if warn <> nil then
             warn^.Tex := GetPlaceCollisionTex(lx, ty, sprHHTelepMask, 0);
-        PlaySound(sndDenied)
+        DeleteGear(Gear);
+        PlaySound(sndDenied);
+        exit
         end
     else
         begin
