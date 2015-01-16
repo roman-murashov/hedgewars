@@ -247,6 +247,7 @@ type
             CollisionIndex: LongInt;    // Position in collision array
             Message: LongWord;          // Game messages are stored here. See gm bitmasks in uConsts
             uid: Longword;              // Lua use this to reference gears
+            Hedgehog: PHedgehog;        // set to CurrentHedgehog on gear creation.  uStats damage code appears to assume it will never be nil and never be changed.
 // Strongly recommended not to override these.  Will mess up generic operations like portaling
             X : hwFloat;              // X/Y/dX/dY are position/velocity. People count on these having semi-normal values
             Y : hwFloat;
@@ -278,7 +279,6 @@ type
             Tex: PTexture;          // A texture created by the gear. Shouldn't use for anything but textures
             Tint: LongWord;         // Used to colour a texture
             LinkedGear: PGear;      // Used to track a related gear. Portal pairs for example.
-            Hedgehog: PHedgehog;    // set to CurrentHedgehog on gear creation
             SoundChannel: LongInt;  // Used to track a sound the gear started
             end;
     TPGearArray = array of PGear;
