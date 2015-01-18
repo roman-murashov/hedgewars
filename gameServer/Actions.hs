@@ -415,14 +415,24 @@ processAction (RemoveTeam teamName) = do
 processAction RemoveClientTeams = do
     (Just ci) <- gets clientIndex
     rnc <- gets roomsClients
+    n <- client's nick
 
     removeTeamActions <- io $ do
         rId <- clientRoomM rnc ci
         roomTeams <- room'sM rnc teams rId
-        return . Prelude.map (RemoveTeam . teamname) . Prelude.filter (\t -> teamownerId t == ci) $ roomTeams
+        return . Prelude.map (RemoveTeam . teamname) . Prelude.filter (\t -> teamowner t == n) $ roomTeams
 
     mapM_ processAction removeTeamActions
 
+
+processAction SetRandomSeed = do
+    ri <- clientRoomA
+    thisRoomChans <- liftM (map sendChan) $ roomClientsS ri
+    seed <- liftM showB $ io $ (randomRIO (0, 10^9) :: IO Int)
+    mapM_ processAction [
+        ModifyRoom (\r -> r{mapParams = Map.insert "SEED" seed $ mapParams r})
+        , AnswerClients thisRoomChans ["CFG", "SEED", seed]
+        ]
 
 
 processAction CheckRegistered = do
