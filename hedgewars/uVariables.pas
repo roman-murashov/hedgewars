@@ -36,14 +36,11 @@ var
     cNewScreenWidth    : LongInt;
     cNewScreenHeight   : LongInt;
     cScreenResizeDelay : LongWord;
-    ipcPort            : Word;
     AprilOne           : boolean;
     cFullScreen        : boolean;
     cLocaleFName       : shortstring;
     cLocale            : shortstring;
     cTimerInterval     : LongInt;
-    PathPrefix         : ansistring;
-    UserPathPrefix     : ansistring;
     cShowFPS           : boolean;
     cFlattenFlakes     : boolean;
     cFlattenClouds     : boolean;
@@ -260,11 +257,11 @@ var
     // these consts are here because they would cause circular dependencies in uConsts/uTypes
     cPathz: array[TPathType] of shortstring = (
         '',                              // ptNone
-        '//',                            // ptData
+        '/',                             // ptData
         '/Graphics',                     // ptGraphics
         '/Themes',                       // ptThemes
         '/Themes/Bamboo',                // ptCurrTheme
-        '/Teams',                        // ptTeams
+        '/Config/Teams',                 // ptTeams
         '/Maps',                         // ptMaps
         '',                              // ptMapCurrent
         '/Demos',                        // ptDemos
@@ -281,7 +278,8 @@ var
         '/Missions/Maps',                // ptMissionMaps
         '/Graphics/SuddenDeath',         // ptSuddenDeath
         '/Graphics/Buttons',             // ptButton
-        '/Shaders'                       // ptShaders
+        '/Shaders',                      // ptShaders
+        '/Config'                        // ptConfig
     );
 
 var
@@ -2464,13 +2462,10 @@ begin
     cLocaleFName    := 'en.txt';
     cFullScreen     := false;
 
-    UserPathPrefix  := '';
-    ipcPort         := 0;
     recordFileName  := '';
     UserNick        := '';
     cStereoMode     := smNone;
     GrayScale       := false;
-    PathPrefix      := './';
     GameType        := gmtLocal;
     cOnlyStats      := False;
     cScriptName     := '';
