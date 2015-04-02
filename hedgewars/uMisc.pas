@@ -283,11 +283,12 @@ else
 
 // allocate and fill structure that will be passed to new thread
 New(image); // will be disposed in SaveScreenshot()
-if dump = 2 then
+{if dump = 2 then
      image^.filename:= shortstring(UserPathPrefix) + filename + '_landpixels' + ext
 else if dump = 1 then
      image^.filename:= shortstring(UserPathPrefix) + filename + '_land' + ext
-else image^.filename:= shortstring(UserPathPrefix) + filename + ext;
+else image^.filename:= shortstring(UserPathPrefix) + filename + ext;}
+image^.filename:= filename + ext;
 
 if dump <> 0 then
     begin

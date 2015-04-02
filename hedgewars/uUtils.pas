@@ -329,7 +329,7 @@ end;
 
 
 function Str2PChar(const s: shortstring): PChar;
-var i :Integer ;
+var i: Integer;
 begin
    for i:= 1 to Length(s) do
       begin
@@ -547,7 +547,7 @@ begin
 {$ENDIF}
 {$I-}
     rwfailed:= false;
-    if (length(UserPathPrefix) > 0) then
+    (*if (length(UserPathPrefix) > 0) then
         begin
         {$IFNDEF PAS2C}
         // create directory if it doesn't exist
@@ -567,10 +567,10 @@ begin
             inc(i)
             end;
         end;
-
+    *)
 {$IFNDEF PAS2C}
     // if everything fails, write to stderr
-    if (length(UserPathPrefix) = 0) or (rwfailed) then
+    //if (length(UserPathPrefix) = 0) or (rwfailed) then
         logFile:= stderr;
 {$ENDIF}
 {$I+}
