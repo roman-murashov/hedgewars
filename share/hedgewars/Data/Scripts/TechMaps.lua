@@ -29,7 +29,7 @@ end
 function PreviewWayPoint(x,y)
     AddPoint(x,y,20)
     AddPoint(x,y,19,true)
-    for i = 0,100,50 do 
+    for i = 0,100,50 do
         AddPoint(x-120,y+i,1,true)
         AddPoint(x+120,y-i)
         AddPoint(x-i,y+120,1,true)
