@@ -671,10 +671,6 @@ function onParameters()
 
 end
 
-function onPreviewInit()
-	onGameInit()
-end
-
 function onGameInit()
 
 		Theme = "Cave"

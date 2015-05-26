@@ -1,6 +1,6 @@
 --[[
 	version 1.3n
-	
+
 	The expat (MIT) license
 
 	Copyright (C) 2012 Vatten
@@ -23,7 +23,7 @@ function IntegerSqrt(num)
 	do
 		temp=div((temp+div(num,temp)),2)
 	end
-	
+
 	return math.abs(temp)
 end
 
@@ -55,7 +55,7 @@ function EndTurn()
 	--3 sec espace time
 	TurnTimeLeft = GetAwayTime*10*3
  end
- 
+
  --show health tag (will mostly be used when a hog is damaged)
 function ShowDamageTag(hog,damage)
 	healthtag=AddVisualGear(GetX(hog), GetY(hog), vgtHealthTag, damage, false)
@@ -78,7 +78,7 @@ end
 	then
 		grav=0
 	end
- 
+
 	if(grav>50)
 	then
 		SetGravity(100+((grav-50)*12))
@@ -88,7 +88,7 @@ end
  end
 
 --====MISC GLOBALS====
- 
+
 --for selecting continent
 local GLOBAL_INIT_TEAMS = {}
 local GLOBAL_SELECT_CONTINENT_CHECK=false
@@ -150,7 +150,7 @@ loc("Medicine: [Fire some exploding medicine that will heal all hogs effected by
 loc("Sabotage/Flare: [Sabotage all hogs in the circle and deal ~1 dmg OR Fire a cluster up into the air]")
 }
 
-local GLOBAL_CONTINENT_INFORMATION = 
+local GLOBAL_CONTINENT_INFORMATION =
 {
 {loc("North America"),"["..loc("Difficulty: ")..loc("EASY").."] "..loc("Area")..": 24,709,000 km2, "..loc("Population")..": 529,000,000",loc("- You can switch between hogs at the start of your turns. (Not first one)").."|"..loc("Special Weapons:").."|"..loc("Shotgun")..": "..GLOBAL_WEAPON_TEXTS[13].."|"..loc("Sniper Rifle")..": "..GLOBAL_WEAPON_TEXTS[1],amSniperRifle,
 {{amShotgun,100},{amDEagle,100},{amLaserSight,2},{amSniperRifle,100},{amCake,1},{amAirAttack,2},{amSwitch,2}}},
@@ -258,7 +258,7 @@ local GLOBAL_WEAPONS_SUPPORT = {
 	{amIceGun, 0, 1, 0, 1, 0},
 	{amKnife, 0, 1, 0, 1, 0},
 	{amRubber, 0, 1, 0, 1, 0}
-	
+
 }
 
 --will check after borders and stuff
@@ -293,13 +293,13 @@ function CleanWeapons(hog)
 		AddAmmo(hog,i,0)
 		i=i+1
 	end
-	
+
 	AddAmmo(hog,amSkip,100)
 end
 
 --get the weapons from a weaponset
 function LoadWeaponset(hog, num)
-	for v,w in pairs(GLOBAL_CONTINENT_INFORMATION[num][5]) 
+	for v,w in pairs(GLOBAL_CONTINENT_INFORMATION[num][5])
 	do
 		ValidateWeapon(hog, w[1],w[2])
 	end
@@ -310,12 +310,12 @@ function InitWeaponsMenu(hog)
 
 	if(GetHogLevel(hog)==0)
 	then
-		for v,w in pairs(GLOBAL_CONTINENT_INFORMATION) 
+		for v,w in pairs(GLOBAL_CONTINENT_INFORMATION)
 		do
 			ValidateWeapon(hog, GLOBAL_CONTINENT_INFORMATION[v][4],1)
 		end
 		AddAmmo(hog,amSwitch) --random continent
-	
+
 	--for the computers
 	else
 		--europe
@@ -338,9 +338,9 @@ function ShowContinentInfo(continent,time,generalinf)
 	then
 		geninftext="| |"..loc("General information")..": |"..GLOBAL_GENERAL_INFORMATION
 	end
-	
+
 	GLOBAL_SHOW_SMALL_INFO=div(time,40)
-	
+
 	ShowMission(GLOBAL_CONTINENT_INFORMATION[continent][1],GLOBAL_CONTINENT_INFORMATION[continent][2],GLOBAL_CONTINENT_INFORMATION[continent][3]..geninftext, -GLOBAL_CONTINENT_INFORMATION[continent][4], time)
 	if(ns)
 	then
@@ -373,19 +373,19 @@ function ZealandiaGetWeapons(hog)
 	if(GetGearType(hog) == gtHedgehog and GLOBAL_TEAM_CONTINENT[GetHogTeamName(hog)]==9 and getTeamValue(GetHogTeamName(hog), "rand-done-turn")==nil)
 	then
 		CleanWeapons(hog)
-	
+
 		local random_weapon = 0
 		local old_rand_weap = 0
 		local rand_weaponset_power = 0
-		
+
 		local numberofweaponssupp=table.maxn(GLOBAL_WEAPONS_SUPPORT)
 		local numberofweaponsdmg=table.maxn(GLOBAL_WEAPONS_DAMAGE)
-		
+
 		local rand1=math.abs(GetRandom(numberofweaponssupp)+1)
 		local rand2=math.abs(GetRandom(numberofweaponsdmg)+1)
-		
+
 		random_weapon = math.abs(GetRandom(table.maxn(GLOBAL_WEAPONS_DAMAGE))+1)
-		
+
 		while(GLOBAL_WEAPONS_DAMAGE[random_weapon][4]>TotalRounds or (MapHasBorder() == true and (GLOBAL_WEAPONS_DAMAGE[random_weapon][1]== amAirAttack or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amMineStrike or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amNapalm or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amDrillStrike or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amPiano)))
 		do
 			if(random_weapon>=numberofweaponsdmg)
@@ -397,7 +397,7 @@ function ZealandiaGetWeapons(hog)
 		ValidateWeapon(hog, GLOBAL_WEAPONS_DAMAGE[random_weapon][1],1)
 		rand_weaponset_power=GLOBAL_WEAPONS_DAMAGE[random_weapon][6]
 		old_rand_weap = random_weapon
-		
+
 		if(rand_weaponset_power <2)
 		then
 			random_weapon = rand1
@@ -426,34 +426,34 @@ function ZealandiaGetWeapons(hog)
 			end
 			ValidateWeapon(hog, GLOBAL_WEAPONS_DAMAGE[random_weapon][1],1)
 		end
-			
+
 		setTeamValue(GetHogTeamName(hog), "rand-done-turn", true)
 	end
 end
 
 --sundaland add weps
 function SundalandGetWeapons(hog)
-	
+
 		local random_weapon = 0
 		local old_rand_weap = 0
 		local rand_weaponset_power = 0
-		
+
 		local firstTurn=0
-		
+
 		local numberofweaponssupp=table.maxn(GLOBAL_WEAPONS_SUPPORT)
 		local numberofweaponsdmg=table.maxn(GLOBAL_WEAPONS_DAMAGE)
-		
+
 		local rand1=GetRandom(numberofweaponssupp)+1
 		local rand2=GetRandom(numberofweaponsdmg)+1
 		local rand3=GetRandom(numberofweaponsdmg)+1
-		
+
 		random_weapon = GetRandom(numberofweaponsdmg)+1
-		
+
 		if(TotalRounds<0)
 		then
 			firstTurn=-TotalRounds
 		end
-		
+
 		while(GLOBAL_WEAPONS_DAMAGE[random_weapon][4]>(TotalRounds+firstTurn) or (MapHasBorder() == true and (GLOBAL_WEAPONS_DAMAGE[random_weapon][1]== amAirAttack or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amMineStrike or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amNapalm or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amDrillStrike or GLOBAL_WEAPONS_DAMAGE[random_weapon][1] == amPiano)))
 		do
 			if(random_weapon>=numberofweaponsdmg)
@@ -465,7 +465,7 @@ function SundalandGetWeapons(hog)
 		ValidateWeapon(hog, GLOBAL_WEAPONS_DAMAGE[random_weapon][1],1)
 		rand_weaponset_power=GLOBAL_WEAPONS_DAMAGE[random_weapon][6]
 		old_rand_weap = random_weapon
-		
+
 		random_weapon = rand1
 		while(GLOBAL_WEAPONS_SUPPORT[random_weapon][4]>(TotalRounds+firstTurn) or rand_weaponset_power+GLOBAL_WEAPONS_SUPPORT[random_weapon][6]>2)
 		do
@@ -477,7 +477,7 @@ function SundalandGetWeapons(hog)
 		end
 		ValidateWeapon(hog, GLOBAL_WEAPONS_SUPPORT[random_weapon][1],1)
 		rand_weaponset_power=rand_weaponset_power+GLOBAL_WEAPONS_SUPPORT[random_weapon][6]
-		
+
 		--check again if  the power is enough
 		if(rand_weaponset_power <2)
 		then
@@ -493,7 +493,7 @@ function SundalandGetWeapons(hog)
 			ValidateWeapon(hog, GLOBAL_WEAPONS_DAMAGE[random_weapon][1],1)
 			rand_weaponset_power=GLOBAL_WEAPONS_DAMAGE[random_weapon][6]
 		end
-		
+
 		if(rand_weaponset_power <1)
 		then
 			random_weapon = rand3
@@ -507,7 +507,7 @@ function SundalandGetWeapons(hog)
 			end
 			ValidateWeapon(hog, GLOBAL_WEAPONS_DAMAGE[random_weapon][1],1)
 		end
-		
+
 		AddVisualGear(GetX(hog), GetY(hog)-30, vgtEvilTrace,0, false)
 		PlaySound(sndReinforce,hog)
 end
@@ -518,16 +518,16 @@ function SetContinentWeapons()
 
 	CleanWeapons(CurrentHedgehog)
 	LoadWeaponset(CurrentHedgehog,GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)])
-	
+
 	visualstuff=AddVisualGear(GetX(CurrentHedgehog), GetY(CurrentHedgehog)-5, vgtDust,0, false)
 	v1, v2, v3, v4, v5, v6, v7, v8, v9, v10 = GetVisualGearValues(visualstuff)
 	SetVisualGearValues(visualstuff, v1, v2, v3, v4, v5, v6, v7, 2, v9, GetClanColor(GetHogClan(CurrentHedgehog)))
-	
+
 	ShowContinentInfo(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)],3000,false)
 end
 
 --==========================run throw all hog/gear weapons ==========================
---will check if the mine is nicely placed 
+--will check if the mine is nicely placed
 function AustraliaSpecialCheckHogs(hog)
 	if(GetGearType(hog) == gtHedgehog)
 	then
@@ -558,14 +558,14 @@ function AfricaSpecialSeduction(hog)
 	end
 end
 
---kerguelen special on structure 
+--kerguelen special on structure
 function KerguelenSpecialRed(hog)
 	if(GetGearType(hog) == gtHedgehog)
 	then
 		if(gearIsInCircle(hog,GetX(CurrentHedgehog), GetY(CurrentHedgehog), 120, false)==true and GetHogClan(hog) ~= GetHogClan(CurrentHedgehog))
 		then
 			local dmg=div((15+div(GetHealth(CurrentHedgehog)*10,100))*GLOBAL_EXTRA_DAMAGE_IS_ON,100)
-		
+
 			if(GetHealth(hog)>dmg)
 			then
 				GLOBAL_TEMP_VALUE=GLOBAL_TEMP_VALUE+div(dmg*2,3)+div(dmg*GLOBAL_VAMPIRIC_IS_ON*2,100*3)
@@ -649,7 +649,7 @@ function KerguelenSpecialBlueActivate(hog)
 				SetHealth(hog, 0)
 			end
 			ShowDamageTag(hog,dmg)
-			
+
 			AddVisualGear(GetX(hog), GetY(hog)-30, vgtEvilTrace, 0, false)
 		end
 	end
@@ -730,21 +730,21 @@ end
 --weapons=<ammo><types>, ammo = ascii[116(1 ammo) to 125(inf ammo)] types = ascii[36(Grenade), 37(Clusterbomb) to 90(knife)] see https://code.google.com/p/hedgewars/wiki/AmmoTypes
 --ex "Own continent~this continent rocks!~tZ}$" will get 1 knife and inf grenades
 function onParameters()
-	
+
 	if(ScriptParam~=nil)
 	then
 		local continentinfo={}
 		local numb=0
 		local wepcodes=0
 		local where=0
-		
+
 		local x=0
 		local i=1
-		
+
 		--default icon
 		continentinfo[4]=amLowGravity
 
-		for c in ScriptParam:gmatch"." 
+		for c in ScriptParam:gmatch"."
 		do
 			if(where==0)
 			then
@@ -783,11 +783,11 @@ function onParameters()
 			end
 			numb=numb+1
 		end
-		
+
 		if(continentinfo[5]~=nil and continentinfo[5][1]~=nil)
 		then
 			continentinfo[3]="- "..continentinfo[1]..loc(" was extracted from the scheme|- This continent will be able to use the specials from the other continents!")
-			
+
 			table.insert(GLOBAL_CONTINENT_INFORMATION, continentinfo)
 		end
 	end
@@ -797,13 +797,13 @@ end
 function onAmmoStoreInit()
 
 	SetAmmo(amSkip, 9, 0, 0, 0)
-	
-	for v,w in pairs(GLOBAL_WEAPONS_DAMAGE) 
+
+	for v,w in pairs(GLOBAL_WEAPONS_DAMAGE)
 	do
 		SetAmmo(w[1], w[2], w[3], w[4], w[5])
 	end
-	
-	for v,w in pairs(GLOBAL_WEAPONS_SUPPORT) 
+
+	for v,w in pairs(GLOBAL_WEAPONS_SUPPORT)
 	do
 		SetAmmo(w[1], w[2], w[3], w[4], w[5])
 	end
@@ -817,7 +817,7 @@ end
 
 --what happen when a turn starts
 function onNewTurn()
-	
+
 	--will refresh the info on each tab weapon
 	GLOBAL_AUSTRALIAN_SPECIAL=0
 	GLOBAL_AFRICAN_SPECIAL_SEDUCTION=0
@@ -830,11 +830,11 @@ function onNewTurn()
 	GLOBAL_EUROPE_SPECIAL=0
 	GLOBAL_VAMPIRIC_IS_ON=0
 	GLOBAL_EXTRA_DAMAGE_IS_ON=100
-	
+
 	GLOBAL_TEMP_VALUE=0
-	
+
 	GLOBAL_SUNDALAND_END_HOG=CurrentHedgehog
-	
+
 	--when all hogs are "placed"
 	if(GetCurAmmoType()~=amTeleport)
 	then
@@ -846,7 +846,7 @@ function onNewTurn()
 			GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]=0
 			GLOBAL_SELECT_CONTINENT_CHECK=true
 			GLOBAL_INIT_TEAMS[GetHogTeamName(CurrentHedgehog)] = 2
-			
+
 			if(GLOBAL_SABOTAGE_HOGS[CurrentHedgehog]~=nil and GLOBAL_SABOTAGE_HOGS[CurrentHedgehog]==1)
 			then
 				GLOBAL_SABOTAGE_COUNTER=-750
@@ -860,10 +860,10 @@ function onNewTurn()
 				SetContinentWeapons()
 			end
 			ShowContinentInfo(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)],-1,true)
-			
+
 			--give zeelandia-teams new weapons so they can plan for the next turn
 			runOnGears(ZealandiaGetWeapons)
-			
+
 			--some specials for some continents (GLOBAL_TEMP_VALUE is from get random weapons)
 			if(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]==9)
 			then
@@ -874,7 +874,7 @@ function onNewTurn()
 				then
 					setTeamValue(GetHogTeamName(CurrentHedgehog), "Antarctica2-turntick", 1)
 				end
-				
+
 				if(getTeamValue(GetHogTeamName(CurrentHedgehog), "Antarctica2-turntick")>=4)
 				then
 					AddAmmo(CurrentHedgehog,amPortalGun)
@@ -886,14 +886,14 @@ function onNewTurn()
 					setTeamValue(GetHogTeamName(CurrentHedgehog), "Antarctica2-turntick", 0)
 				end
 				setTeamValue(GetHogTeamName(CurrentHedgehog), "Antarctica2-turntick", getTeamValue(GetHogTeamName(CurrentHedgehog), "Antarctica2-turntick")+1)
-				
+
 			elseif(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]==5)
 			then
 				if(getTeamValue(GetHogTeamName(CurrentHedgehog), "Asia-turntick")==nil)
 				then
 					setTeamValue(GetHogTeamName(CurrentHedgehog), "Asia-turntick", 1)
 				end
-				
+
 				if(getTeamValue(GetHogTeamName(CurrentHedgehog), "Asia-turntick")>=2)
 				then
 					AddAmmo(CurrentHedgehog,amParachute)
@@ -903,7 +903,7 @@ function onNewTurn()
 			elseif(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]==1)
 			then
 				AddAmmo(CurrentHedgehog,amSwitch,GetAmmoCount(CurrentHedgehog, amSwitch)+1)
-				
+
 				ParseCommand("setweap " .. string.char(amSwitch))
 				GLOBAL_TEMP_VALUE=87
 			end
@@ -913,7 +913,7 @@ end
 
 --what happens when you press "tab" (common button)
 function onSwitch()
-	
+
 	if(GLOBAL_SWITCH_HOG_IS_ON==false)
 	then
 		--place mine (australia)
@@ -1047,7 +1047,7 @@ function onSwitch()
 		elseif(GetHogLevel(CurrentHedgehog)==0 and GLOBAL_SELECT_CONTINENT_CHECK==true and (GetCurAmmoType() == amSkip or GetCurAmmoType() == amNothing))
 		then
 			GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]=GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]+1
-			
+
 			if(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]> table.maxn(GLOBAL_CONTINENT_INFORMATION))
 			then
 				GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]=1
@@ -1066,7 +1066,7 @@ function onUp()
 	if(GetHogLevel(CurrentHedgehog)==0 and GLOBAL_SELECT_CONTINENT_CHECK==true and (GetCurAmmoType() == amSkip or GetCurAmmoType() == amNothing))
 	then
 		GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]=GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]+1
-		
+
 		if(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]> table.maxn(GLOBAL_CONTINENT_INFORMATION))
 		then
 			GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]=1
@@ -1080,7 +1080,7 @@ function onDown()
 	if(GetHogLevel(CurrentHedgehog)==0 and GLOBAL_SELECT_CONTINENT_CHECK==true and (GetCurAmmoType() == amSkip or GetCurAmmoType() == amNothing))
 	then
 		GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]=GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]-1
-		
+
 		if(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]<=0)
 		then
 			GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)]=table.maxn(GLOBAL_CONTINENT_INFORMATION)
@@ -1099,7 +1099,7 @@ function onGameTick20()
 			SetContinentWeapons()
 			PlaySound(sndMineTick)
 		else
-			for v,w in pairs(GLOBAL_CONTINENT_INFORMATION) 
+			for v,w in pairs(GLOBAL_CONTINENT_INFORMATION)
 			do
 				if(GetCurAmmoType()==GLOBAL_CONTINENT_INFORMATION[v][4])
 				then
@@ -1111,7 +1111,7 @@ function onGameTick20()
 			end
 		end
 	end
-	
+
 	--show the kerguelen ring
 	if(GLOBAL_KERGUELEN_SPECIAL > 1 and GetCurAmmoType() == amHammer)
 	then
@@ -1119,7 +1119,7 @@ function onGameTick20()
 		then
 			GLOBAL_VISUAL_CIRCLE=AddVisualGear(GetX(CurrentHedgehog), GetY(CurrentHedgehog), vgtCircle, 0, true)
 		end
-		
+
 		if(GLOBAL_KERGUELEN_SPECIAL == 2) --walrus scream
 		then
 			SetVisualGearValues(GLOBAL_VISUAL_CIRCLE, GetX(CurrentHedgehog), GetY(CurrentHedgehog),20, 200, 0, 0, 100, 120, 4, 0xff0000ee)
@@ -1133,13 +1133,13 @@ function onGameTick20()
 		then
 			SetVisualGearValues(GLOBAL_VISUAL_CIRCLE, GetX(CurrentHedgehog), GetY(CurrentHedgehog),20, 200, 0, 0, 100, 80, 10, 0x00ff00ee)
 		end
-	
+
 	elseif(GLOBAL_VISUAL_CIRCLE~=nil)
 	then
 		DeleteVisualGear(GLOBAL_VISUAL_CIRCLE)
 		GLOBAL_VISUAL_CIRCLE=nil
 	end
-	
+
 	--sabotage
 	if(GLOBAL_SABOTAGE_HOGS[CurrentHedgehog]~=nil and GLOBAL_SABOTAGE_HOGS[CurrentHedgehog]>=1)
 	then
@@ -1158,10 +1158,10 @@ function onGameTick20()
 			--update the constant at the top also to something in between
 			GLOBAL_SABOTAGE_FREQUENCY=(25*(RND))+70
 			GLOBAL_SABOTAGE_GRAVITY_SWITCH=true
-			
+
 			GLOBAL_SABOTAGE_HOGS[CurrentHedgehog]=2
 		end
-		
+
 		if(GLOBAL_SABOTAGE_COUNTER >0)
 		then
 			if(GLOBAL_SABOTAGE_GRAVITY_SWITCH)
@@ -1170,13 +1170,13 @@ function onGameTick20()
 			else
 				SetGravityFromScale(100-div(100*GLOBAL_SABOTAGE_COUNTER,GLOBAL_SABOTAGE_FREQUENCY))
 			end
-			
+
 			if(GLOBAL_SABOTAGE_COUNTER % 20 == 0)
 			then
 				AddVisualGear(GetX(CurrentHedgehog), GetY(CurrentHedgehog), vgtSmokeWhite, 0, false)
 			end
 		end
-		
+
 		if(TurnTimeLeft<(GetAwayTime*10) or band(GetState(CurrentHedgehog),gstAttacked)==1)
 		then
 			GLOBAL_SABOTAGE_HOGS[CurrentHedgehog]=0
@@ -1190,7 +1190,7 @@ function onGameTick20()
 				--AddGear(GetX(CurrentHedgehog), GetY(CurrentHedgehog)-10, gtCluster, 0, 0, -160000, 30)
 				GLOBAL_SABOTAGE_GRAVITY_SWITCH=true
 			end
-			
+
 			if(GetHealth(CurrentHedgehog)<=2)
 			then
 				SetHealth(CurrentHedgehog, 0)
@@ -1200,26 +1200,26 @@ function onGameTick20()
 				SetHealth(CurrentHedgehog, GetHealth(CurrentHedgehog)-2)
 			end
 			ShowDamageTag(CurrentHedgehog,2)
-			
+
 			GLOBAL_SABOTAGE_COUNTER=0
 		else
 			GLOBAL_SABOTAGE_COUNTER=GLOBAL_SABOTAGE_COUNTER+1
 		end
 	end
-	
+
 	if(GetCurAmmoType() == amSwitch and GLOBAL_TEMP_VALUE==87)
 	then
 		SetGearMessage(CurrentHedgehog,gmAttack)
 		GLOBAL_TEMP_VALUE=0
 	end
-	
+
 	if(GLOBAL_SHOW_SMALL_INFO>0)
 	then
 		if(GLOBAL_SHOW_SMALL_INFO==1)
 		then
 			ShowContinentInfo(GLOBAL_TEAM_CONTINENT[GetHogTeamName(CurrentHedgehog)],-1,true)
 		end
-		
+
 		GLOBAL_SHOW_SMALL_INFO=GLOBAL_SHOW_SMALL_INFO-1
 	end
 end
@@ -1235,12 +1235,12 @@ end
 --if you used hogswitch or any similar weapon, dont enable any weaponchange
 function onAttack()
 	GLOBAL_SELECT_CONTINENT_CHECK=false
-	
+
 	--african special
 	if(GLOBAL_AFRICAN_SPECIAL_SEDUCTION == 1 and GetCurAmmoType() == amSeduction and band(GetState(CurrentHedgehog),gstAttacked)==0)
 	then
 		EndTurn()
-		
+
 		GLOBAL_TEMP_VALUE=0
 		runOnGears(AfricaSpecialSeduction)
 		SetHealth(CurrentHedgehog, GetHealth(CurrentHedgehog)+GLOBAL_TEMP_VALUE)
@@ -1248,7 +1248,7 @@ function onAttack()
 		--visual stuff
 		VisualExplosion(250,GetX(CurrentHedgehog), GetY(CurrentHedgehog),vgtSmoke,vgtSmokeWhite)
 		PlaySound(sndParachute)
-		
+
 		RemoveWeapon(CurrentHedgehog,amSeduction)
 
 	--Kerguelen specials
@@ -1261,7 +1261,7 @@ function onAttack()
 			runOnGears(KerguelenSpecialRed)
 			SetHealth(CurrentHedgehog, GetHealth(CurrentHedgehog)+GLOBAL_TEMP_VALUE)
 			PlaySound(sndHellish)
-		
+
 		--swap
 		elseif(GLOBAL_KERGUELEN_SPECIAL == 3 and TotalRounds>=1)
 		then
@@ -1275,7 +1275,7 @@ function onAttack()
 			else
 				PlaySound(sndPiano6)
 			end
-			
+
 		--cries
 		elseif(GLOBAL_KERGUELEN_SPECIAL == 5)
 		then
@@ -1285,14 +1285,14 @@ function onAttack()
 				AddGear(0, 0, gtWaterUp, 0, 0,0,0)
 				PlaySound(sndWarp)
 				PlaySound(sndMolotov)
-				
+
 				GLOBAL_TEMP_VALUE=0
 				runOnGears(KerguelenSpecialBlueActivate)
 				SetHealth(CurrentHedgehog, GetHealth(CurrentHedgehog)+GLOBAL_TEMP_VALUE)
 			else
 				HogSay(CurrentHedgehog, loc("Hogs in sight!"), SAY_SAY)
 			end
-		
+
 		--sabotage
 		elseif(GLOBAL_KERGUELEN_SPECIAL == 6)
 		then
@@ -1304,15 +1304,15 @@ function onAttack()
 				AddGear(GetX(CurrentHedgehog), GetY(CurrentHedgehog)-20, gtCluster, 0, 0, -1000000, 32)
 			end
 		end
-		
+
 		EndTurn()
-		
+
 		DeleteVisualGear(GLOBAL_VISUAL_CIRCLE)
 		GLOBAL_VISUAL_CIRCLE=nil
 		GLOBAL_KERGUELEN_SPECIAL=0
-		
+
 		RemoveWeapon(CurrentHedgehog,amHammer)
-		
+
 	elseif(GetCurAmmoType() == amVampiric)
 	then
 		GLOBAL_VAMPIRIC_IS_ON=75
@@ -1324,13 +1324,13 @@ end
 
 function onGearAdd(gearUid)
 	GLOBAL_SELECT_CONTINENT_CHECK=false
-	
+
 	--track the gears im using
-	if(GetGearType(gearUid) == gtHedgehog or GetGearType(gearUid) == gtMine or GetGearType(gearUid) == gtExplosives) 
+	if(GetGearType(gearUid) == gtHedgehog or GetGearType(gearUid) == gtMine or GetGearType(gearUid) == gtExplosives)
 	then
 		trackGear(gearUid)
 	end
-	
+
 	--remove gasclouds on gasbombspecial
 	if(GetGearType(gearUid)==gtPoisonCloud and GLOBAL_SOUTH_AMERICAN_SPECIAL == true)
 	then
@@ -1345,7 +1345,7 @@ function onGearAdd(gearUid)
 			SetGearPosition(CurrentHedgehog, GetX(CurrentHedgehog),GetY(CurrentHedgehog)-3)
 			SetGearVelocity(CurrentHedgehog, vx, vy)
 			DeleteGear(gearUid)
-			
+
 		elseif(GLOBAL_AFRICAN_SPECIAL_STICKY == 2)
 		then
 			FireGear(CurrentHedgehog,gtNapalmBomb, vx, vy, 0)
@@ -1383,11 +1383,11 @@ function onGearAdd(gearUid)
 	then
 		GLOBAL_TEMP_VALUE=0
 		runOnGears(AustraliaSpecialCheckHogs)
-		
+
 		if(GLOBAL_TEMP_VALUE==0)
 		then
 			vx,vy=GetGearVelocity(gearUid)
-			
+
 			if(GLOBAL_AUSTRALIAN_SPECIAL==1)
 			then
 				local austmine=FireGear(CurrentHedgehog,gtMine, vx, vy, 0)
@@ -1413,10 +1413,10 @@ end
 
 function onGearDelete(gearUid)
 
-	if(GetGearType(gearUid) == gtHedgehog or GetGearType(gearUid) == gtMine or GetGearType(gearUid) == gtExplosives) 
+	if(GetGearType(gearUid) == gtHedgehog or GetGearType(gearUid) == gtMine or GetGearType(gearUid) == gtExplosives)
 	then
 		trackDeletion(gearUid)
-		
+
 		--sundaland special
 		if(GetGearType(gearUid) == gtHedgehog and GLOBAL_TEAM_CONTINENT[GetHogTeamName(GLOBAL_SUNDALAND_END_HOG)]==10)
 		then
@@ -1424,11 +1424,11 @@ function onGearDelete(gearUid)
 			then
 				runOnGears(SundalandFindOtherHogInTeam)
 			end
-		
+
 			SundalandGetWeapons(GLOBAL_SUNDALAND_END_HOG)
 		end
 	end
-	
+
 	--north american lipstick
 	if(GetGearType(gearUid)==gtSniperRifleShot )
 	then
@@ -1450,12 +1450,12 @@ function onGearDelete(gearUid)
 		GLOBAL_TEMP_VALUE=gearUid
 		runOnGears(SouthAmericaSpecialCheeseExplosion)
 		AddVisualGear(GetX(gearUid), GetY(gearUid), vgtExplosion, 0, false)
-	
+
 	--asian special
 	elseif(GetGearType(gearUid)==gtSnowball and GetGearMessage(gearUid)==1)
 	then
 		AddGear(GetX(gearUid), GetY(gearUid), gtCluster, 0, 0, 0, 22)
-	
+
 	--europe special
 	elseif(GetGearType(gearUid)==gtCluster and GetGearMessage(gearUid)==2)
 	then
