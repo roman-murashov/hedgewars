@@ -78,8 +78,10 @@ procedure RenderSetup();
 
 // TODO everything below this should not need a public interface
 
+{$IFDEF USE_S3D_RENDERING OR USE_VIDEO_RECORDING}
 procedure CreateFramebuffer(var frame, depth, tex: GLuint);
 procedure DeleteFramebuffer(var frame, depth, tex: GLuint);
+{$ENDIF}
 
 procedure EnableTexture(enable:Boolean);
 
